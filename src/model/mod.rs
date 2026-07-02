@@ -19,13 +19,17 @@ pub use contract::{TransformationContract, SUPPORTED_DTCS_VERSIONS};
 pub use expression::Expression;
 pub use extension::ExtensionBlock;
 pub use function::Function;
-pub use interface::{Input, Output};
+pub use interface::{Input, InterfaceCondition, Output, StreamingDeclaration, StreamingMode};
 pub use lineage::{Lineage, LineageMapping};
-pub use metadata::Metadata;
+pub use metadata::{
+    ClassificationLevel, DocumentationMetadata, GovernanceMetadata, IdentityMetadata, Metadata,
+    ProvenanceMetadata,
+};
 pub use registry::Registry;
 pub use rule::{is_known_rule, Rule, RulePhase};
 pub use semantics::TransformationSemantics;
 pub use types::{
-    is_known_logical_type, parse_logical_type, Field, LogicalType, Schema, TypeParseError,
+    infer_logical_type, is_extension_type_identifier, is_known_logical_type, parse_logical_type,
+    type_compatible, Field, LogicalType, Schema, TypeCompatibility, TypeConversion, TypeParseError,
 };
 pub use versioning::Versioning;

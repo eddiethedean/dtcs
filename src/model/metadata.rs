@@ -1,11 +1,98 @@
-//! Contract metadata.
+//! Contract metadata (SPEC Chapter 5).
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-/// Document-level metadata.
+/// Classification levels from SPEC Chapter 5 §9.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ClassificationLevel {
+    /// Public classification.
+    Public,
+    /// Internal classification.
+    Internal,
+    /// Confidential classification.
+    Confidential,
+    /// Restricted classification.
+    Restricted,
+}
+
+/// Documentation metadata (SPEC Chapter 5 §6).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentationMetadata {
+    /// Short summary.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub summary: Option<String>,
+    /// Detailed description.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    /// Usage examples.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub examples: Vec<String>,
+    /// External references.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub references: Vec<String>,
+}
+
+/// Governance metadata (SPEC Chapter 5 §7).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct GovernanceMetadata {
+    /// Owning party.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner: Option<String>,
+    /// Data steward.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub steward: Option<String>,
+    /// Approval status.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub approval_status: Option<String>,
+    /// Last review date (ISO-8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub review_date: Option<String>,
+    /// Policy references.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub policy_refs: Vec<String>,
+}
+
+/// Provenance metadata (SPEC Chapter 5 §8).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ProvenanceMetadata {
+    /// Author.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub author: Option<String>,
+    /// Creation timestamp (ISO-8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub created_at: Option<String>,
+    /// Modification timestamp (ISO-8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub modified_at: Option<String>,
+    /// Originating system.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub originating_system: Option<String>,
+}
+
+/// Identity metadata (SPEC Chapter 5 §5).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct IdentityMetadata {
+    /// Object identifier.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identifier: Option<String>,
+    /// Object name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    /// Object version.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+}
+
+/// Object metadata (SPEC Chapter 5).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Metadata {
     /// Optional description.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -13,7 +100,22 @@ pub struct Metadata {
     /// Optional tags.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub tags: Vec<String>,
-    /// Additional metadata preserved verbatim.
+    /// Identity metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identity: Option<IdentityMetadata>,
+    /// Documentation metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub documentation: Option<DocumentationMetadata>,
+    /// Governance metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub governance: Option<GovernanceMetadata>,
+    /// Provenance metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub provenance: Option<ProvenanceMetadata>,
+    /// Classification level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub classification: Option<ClassificationLevel>,
+    /// Custom namespaced metadata preserved verbatim.
     #[serde(default, flatten)]
     pub extensions: IndexMap<String, Value>,
 }

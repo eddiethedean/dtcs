@@ -1,0 +1,33 @@
+dtcsVersion: "1.0.0"
+id: "bad.precondition.phase"
+name: "Bad Precondition Phase"
+version: "0.1.0"
+
+inputs:
+  - id: "source"
+    preconditions:
+      - rule: "wrong_phase_rule"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "wrong_phase_rule"
+    rule: "dtcs:not_null"
+    target: "source.id"
+    phase: postcondition
+
+lineage:
+  mappings:
+    - output: "result"
+      inputs: ["source"]

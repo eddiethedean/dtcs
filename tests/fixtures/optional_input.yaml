@@ -1,0 +1,32 @@
+dtcsVersion: "1.0.0"
+id: "optional.input"
+name: "Optional Input"
+version: "0.1.0"
+
+inputs:
+  - id: "required"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+  - id: "enrichment"
+    optional: true
+    schema:
+      fields:
+        - name: "extra"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["required", "enrichment"]

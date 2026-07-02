@@ -1,0 +1,55 @@
+dtcsVersion: "1.0.0"
+id: "metadata.example"
+name: "Metadata Example"
+version: "0.2.0"
+
+metadata:
+  description: "Contract with full metadata"
+  tags: ["example", "metadata"]
+  classification: internal
+  governance:
+    owner: "data-platform"
+    steward: "analytics-team"
+    approvalStatus: "approved"
+    reviewDate: "2026-01-15"
+    policyRefs:
+      - "https://example.com/policies/data-governance"
+      - "vendor:retention-policy"
+  provenance:
+    author: "platform-team"
+    createdAt: "2026-01-10T09:00:00Z"
+    modifiedAt: "2026-01-15T14:30:00Z"
+    originatingSystem: "contract-editor"
+  documentation:
+    summary: "Demonstrates metadata categories"
+    examples:
+      - "See customer_normalize.dtcs.yaml"
+  identity:
+    identifier: "metadata.example"
+    name: "Metadata Example"
+    version: "0.2.0"
+  vendor:customNote: "preserved extension metadata"
+
+inputs:
+  - id: "source"
+    metadata:
+      classification: internal
+      description: "Primary input dataset"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "result"
+      inputs: ["source"]

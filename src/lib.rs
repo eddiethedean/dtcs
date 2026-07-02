@@ -48,6 +48,7 @@ pub const SPEC_VERSION: &str = "1.0.0-draft";
 
 pub mod compatibility;
 pub mod diagnostics;
+pub mod metadata;
 pub mod model;
 pub mod parser;
 pub mod plan;
@@ -63,7 +64,10 @@ pub use diagnostics::{
     codes, inspect_contract, Diagnostic, DiagnosticCategory, DiagnosticReport, DiagnosticStage,
     Severity, ValidationReport,
 };
-pub use model::{parse_logical_type, LogicalType, TransformationContract, TypeParseError};
+pub use model::{
+    parse_logical_type, type_compatible, LogicalType, TransformationContract, TypeCompatibility,
+    TypeParseError,
+};
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
 pub use validation::{validate, ValidationPhase};
 

@@ -1,0 +1,39 @@
+dtcsVersion: "1.0.0"
+id: "precondition.example"
+name: "Precondition Example"
+version: "0.1.0"
+
+inputs:
+  - id: "source"
+    preconditions:
+      - rule: "source_not_empty"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result"
+    postconditions:
+      - rule: "result_not_empty"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "source_not_empty"
+    rule: "dtcs:not_null"
+    target: "source.id"
+    phase: precondition
+  - id: "result_not_empty"
+    rule: "dtcs:not_null"
+    target: "result.id"
+    phase: postcondition
+
+lineage:
+  mappings:
+    - output: "result"
+      inputs: ["source"]

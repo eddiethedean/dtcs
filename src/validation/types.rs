@@ -1,7 +1,9 @@
 //! Type validation phase.
 
 use crate::diagnostics::{codes, DiagnosticCategory};
-use crate::model::{parse_logical_type, TransformationContract, TypeParseError};
+use crate::model::{
+    parse_logical_type, type_compatible, TransformationContract, TypeCompatibility, TypeParseError,
+};
 
 use super::context::ValidationContext;
 
@@ -33,6 +35,28 @@ pub(crate) fn validate_types(ctx: &mut ValidationContext, contract: &Transformat
             );
         }
     }
+
+    for expression in &contract.expressions {
+        if let Some(type_name) = &expression.type_name {
+            validate_declared_type(
+                ctx,
+                type_name,
+                &format!("expressions.{}.type", expression.id),
+            );
+        }
+    }
+
+    for function in &contract.functions {
+        if let Some(type_name) = &function.type_name {
+            validate_declared_type(ctx, type_name, &format!("functions.{}.type", function.id));
+        }
+    }
+}
+
+fn validate_declared_type(ctx: &mut ValidationContext, type_name: &str, object_ref: &str) {
+    if let Err(error) = parse_logical_type(type_name) {
+        emit_type_error(ctx, object_ref, type_name, error);
+    }
 }
 
 fn validate_field_type(
@@ -52,9 +76,103 @@ fn validate_field_type(
         return;
     }
 
-    match parse_logical_type(&field.type_name) {
-        Ok(_) => {}
-        Err(TypeParseError::BareComposite(kind)) => {
+    let parsed = match parse_logical_type(&field.type_name) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            emit_type_error(ctx, field_ref, &field.type_name, error);
+            return;
+        }
+    };
+
+    for (index, conversion) in field.conversions.iter().enumerate() {
+        validate_conversion(ctx, field_ref, index, conversion, &parsed);
+    }
+}
+
+fn validate_conversion(
+    ctx: &mut ValidationContext,
+    field_ref: &str,
+    index: usize,
+    conversion: &crate::model::TypeConversion,
+    field_type: &crate::model::LogicalType,
+) {
+    let object_ref = format!("{field_ref}.conversions[{index}]");
+    let from_type = match parse_logical_type(&conversion.from) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            emit_type_error(ctx, &format!("{object_ref}.from"), &conversion.from, error);
+            return;
+        }
+    };
+    let to_type = match parse_logical_type(&conversion.to) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            emit_type_error(ctx, &format!("{object_ref}.to"), &conversion.to, error);
+            return;
+        }
+    };
+
+    let from_field = type_compatible(field_type, &from_type);
+    let to_field = type_compatible(field_type, &to_type);
+    if from_field == TypeCompatibility::Incompatible {
+        ctx.error(
+            codes::TYPE_INCOMPATIBLE,
+            DiagnosticCategory::Type,
+            format!(
+                "conversion source type '{}' is incompatible with field type",
+                conversion.from
+            ),
+            Some(&format!("{object_ref}.from")),
+            Some("Align conversion.from with the declared field type"),
+        );
+    }
+    if to_field == TypeCompatibility::Incompatible {
+        ctx.error(
+            codes::TYPE_INCOMPATIBLE,
+            DiagnosticCategory::Type,
+            format!(
+                "conversion target type '{}' is incompatible with field type",
+                conversion.to
+            ),
+            Some(&format!("{object_ref}.to")),
+            Some("Align conversion.to with the declared field type"),
+        );
+    }
+
+    let conversion_compat = type_compatible(&from_type, &to_type);
+    if conversion_compat == TypeCompatibility::Incompatible {
+        ctx.error(
+            codes::TYPE_INCOMPATIBLE,
+            DiagnosticCategory::Type,
+            format!(
+                "conversion from '{}' to '{}' is not type-compatible",
+                conversion.from, conversion.to
+            ),
+            Some(&object_ref),
+            None,
+        );
+    } else if conversion_compat == TypeCompatibility::Compatible && !conversion.lossy {
+        ctx.error(
+            codes::INVALID_CONVERSION,
+            DiagnosticCategory::Type,
+            format!(
+                "conversion from '{}' to '{}' requires lossy: true",
+                conversion.from, conversion.to
+            ),
+            Some(&object_ref),
+            Some("Set lossy: true for non-identical compatible conversions"),
+        );
+    }
+}
+
+fn emit_type_error(
+    ctx: &mut ValidationContext,
+    field_ref: &str,
+    type_name: &str,
+    error: TypeParseError,
+) {
+    match error {
+        TypeParseError::BareComposite(kind) => {
             ctx.error(
                 codes::INVALID_TYPE,
                 DiagnosticCategory::Type,
@@ -63,15 +181,30 @@ fn validate_field_type(
                 Some("Use parameterized composite types such as list<string>"),
             );
         }
-        Err(TypeParseError::Unknown(_))
-        | Err(TypeParseError::UnknownParameter(_))
-        | Err(TypeParseError::Malformed(_)) => {
+        TypeParseError::InvalidArity {
+            kind,
+            expected,
+            actual,
+        } => {
             ctx.error(
                 codes::INVALID_TYPE,
                 DiagnosticCategory::Type,
-                format!("unknown logical type '{}'", field.type_name),
+                format!(
+                    "composite type '{kind}' requires {expected} type parameters, found {actual}"
+                ),
                 Some(field_ref),
-                Some("Use a primitive or parameterized composite type from SPEC Chapter 4"),
+                Some("Use list<T>, map<K,V>, object<T...>, or tuple<T...> with correct arity"),
+            );
+        }
+        TypeParseError::Unknown(_)
+        | TypeParseError::UnknownParameter(_)
+        | TypeParseError::Malformed(_) => {
+            ctx.error(
+                codes::INVALID_TYPE,
+                DiagnosticCategory::Type,
+                format!("unknown logical type '{type_name}'"),
+                Some(field_ref),
+                Some("Use a primitive, parameterized composite, or namespaced extension type"),
             );
         }
     }

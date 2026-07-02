@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::metadata::Metadata;
+
 /// Rule evaluation phase per SPEC Chapter 19.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -16,6 +18,7 @@ pub enum RulePhase {
 
 /// A declarative invariant rule.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Rule {
     /// Stable rule instance identifier.
     pub id: String,
@@ -25,6 +28,9 @@ pub struct Rule {
     pub target: String,
     /// Evaluation phase.
     pub phase: RulePhase,
+    /// Object metadata (SPEC Chapter 5 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub metadata: Option<Metadata>,
 }
 
 /// Known standard rules for MVP validation.

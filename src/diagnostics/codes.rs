@@ -26,3 +26,11 @@ pub const INVALID_SEMANTIC_ACTION: &str = "dtcs:invalid-semantic-action";
 pub const INVALID_RULE: &str = "dtcs:invalid-rule";
 /// Invalid extension key.
 pub const INVALID_EXTENSION: &str = "dtcs:invalid-extension";
+/// Invalid metadata declaration.
+pub const INVALID_METADATA: &str = "dtcs:invalid-metadata";
+/// Invalid input or output interface declaration.
+pub const INVALID_INTERFACE: &str = "dtcs:invalid-interface";
+/// Incompatible logical types.
+pub const TYPE_INCOMPATIBLE: &str = "dtcs:type-incompatible";
+/// Invalid type conversion declaration.
+pub const INVALID_CONVERSION: &str = "dtcs:invalid-conversion";

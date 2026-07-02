@@ -1,10 +1,11 @@
 //! Validation pipeline.
 
 mod com;
-mod context;
+pub(crate) mod context;
 mod document;
 mod extensions;
 mod field_index;
+mod interfaces;
 mod lineage;
 mod phases;
 mod references;
@@ -15,12 +16,14 @@ mod types;
 pub use phases::ValidationPhase;
 
 use crate::diagnostics::ValidationReport;
+use crate::metadata;
 use crate::model::TransformationContract;
 
 use self::com::validate_com;
 use self::context::ValidationContext;
 use self::document::validate_document;
 use self::extensions::validate_extensions;
+use self::interfaces::validate_interfaces;
 use self::references::validate_references;
 use self::semantics::validate_semantics;
 use self::structural::validate_structural;
@@ -34,9 +37,15 @@ pub fn validate(contract: &TransformationContract) -> ValidationReport {
     for phase in ValidationPhase::ORDER {
         match phase {
             ValidationPhase::Document => validate_document(&mut ctx, contract),
-            ValidationPhase::CanonicalObjectModel => validate_com(&mut ctx, contract),
+            ValidationPhase::CanonicalObjectModel => {
+                validate_com(&mut ctx, contract);
+                metadata::validate_into(&mut ctx, contract);
+            }
             ValidationPhase::Structural => validate_structural(&mut ctx, contract),
-            ValidationPhase::Types => validate_types(&mut ctx, contract),
+            ValidationPhase::Types => {
+                validate_interfaces(&mut ctx, contract);
+                validate_types(&mut ctx, contract);
+            }
             ValidationPhase::References => validate_references(&mut ctx, contract),
             ValidationPhase::Semantics => validate_semantics(&mut ctx, contract),
             ValidationPhase::Extensions => validate_extensions(&mut ctx, contract),

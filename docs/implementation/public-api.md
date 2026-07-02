@@ -45,6 +45,18 @@ for error in report.errors() {
 }
 ```
 
+## Metadata validation
+
+Phase 0.2 adds a standalone metadata validator that is also invoked during full contract validation:
+
+```rust
+use dtcs::{metadata, parse, DocumentFormat};
+
+let result = parse(yaml_bytes, DocumentFormat::Yaml);
+let contract = result.into_contract().expect("valid parse");
+let report = metadata::validate(&contract);
+```
+
 ## CLI
 
 The `dtcs` binary is enabled by default (`cli` feature):
