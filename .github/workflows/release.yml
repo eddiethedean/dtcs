@@ -53,8 +53,6 @@ jobs:
         include:
           - os: ubuntu-latest
             build-sdist: true
-          - os: macos-13
-            build-sdist: false
           - os: macos-14
             build-sdist: false
           - os: windows-latest
@@ -68,7 +66,17 @@ jobs:
           python-version: "3.12"
       - name: Install maturin
         run: pip install maturin
+      - name: Install macOS Rust targets
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Build wheels (macOS arm64)
+        if: runner.os == 'macOS'
+        run: maturin build --release --features python --locked --target aarch64-apple-darwin --out dist
+      - name: Build wheels (macOS x86_64)
+        if: runner.os == 'macOS'
+        run: maturin build --release --features python --locked --target x86_64-apple-darwin --out dist
       - name: Build wheels
+        if: runner.os != 'macOS'
         run: maturin build --release --features python --locked --out dist
       - name: Build sdist
         if: matrix.build-sdist
