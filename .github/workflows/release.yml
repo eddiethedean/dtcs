@@ -45,50 +45,162 @@ jobs:
           fi
           exit "$code"
 
-  build-python:
+  build-python-linux:
     needs: checks
+    runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            build-sdist: true
-          - os: macos-14
-            build-sdist: false
-          - os: windows-latest
-            build-sdist: false
-    runs-on: ${{ matrix.os }}
+        platform:
+          - runner: ubuntu-22.04
+            target: x86_64
+          - runner: ubuntu-22.04
+            target: x86
+          - runner: ubuntu-22.04
+            target: aarch64
+            manylinux: 2_28
+          - runner: ubuntu-22.04
+            target: armv7
+          - runner: ubuntu-22.04
+            target: s390x
+          - runner: ubuntu-22.04
+            target: ppc64le
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install maturin
-        run: pip install maturin
-      - name: Install macOS Rust targets
-        if: runner.os == 'macOS'
-        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
-      - name: Build wheels (macOS arm64)
-        if: runner.os == 'macOS'
-        run: maturin build --release --features python --locked --target aarch64-apple-darwin --out dist
-      - name: Build wheels (macOS x86_64)
-        if: runner.os == 'macOS'
-        run: maturin build --release --features python --locked --target x86_64-apple-darwin --out dist
       - name: Build wheels
-        if: runner.os != 'macOS'
-        run: maturin build --release --features python --locked --out dist
-      - name: Build sdist
-        if: matrix.build-sdist
-        run: maturin sdist --out dist
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --features python --locked --compatibility pypi
+          sccache: "true"
+          manylinux: ${{ matrix.platform.manylinux || 'auto' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: python-dist-${{ matrix.os }}
+          name: python-dist-linux-${{ matrix.platform.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  build-python-musllinux:
+    needs: checks
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runner: ubuntu-22.04
+            target: x86_64
+          - runner: ubuntu-22.04
+            target: x86
+          - runner: ubuntu-22.04
+            target: aarch64
+          - runner: ubuntu-22.04
+            target: armv7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --features python --locked --compatibility pypi
+          sccache: "true"
+          manylinux: musllinux_1_2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-musllinux-${{ matrix.platform.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  build-python-windows:
+    needs: checks
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runner: windows-latest
+            target: x64
+            python_arch: x64
+          - runner: windows-latest
+            target: x86
+            python_arch: x86
+          - runner: windows-11-arm
+            target: aarch64
+            python_arch: arm64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          architecture: ${{ matrix.platform.python_arch }}
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --features python --locked --compatibility pypi
+          sccache: "true"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-windows-${{ matrix.platform.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  build-python-macos:
+    needs: checks
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - runner: macos-15-intel
+            target: x86_64
+          - runner: macos-latest
+            target: aarch64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
+        with:
+          target: ${{ matrix.platform.target }}
+          args: --release --out dist --features python --locked --compatibility pypi
+          sccache: "true"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-macos-${{ matrix.platform.target }}
+          path: dist/*
+          if-no-files-found: error
+
+  build-python-sdist:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build sdist
+        uses: PyO3/maturin-action@v1
+        with:
+          command: sdist
+          args: --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-sdist
           path: dist/*
           if-no-files-found: error
 
   publish-pypi:
-    needs: build-python
+    needs:
+      - build-python-linux
+      - build-python-musllinux
+      - build-python-windows
+      - build-python-macos
+      - build-python-sdist
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
