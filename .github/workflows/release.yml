@@ -23,12 +23,7 @@ jobs:
       - name: Verify tag matches crate and Python versions
         run: |
           crate_version=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
-          py_version=$(python - <<'PY'
-import tomllib
-from pathlib import Path
-print(tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"])
-PY
-)
+          py_version=$(python -c "import tomllib; from pathlib import Path; print(tomllib.loads(Path('pyproject.toml').read_text())['project']['version'])")
           tag_version="${GITHUB_REF_NAME#v}"
           if [ "$crate_version" != "$tag_version" ]; then
             echo "Tag ${GITHUB_REF_NAME} (v${tag_version}) does not match Cargo.toml version ${crate_version}"
