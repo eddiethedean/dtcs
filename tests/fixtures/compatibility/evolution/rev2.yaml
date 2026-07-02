@@ -1,0 +1,32 @@
+dtcsVersion: "1.0.0"
+id: "evolution.sample"
+name: "Evolution Rev2"
+version: "1.1.0"
+
+inputs:
+  - id: "raw"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+  - id: "aux"
+    optional: true
+    schema:
+      fields:
+        - name: "flag"
+          type: "boolean"
+          nullable: true
+
+outputs:
+  - id: "clean"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "clean"
+      inputs: ["raw"]

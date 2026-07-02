@@ -36,3 +36,15 @@ pub const TYPE_INCOMPATIBLE: &str = "dtcs:type-incompatible";
 pub const INVALID_CONVERSION: &str = "dtcs:invalid-conversion";
 /// Invalid function declaration.
 pub const INVALID_FUNCTION: &str = "dtcs:invalid-function";
+/// Incompatible contract revision or pair.
+pub const INCOMPATIBLE_CONTRACT: &str = "dtcs:incompatible-contract";
+/// Compatibility holds only under stated conditions.
+pub const CONDITIONAL_COMPATIBILITY: &str = "dtcs:conditional-compatibility";
+/// Breaking evolution change detected.
+pub const EVOLUTION_BREAKING_CHANGE: &str = "dtcs:evolution-breaking-change";
+/// Deprecated object referenced or declared.
+pub const DEPRECATED_OBJECT: &str = "dtcs:deprecated-object";
+/// Invalid version identifier or format.
+pub const INVALID_VERSION: &str = "dtcs:invalid-version";
+/// Conflicting version declarations.
+pub const VERSION_CONFLICT: &str = "dtcs:version-conflict";

@@ -65,6 +65,12 @@ Defined in [`src/diagnostics/codes.rs`](../../src/diagnostics/codes.rs):
 - `dtcs:invalid-interface` (Phase 0.2)
 - `dtcs:type-incompatible` (Phase 0.2)
 - `dtcs:invalid-conversion` (Phase 0.2)
+- `dtcs:incompatible-contract` (Phase 0.3)
+- `dtcs:conditional-compatibility` (Phase 0.3)
+- `dtcs:evolution-breaking-change` (Phase 0.3)
+- `dtcs:deprecated-object` (Phase 0.3)
+- `dtcs:invalid-version` (Phase 0.3)
+- `dtcs:version-conflict` (Phase 0.3)
 
 ## Validation semantics
 

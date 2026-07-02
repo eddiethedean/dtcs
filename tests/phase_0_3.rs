@@ -1,0 +1,135 @@
+//! Phase 0.3 integration tests — compatibility, evolution, versioning, lineage analysis.
+
+use std::fs;
+use std::path::PathBuf;
+
+use dtcs::{
+    analyze_compatibility, analyze_evolution, codes, parse, ComparisonScope, CompatibilityLevel,
+    DocumentFormat,
+};
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/fixtures")
+        .join(name)
+}
+
+fn compat_fixture(name: &str) -> PathBuf {
+    fixture(&format!("compatibility/{name}"))
+}
+
+fn load_contract(path: &PathBuf) -> dtcs::TransformationContract {
+    let content = fs::read(path).expect("read fixture");
+    parse(&content, DocumentFormat::Yaml)
+        .into_contract()
+        .expect("valid contract")
+}
+
+#[test]
+fn classifies_identical_contracts() {
+    let a = load_contract(&compat_fixture("identical_a.yaml"));
+    let b = load_contract(&compat_fixture("identical_b.yaml"));
+    let report = analyze_compatibility(&a, &b, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::Identical);
+}
+
+#[test]
+fn classifies_backward_compatible_contracts() {
+    let old = load_contract(&compat_fixture("backward_old.yaml"));
+    let new = load_contract(&compat_fixture("backward_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::BackwardCompatible);
+}
+
+#[test]
+fn classifies_forward_compatible_contracts() {
+    let old = load_contract(&compat_fixture("forward_old.yaml"));
+    let new = load_contract(&compat_fixture("forward_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::ForwardCompatible);
+}
+
+#[test]
+fn classifies_conditionally_compatible_contracts() {
+    let a = load_contract(&compat_fixture("conditional_a.yaml"));
+    let b = load_contract(&compat_fixture("conditional_b.yaml"));
+    let report = analyze_compatibility(&a, &b, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::ConditionallyCompatible);
+}
+
+#[test]
+fn classifies_incompatible_contracts() {
+    let a = load_contract(&compat_fixture("incompatible_a.yaml"));
+    let b = load_contract(&compat_fixture("incompatible_b.yaml"));
+    let report = analyze_compatibility(&a, &b, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::Incompatible);
+    assert!(!report.is_compatible());
+}
+
+#[test]
+fn analyzes_evolution_between_revisions() {
+    let rev1 = load_contract(&compat_fixture("evolution/rev1.yaml"));
+    let rev2 = load_contract(&compat_fixture("evolution/rev2.yaml"));
+    let report = analyze_evolution(&rev1, &rev2);
+    assert!(report.same_identity);
+    assert_eq!(report.compatibility, CompatibilityLevel::BackwardCompatible);
+    assert!(!report.changes.is_empty());
+}
+
+#[test]
+fn detects_deprecation_metadata() {
+    let deprecated = load_contract(&compat_fixture("evolution/deprecated.yaml"));
+    let report = analyze_evolution(&deprecated, &deprecated);
+    assert!(report
+        .changes
+        .iter()
+        .any(|c| c.object_ref.as_deref() == Some("metadata.deprecated")));
+}
+
+#[test]
+fn rejects_invalid_version_identifier() {
+    let report = load_contract(&fixture("invalid_version.yaml")).validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_VERSION));
+}
+
+#[test]
+fn warns_on_version_metadata_conflict() {
+    let report = load_contract(&fixture("version_conflict.yaml")).validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_METADATA));
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::VERSION_CONFLICT));
+}
+
+#[test]
+fn analyzes_lineage_graph_and_impact() {
+    let contract = load_contract(&fixture("lineage_multi.yaml"));
+    let report = dtcs::lineage::analyze_with_options(&contract, Some("customers"), None);
+    assert_eq!(report.graph.len(), 2);
+    let impact = report.impact.expect("impact");
+    assert!(impact.outputs.contains(&"customer_summary".to_string()));
+    assert!(impact.outputs.contains(&"order_enriched".to_string()));
+    assert_eq!(report.governance.owner.as_deref(), Some("data-platform"));
+}
+
+#[test]
+fn analyzes_lineage_dependency() {
+    let contract = load_contract(&fixture("lineage_multi.yaml"));
+    let report = dtcs::lineage::analyze_with_options(&contract, None, Some("order_enriched"));
+    let dep = report.dependency.expect("dependency");
+    assert_eq!(dep.inputs, vec!["orders", "customers"]);
+}
+
+#[test]
+fn versioning_validate_is_public() {
+    let contract = load_contract(&fixture("valid_customer.yaml"));
+    let report = dtcs::versioning::validate(&contract);
+    assert!(report.is_valid());
+}

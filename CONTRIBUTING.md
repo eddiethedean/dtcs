@@ -43,9 +43,9 @@ The reference crate through **0.2.0** implements parsing, the canonical object m
 Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a semver tag is pushed:
 
 ```bash
-# Ensure Cargo.toml and pyproject.toml are both 0.2.0 and CI is green
-git tag v0.2.0
-git push origin v0.2.0
+# Ensure Cargo.toml and pyproject.toml are both 0.3.0 and CI is green
+git tag v0.3.0
+git push origin v0.3.0
 ```
 
 The workflow verifies the tag matches `Cargo.toml` and `pyproject.toml`, runs checks, publishes to crates.io, builds multi-platform Python wheels, and uploads to PyPI.

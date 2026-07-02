@@ -5,7 +5,10 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
+use crate::compatibility::{analyze as analyze_compatibility, analyze_evolution, ComparisonScope};
 use crate::diagnostics::{inspect_contract, DiagnosticReport};
+use crate::lineage::analyze_with_options;
+use crate::model::TransformationContract;
 use crate::parser::parse_file;
 
 /// DTCS command-line tool.
@@ -13,7 +16,7 @@ use crate::parser::parse_file;
 #[command(
     name = "dtcs",
     version,
-    about = "Validate DTCS transformation contracts"
+    about = "Validate and analyze DTCS transformation contracts"
 )]
 pub struct Cli {
     #[command(subcommand)]
@@ -48,6 +51,43 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Compare compatibility between two contracts.
+    Compat {
+        /// Source (older) contract path.
+        source: PathBuf,
+        /// Target (newer) contract path.
+        target: PathBuf,
+        /// Comparison scope (comma-separated: interfaces,types,semantics,lineage,metadata,extensions,all).
+        #[arg(long, value_delimiter = ',')]
+        scope: Vec<String>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Analyze evolution between two revisions.
+    Evolve {
+        /// Older revision path.
+        older: PathBuf,
+        /// Newer revision path.
+        newer: PathBuf,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Analyze lineage for a contract.
+    Lineage {
+        /// Path to a DTCS document.
+        path: PathBuf,
+        /// List outputs affected by this input id.
+        #[arg(long)]
+        impact: Option<String>,
+        /// List inputs required by this output id.
+        #[arg(long)]
+        dependency: Option<String>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
     /// Print tool and specification versions.
     Version {
         /// Emit JSON output.
@@ -67,21 +107,7 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             Ok(if report.is_valid() { 0 } else { 1 })
         }
         Command::Inspect { path, json } => {
-            let result = parse_file(&path)?;
-            let mut report = result.report;
-            if let Some(ref contract) = result.contract {
-                report.merge(crate::validate(contract));
-            }
-            if !report.is_valid() {
-                render_report(&report, json, ReportMode::Diagnostics)
-                    .map_err(|e| miette::miette!("{e}"))?;
-                return Ok(1);
-            }
-            let Some(contract) = result.contract else {
-                render_report(&report, json, ReportMode::Diagnostics)
-                    .map_err(|e| miette::miette!("{e}"))?;
-                return Ok(1);
-            };
+            let contract = load_valid_contract(&path)?;
             if json {
                 let summary = InspectSummary::from_contract(&contract);
                 println!(
@@ -100,6 +126,92 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 .map_err(|e| miette::miette!("{e}"))?;
             Ok(if report.is_valid() { 0 } else { 1 })
         }
+        Command::Compat {
+            source,
+            target,
+            scope,
+            json,
+        } => {
+            let source_contract = load_valid_contract(&source)?;
+            let target_contract = load_valid_contract(&target)?;
+            let scope = ComparisonScope::from_tokens(&scope);
+            let report = analyze_compatibility(&source_contract, &target_contract, scope);
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                println!("compatibility: {:?}", report.level);
+                for aspect in &report.aspects {
+                    println!("  {}: {}", aspect.aspect, aspect.message);
+                }
+                for diagnostic in &report.diagnostics {
+                    println!(
+                        "[{:?}] {} - {}",
+                        diagnostic.severity, diagnostic.id, diagnostic.message
+                    );
+                }
+            }
+            Ok(if report.is_compatible() { 0 } else { 1 })
+        }
+        Command::Evolve { older, newer, json } => {
+            let older_contract = load_valid_contract(&older)?;
+            let newer_contract = load_valid_contract(&newer)?;
+            let report = analyze_evolution(&older_contract, &newer_contract);
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                println!(
+                    "evolution: {:?} (same identity: {})",
+                    report.compatibility, report.same_identity
+                );
+                for change in &report.changes {
+                    println!("  [{:?}] {}", change.category, change.message);
+                }
+                for hint in &report.migration_hints {
+                    println!("  hint: {hint}");
+                }
+            }
+            Ok(
+                if report.same_identity
+                    && report.compatibility != crate::CompatibilityLevel::Incompatible
+                {
+                    0
+                } else {
+                    1
+                },
+            )
+        }
+        Command::Lineage {
+            path,
+            impact,
+            dependency,
+            json,
+        } => {
+            let contract = load_valid_contract(&path)?;
+            let report = analyze_with_options(&contract, impact.as_deref(), dependency.as_deref());
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                for edge in &report.graph {
+                    println!("{} <- {:?}", edge.output, edge.inputs);
+                }
+                if let Some(impact) = &report.impact {
+                    println!("impact {} -> {:?}", impact.input, impact.outputs);
+                }
+                if let Some(dep) = &report.dependency {
+                    println!("dependency {} <- {:?}", dep.output, dep.inputs);
+                }
+            }
+            Ok(0)
+        }
         Command::Version { json } => {
             if json {
                 println!(
@@ -116,6 +228,23 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             Ok(0)
         }
     }
+}
+
+fn load_valid_contract(path: &PathBuf) -> miette::Result<TransformationContract> {
+    let result = parse_file(path)?;
+    if !result.report.is_valid() {
+        return Err(miette::miette!("parse failed for {}", path.display()));
+    }
+    result
+        .contract
+        .ok_or_else(|| miette::miette!("no contract in {}", path.display()))
+        .and_then(|contract| {
+            let report = crate::validate(&contract);
+            if !report.is_valid() {
+                return Err(miette::miette!("validation failed for {}", path.display()));
+            }
+            Ok(contract)
+        })
 }
 
 #[derive(Debug)]

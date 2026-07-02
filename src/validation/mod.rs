@@ -41,7 +41,10 @@ pub fn validate(contract: &TransformationContract) -> ValidationReport {
 
     for phase in ValidationPhase::ORDER {
         match phase {
-            ValidationPhase::Document => validate_document(&mut ctx, contract),
+            ValidationPhase::Document => {
+                validate_document(&mut ctx, contract);
+                merge_versioning(&mut ctx, contract);
+            }
             ValidationPhase::CanonicalObjectModel => {
                 validate_com(&mut ctx, contract);
                 metadata::validate_into(&mut ctx, contract);
@@ -70,4 +73,8 @@ pub fn validate(contract: &TransformationContract) -> ValidationReport {
     }
 
     ctx.into_report()
+}
+
+fn merge_versioning(ctx: &mut ValidationContext, contract: &TransformationContract) {
+    ctx.merge_report(crate::versioning::validate(contract));
 }

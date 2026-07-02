@@ -48,11 +48,13 @@ pub const SPEC_VERSION: &str = "1.0.0-draft";
 
 pub mod compatibility;
 pub mod diagnostics;
+pub mod lineage;
 pub mod metadata;
 pub mod model;
 pub mod parser;
 pub mod plan;
 pub mod validation;
+pub mod versioning;
 
 #[cfg(feature = "cli")]
 pub mod cli;
@@ -60,10 +62,15 @@ pub mod cli;
 #[cfg(feature = "python")]
 mod python;
 
+pub use compatibility::{
+    analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,
+    CompatibilityLevel, CompatibilityReport, EvolutionReport,
+};
 pub use diagnostics::{
     codes, inspect_contract, Diagnostic, DiagnosticCategory, DiagnosticReport, DiagnosticStage,
     Severity, ValidationReport,
 };
+pub use lineage::{analyze as analyze_lineage, LineageAnalysisReport, LineageGovernance};
 pub use model::{
     parse_logical_type, type_compatible, LogicalType, TransformationContract, TypeCompatibility,
     TypeParseError,

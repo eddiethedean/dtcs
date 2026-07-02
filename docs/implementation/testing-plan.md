@@ -4,7 +4,18 @@ Tests should be written against `SPEC.md`.
 
 ## Shared fixture manifest
 
-[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+
+## Phase 0.3 fixture groups
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Compatibility (5 levels) | `tests/fixtures/compatibility/` — `identical_*`, `backward_*`, `forward_*`, `conditional_*`, `incompatible_*` |
+| Evolution | `tests/fixtures/compatibility/evolution/rev1.yaml`, `rev2.yaml`, `deprecated.yaml` |
+| Versioning | `invalid_version.yaml`, `version_conflict.yaml` |
+| Lineage analysis | `lineage_multi.yaml` |
+
+Integration tests: [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs).
 
 ## Phase 0.2 fixture groups
 

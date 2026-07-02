@@ -2,7 +2,7 @@
 
 Follow the architecture defined in `SPEC.md`.
 
-Initial implementation pipeline:
+Implementation pipeline (Phase 0.3):
 
 ```text
 DTCS Document
@@ -13,12 +13,22 @@ Parser
         ▼
 Canonical Object Model
         │
+        ├──────────────────────────────┐
+        ▼                              ▼
+Validator (0.1–0.2)              Analyzer (0.3)
+        │                              │
+        ▼                              ├─ compatibility::analyze
+Diagnostics                            ├─ analyze_evolution
+        │                              ├─ versioning::validate
+        │                              └─ lineage::analyze
+        │                              │
+        │                              ▼
+        │                         Analysis reports
         ▼
-Validator
-        │
-        ▼
-Diagnostics
+   (valid contracts only for analysis)
 ```
+
+Analysis is **read-only** — it never mutates the Canonical Object Model.
 
 Future pipeline:
 
@@ -38,4 +48,4 @@ Execution Plan
 Runtime
 ```
 
-For this first crate, implement only through Diagnostics.
+For this crate through 0.3.0, implement through Diagnostics and Contract Analysis.

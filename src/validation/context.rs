@@ -76,6 +76,11 @@ impl ValidationContext {
         self.push(diagnostic);
     }
 
+    /// Merges diagnostics from another report.
+    pub fn merge_report(&mut self, other: DiagnosticReport) {
+        self.report.merge(other);
+    }
+
     /// Validates unique identifiers within a collection.
     pub fn check_unique_ids(
         &mut self,

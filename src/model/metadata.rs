@@ -115,6 +115,12 @@ pub struct Metadata {
     /// Classification level.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub classification: Option<ClassificationLevel>,
+    /// Whether this object revision is deprecated (evolution analysis).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub deprecated: Option<bool>,
+    /// Recommended replacement contract id when deprecated.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub replacement: Option<String>,
     /// Custom namespaced metadata preserved verbatim.
     #[serde(default, flatten)]
     pub extensions: IndexMap<String, Value>,

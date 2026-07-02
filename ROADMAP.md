@@ -28,7 +28,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 |-------|------|------------|--------|
 | **0.1** | [Foundation](#phase-01--foundation) | Ch 1–3, 9–10, 17–20 (core) | **Complete** (`0.1.2`) |
 | **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
-| **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | Planned |
+| **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | Planned |
 | **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | Planned |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | Planned |
@@ -167,13 +167,13 @@ Expression typing in 0.2 performs static analysis of declared expression bodies 
 
 - [x] [Ch 4 §14](SPEC.md#chapter-4----type-system), [Ch 5 §13](SPEC.md#chapter-5----metadata), [Ch 6 §15](SPEC.md#chapter-6----inputs-and-outputs): chapter conformance
 - [x] Fixture corpus extended with metadata, streaming, and optional-input cases
-- [ ] Publish to crates.io and PyPI at `0.2.0` (tag `v0.2.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [x] Publish to crates.io and PyPI at `0.2.0` (tag `v0.2.0`)
 
 ---
 
 ## Phase 0.3 — Contract Analysis
 
-**Target:** `0.3.x` · **Tier:** II · **Prerequisite:** 0.2
+**Target:** `0.3.x` · **Tier:** II · **Prerequisite:** 0.2 · **Status:** Complete (`0.3.0`)
 
 **Implements:** Analyzer ([Ch 23 §4](SPEC.md#chapter-23----conformance)) · **SPEC:** [Ch 10](SPEC.md#chapter-10----lineage) §11–12, [Ch 11](SPEC.md#chapter-11----compatibility)–[12](SPEC.md#chapter-12----evolution), [Ch 25](SPEC.md#chapter-25----versioning)
 
@@ -203,8 +203,9 @@ Analyze contracts for interoperability, safe evolution, versioning, and lineage 
 
 ### Exit criteria
 
-- [Ch 11 §14](SPEC.md#chapter-11----compatibility), [Ch 12 §13](SPEC.md#chapter-12----evolution), [Ch 25 §13](SPEC.md#chapter-25----versioning), [Ch 10 §13](SPEC.md#chapter-10----lineage)
-- Paired contract fixtures for each compatibility classification
+- [x] [Ch 11 §14](SPEC.md#chapter-11----compatibility), [Ch 12 §13](SPEC.md#chapter-12----evolution), [Ch 25 §13](SPEC.md#chapter-25----versioning), [Ch 10 §13](SPEC.md#chapter-10----lineage)
+- [x] Paired contract fixtures for each compatibility classification
+- [ ] Publish to crates.io and PyPI at `0.3.0` (tag `v0.3.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

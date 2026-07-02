@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+
+Phase 0.3 — Contract Analysis.
+
+- Compatibility engine with five classifications (Identical, Backward/Forward Compatible, Conditionally Compatible, Incompatible)
+- Evolution analysis with change categories, deprecation detection, and migration hints
+- Ch 25 versioning validation (`versioning::validate`)
+- Dataset-level lineage analysis (dependency graph, impact, dependency queries, governance summary)
+- CLI: `dtcs compat`, `dtcs evolve`, `dtcs lineage`
+- Python: `compat_analyze`, `evolve_analyze`, `lineage_analyze`, `version_validate`
+- Fixtures under `tests/fixtures/compatibility/` for all classification levels
+
 ## 0.2.0
 
 Phase 0.2 — Contract Model.

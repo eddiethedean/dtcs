@@ -7,7 +7,17 @@ import json
 import sys
 from pathlib import Path
 
-from dtcs import SPEC_VERSION, __version__, inspect, is_valid, parse_file, validate_result
+from dtcs import (
+    SPEC_VERSION,
+    __version__,
+    compat_analyze,
+    evolve_analyze,
+    inspect,
+    is_valid,
+    lineage_analyze,
+    parse_file,
+    validate_result,
+)
 
 
 def _render_report(report: dict, *, json_output: bool, mode: str) -> None:
@@ -39,10 +49,24 @@ def _render_report(report: dict, *, json_output: bool, mode: str) -> None:
         print("valid")
 
 
+def _load_valid_contract(path: Path) -> dict:
+    try:
+        result = parse_file(str(path))
+    except ValueError as error:
+        raise SystemExit(str(error)) from error
+    report = validate_result(result)
+    if not is_valid(report):
+        raise SystemExit(f"validation failed for {path}")
+    contract = result.get("contract")
+    if contract is None:
+        raise SystemExit(f"no contract in {path}")
+    return contract
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="dtcs",
-        description="Validate DTCS transformation contracts",
+        description="Validate and analyze DTCS transformation contracts",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -60,6 +84,23 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     diagnostics_parser.add_argument("path", type=Path)
     diagnostics_parser.add_argument("--json", action="store_true")
+
+    compat_parser = subparsers.add_parser("compat", help="Compare contract compatibility")
+    compat_parser.add_argument("source", type=Path)
+    compat_parser.add_argument("target", type=Path)
+    compat_parser.add_argument("--scope", default="")
+    compat_parser.add_argument("--json", action="store_true")
+
+    evolve_parser = subparsers.add_parser("evolve", help="Analyze contract evolution")
+    evolve_parser.add_argument("older", type=Path)
+    evolve_parser.add_argument("newer", type=Path)
+    evolve_parser.add_argument("--json", action="store_true")
+
+    lineage_parser = subparsers.add_parser("lineage", help="Analyze contract lineage")
+    lineage_parser.add_argument("path", type=Path)
+    lineage_parser.add_argument("--impact", default=None)
+    lineage_parser.add_argument("--dependency", default=None)
+    lineage_parser.add_argument("--json", action="store_true")
 
     version_parser = subparsers.add_parser("version", help="Print package versions")
     version_parser.add_argument("--json", action="store_true")
@@ -85,6 +126,40 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(f"dtcs {_package_version()}")
             print(f"spec {SPEC_VERSION}")
+        return 0
+
+    if args.command == "compat":
+        source = _load_valid_contract(args.source)
+        target = _load_valid_contract(args.target)
+        scope = [part for part in args.scope.split(",") if part] if args.scope else None
+        report = compat_analyze(source, target, scope)
+        if args.json:
+            print(json.dumps(report, indent=2))
+        else:
+            print(f"compatibility: {report.get('level')}")
+        return 0 if report.get("level") != "incompatible" else 1
+
+    if args.command == "evolve":
+        older = _load_valid_contract(args.older)
+        newer = _load_valid_contract(args.newer)
+        report = evolve_analyze(older, newer)
+        if args.json:
+            print(json.dumps(report, indent=2))
+        else:
+            print(
+                f"evolution: {report.get('compatibility')} "
+                f"(same identity: {report.get('same_identity')})"
+            )
+        return 0 if report.get("sameIdentity") and report.get("compatibility") != "incompatible" else 1
+
+    if args.command == "lineage":
+        contract = _load_valid_contract(args.path)
+        report = lineage_analyze(contract, args.impact, args.dependency)
+        if args.json:
+            print(json.dumps(report, indent=2))
+        else:
+            for edge in report.get("graph", []):
+                print(f"{edge['output']} <- {edge['inputs']}")
         return 0
 
     path = args.path

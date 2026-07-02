@@ -1,0 +1,32 @@
+dtcsVersion: "1.0.0"
+id: "compat.forward"
+name: "Forward Old"
+version: "1.0.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+  - id: "legacy"
+    optional: true
+    schema:
+      fields:
+        - name: "legacy_id"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

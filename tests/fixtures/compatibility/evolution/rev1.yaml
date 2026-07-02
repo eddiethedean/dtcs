@@ -1,0 +1,25 @@
+dtcsVersion: "1.0.0"
+id: "evolution.sample"
+name: "Evolution Rev1"
+version: "1.0.0"
+
+inputs:
+  - id: "raw"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "clean"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "clean"
+      inputs: ["raw"]

@@ -5,7 +5,9 @@ use pyo3::prelude::*;
 use pyo3::types::{PyByteArray, PyDict};
 use serde::Serialize;
 
+use crate::compatibility::{analyze as analyze_compatibility, analyze_evolution, ComparisonScope};
 use crate::diagnostics::inspect_contract;
+use crate::lineage::analyze_with_options;
 use crate::model::TransformationContract;
 use crate::parser::{parse, parse_file, DocumentFormat, ParseResult};
 
@@ -133,6 +135,56 @@ fn inspect(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<String> {
     Ok(inspect_contract(&contract))
 }
 
+/// Analyze compatibility between two contracts.
+#[pyfunction]
+#[pyo3(signature = (source, target, scope=None))]
+fn compat_analyze(
+    py: Python<'_>,
+    source: &Bound<'_, PyAny>,
+    target: &Bound<'_, PyAny>,
+    scope: Option<Vec<String>>,
+) -> PyResult<Py<PyAny>> {
+    let source = contract_from_py(py, source)?;
+    let target = contract_from_py(py, target)?;
+    let scope = ComparisonScope::from_tokens(&scope.unwrap_or_default());
+    value_to_py(py, &analyze_compatibility(&source, &target, scope))
+}
+
+/// Analyze evolution between two contract revisions.
+#[pyfunction]
+fn evolve_analyze(
+    py: Python<'_>,
+    older: &Bound<'_, PyAny>,
+    newer: &Bound<'_, PyAny>,
+) -> PyResult<Py<PyAny>> {
+    let older = contract_from_py(py, older)?;
+    let newer = contract_from_py(py, newer)?;
+    value_to_py(py, &analyze_evolution(&older, &newer))
+}
+
+/// Analyze lineage for a contract.
+#[pyfunction]
+#[pyo3(signature = (contract, impact=None, dependency=None))]
+fn lineage_analyze(
+    py: Python<'_>,
+    contract: &Bound<'_, PyAny>,
+    impact: Option<String>,
+    dependency: Option<String>,
+) -> PyResult<Py<PyAny>> {
+    let contract = contract_from_py(py, contract)?;
+    value_to_py(
+        py,
+        &analyze_with_options(&contract, impact.as_deref(), dependency.as_deref()),
+    )
+}
+
+/// Validate version identifiers on a contract.
+#[pyfunction]
+fn version_validate(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    let contract = contract_from_py(py, contract)?;
+    value_to_py(py, &crate::versioning::validate(&contract))
+}
+
 /// Native extension module for the Python `dtcs` package.
 #[pymodule]
 fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -143,5 +195,9 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;
     m.add_function(wrap_pyfunction!(inspect, m)?)?;
+    m.add_function(wrap_pyfunction!(compat_analyze, m)?)?;
+    m.add_function(wrap_pyfunction!(evolve_analyze, m)?)?;
+    m.add_function(wrap_pyfunction!(lineage_analyze, m)?)?;
+    m.add_function(wrap_pyfunction!(version_validate, m)?)?;
     Ok(())
 }

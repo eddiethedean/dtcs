@@ -283,3 +283,38 @@ def test_cli_inspect_json_output() -> None:
     payload = json.loads(output.stdout)
     assert payload["id"] == "customer.normalize"
     assert payload["inputs"] >= 1
+
+
+def test_compat_analyze_backward_compatible() -> None:
+    old = _fixture_dir() / "compatibility" / "backward_old.yaml"
+    new = _fixture_dir() / "compatibility" / "backward_new.yaml"
+    source = dtcs.parse_file(str(old))["contract"]
+    target = dtcs.parse_file(str(new))["contract"]
+    report = dtcs.compat_analyze(source, target)
+    assert report["level"] == "backwardCompatible"
+
+
+def test_cli_compat_json_output() -> None:
+    old = _fixture_dir() / "compatibility" / "backward_old.yaml"
+    new = _fixture_dir() / "compatibility" / "backward_new.yaml"
+    output = _python_dtcs("compat", "--json", str(old), str(new))
+    assert output.returncode == 0
+    payload = json.loads(output.stdout)
+    assert payload["level"] == "backwardCompatible"
+
+
+def test_cli_evolve_json_output() -> None:
+    rev1 = _fixture_dir() / "compatibility" / "evolution" / "rev1.yaml"
+    rev2 = _fixture_dir() / "compatibility" / "evolution" / "rev2.yaml"
+    output = _python_dtcs("evolve", "--json", str(rev1), str(rev2))
+    assert output.returncode == 0
+    payload = json.loads(output.stdout)
+    assert payload["sameIdentity"] is True
+
+
+def test_cli_lineage_json_output() -> None:
+    path = _fixture_dir() / "lineage_multi.yaml"
+    output = _python_dtcs("lineage", "--json", "--impact", "customers", str(path))
+    assert output.returncode == 0
+    payload = json.loads(output.stdout)
+    assert payload["impact"]["outputs"]

@@ -56,6 +56,17 @@ dtcs/
       report.rs
     compatibility/
       mod.rs
+      types.rs
+      report.rs
+      compare.rs
+      classify.rs
+      evolution.rs
+    versioning/
+      mod.rs
+      validate.rs
+    lineage/
+      mod.rs
+      analysis.rs
     plan/
       mod.rs
     cli/
@@ -66,7 +77,12 @@ dtcs/
     dtcs/
   tests/
     fixtures/
+      compatibility/
     fixture_expectations.json
+    mvp.rs
+    phase_0_2.rs
+    phase_0_3.rs
+    manifest.rs
 ```
 
 Keep modules small and aligned with `SPEC.md`.

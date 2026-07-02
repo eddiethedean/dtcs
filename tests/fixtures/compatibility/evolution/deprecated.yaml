@@ -1,0 +1,29 @@
+dtcsVersion: "1.0.0"
+id: "evolution.deprecated"
+name: "Evolution Deprecated"
+version: "2.0.0"
+
+metadata:
+  deprecated: true
+  replacement: "evolution.sample"
+
+inputs:
+  - id: "raw"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "clean"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "clean"
+      inputs: ["raw"]

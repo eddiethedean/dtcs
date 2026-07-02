@@ -15,6 +15,22 @@ Do not implement these yet:
 
 The first crate should be a correct spec core based on [`SPEC.md`](../../SPEC.md).
 
+## In scope through 0.3.0
+
+- Parse YAML and JSON into the Canonical Object Model
+- Seven-phase validation with structured diagnostics
+- Metadata validation (Phase 0.2)
+- Type system: conversions, collections, extension types, expression typing (Phase 0.2)
+- I/O interfaces: optional inputs, streaming, pre/postconditions (Phase 0.2)
+- Lineage completeness enforcement
+- Scoped field reference resolution
+- Compatibility analysis with five classification levels (Phase 0.3)
+- Evolution analysis with change categories and migration hints (Phase 0.3)
+- Ch 25 versioning validation (Phase 0.3)
+- Dataset-level lineage analysis: dependency graph, impact, governance (Phase 0.3)
+- CLI (`validate`, `inspect`, `diagnostics`, `version`, `compat`, `evolve`, `lineage`)
+- Python bindings via maturin
+
 ## In scope through 0.2.0
 
 - Parse YAML and JSON into the Canonical Object Model

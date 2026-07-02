@@ -57,6 +57,32 @@ let contract = result.into_contract().expect("valid parse");
 let report = metadata::validate(&contract);
 ```
 
+## Contract analysis (Phase 0.3)
+
+```rust
+use dtcs::{
+    analyze_compatibility, analyze_evolution, analyze_lineage, ComparisonScope,
+    CompatibilityLevel,
+};
+
+let source = /* TransformationContract */;
+let target = /* TransformationContract */;
+
+let compat = analyze_compatibility(&source, &target, ComparisonScope::all());
+assert_eq!(compat.level, CompatibilityLevel::BackwardCompatible);
+
+let evolution = analyze_evolution(&source, &target);
+let lineage = analyze_lineage(&source);
+```
+
+Versioning validation (Ch 25) runs during full contract validation when a `versioning` block is present, and is also available standalone:
+
+```rust
+use dtcs::versioning;
+
+let report = versioning::validate(&contract);
+```
+
 ## Python API
 
 The `dtcs` package mirrors the Rust parse/validate surface. Contract dicts must use **camelCase** keys to match the Canonical Object Model (`dtcsVersion`, `semanticActions`, etc.).
@@ -87,6 +113,10 @@ summary = dtcs.inspect(contract)
 | `parse_and_validate` | Parse and validate in one step |
 | `inspect` | Human-readable contract summary |
 | `is_valid` | True when a diagnostic report has no error-severity items |
+| `compat_analyze` | Compare two contracts; returns level, aspects, diagnostics |
+| `evolve_analyze` | Evolution diff between two revisions of the same contract |
+| `lineage_analyze` | Dependency graph, impact, and governance summary |
+| `version_validate` | Ch 25 versioning block validation |
 
 ## CLI
 
@@ -101,6 +131,10 @@ dtcs inspect contract.yaml
 dtcs inspect contract.yaml --json
 dtcs diagnostics contract.yaml --json
 dtcs version
+dtcs compat source.yaml target.yaml
+dtcs compat source.yaml target.yaml --json --scope interfaces,types
+dtcs evolve older.yaml newer.yaml --json
+dtcs lineage contract.yaml --impact INPUT_ID --json
 ```
 
 The Python package exposes the same subcommands via `python -m dtcs` or the `dtcs` console script.
