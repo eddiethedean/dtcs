@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "invalid.http_action"
+name: "Invalid HTTP Action"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "email"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "email"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "bad_action"
+    action: "http://example.com/lowercase"
+    target: "in.email"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

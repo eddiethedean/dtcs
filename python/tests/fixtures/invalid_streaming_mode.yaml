@@ -1,0 +1,27 @@
+dtcsVersion: "1.0.0"
+id: "bad.streaming"
+name: "Bad Streaming"
+version: "0.1.0"
+
+inputs:
+  - id: "events"
+    streaming:
+      mode: continuous
+    schema:
+      fields:
+        - name: "event_id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "event_id"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["events"]

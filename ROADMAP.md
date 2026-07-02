@@ -27,7 +27,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | Phase | Name | SPEC focus | Status |
 |-------|------|------------|--------|
 | **0.1** | [Foundation](#phase-01--foundation) | Ch 1–3, 9–10, 17–20 (core) | **Complete** (`0.1.2`) |
-| **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | Planned |
+| **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | Planned |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | Planned |
 | **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | Planned |
@@ -133,7 +133,7 @@ Ship the [Ch 2 §13](SPEC.md#chapter-2----core-concepts) pipeline through diagno
 
 ## Phase 0.2 — Contract Model
 
-**Target:** `0.2.x` · **Tier:** II · **Prerequisite:** 0.1
+**Target:** `0.2.x` · **Tier:** II · **Prerequisite:** 0.1 · **Status:** Complete (`0.2.0`)
 
 **Implements:** Validator (extended) · **SPEC:** [Ch 4](SPEC.md#chapter-4----type-system), [Ch 5](SPEC.md#chapter-5----metadata), [Ch 6](SPEC.md#chapter-6----inputs-and-outputs)
 
@@ -157,13 +157,16 @@ Complete contract representation: metadata, full type system, and I/O interface 
 
 | Surface | Entry point |
 |---------|-------------|
-| Rust | `dtcs::metadata::validate(contract)` |
-| CLI | `dtcs validate` (metadata checks integrated) |
+| Rust | `dtcs::metadata::validate(contract)`, `dtcs::parse_logical_type`, `dtcs::type_compatible` |
+| Python | `dtcs.metadata_validate`, `dtcs.validate_result`, `dtcs.parse_and_validate` |
+| CLI | `dtcs validate` (metadata, types, expressions, and interface checks integrated) |
+
+Expression typing in 0.2 performs static analysis of declared expression bodies (field references, literals, binary operators, and function calls). Full Chapter 8 grammar parsing is deferred to Phase 0.6.
 
 ### Exit criteria
 
-- [Ch 4 §14](SPEC.md#chapter-4----type-system), [Ch 5 §13](SPEC.md#chapter-5----metadata), [Ch 6 §15](SPEC.md#chapter-6----inputs-and-outputs): chapter conformance
-- Fixture corpus extended with metadata, streaming, and optional-input cases
+- [x] [Ch 4 §14](SPEC.md#chapter-4----type-system), [Ch 5 §13](SPEC.md#chapter-5----metadata), [Ch 6 §15](SPEC.md#chapter-6----inputs-and-outputs): chapter conformance
+- [x] Fixture corpus extended with metadata, streaming, and optional-input cases
 
 ---
 

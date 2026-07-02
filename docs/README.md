@@ -5,6 +5,7 @@
 | Document | Description |
 |----------|-------------|
 | [SPEC.md](../SPEC.md) | Full DTCS 1.0 draft specification (normative, authoritative) |
+| [ROADMAP.md](../ROADMAP.md) | Reference implementation milestones (Phases 0.1–0.10) |
 
 ## Editorial process
 

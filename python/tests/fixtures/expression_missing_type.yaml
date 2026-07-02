@@ -1,0 +1,29 @@
+dtcsVersion: "1.0.0"
+id: "expression.missing_type"
+name: "Expression Missing Type"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+expressions:
+  - id: "double_value"
+    expr: "in.value * 2"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -1,20 +1,30 @@
-//! Interface validation phase (SPEC Chapter 6).
+//! Interface validation (SPEC Chapter 6).
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::diagnostics::{codes, DiagnosticCategory};
 use crate::model::{RulePhase, TransformationContract};
 
-use super::context::{is_namespaced_identifier, ValidationContext};
+use super::context::{is_vendor_namespaced_identifier, ValidationContext};
 
-pub(crate) fn validate_interfaces(ctx: &mut ValidationContext, contract: &TransformationContract) {
-    validate_optional_inputs(ctx, contract);
-    validate_io_extensions(ctx, contract);
-    validate_streaming(ctx, contract);
-    validate_conditions(ctx, contract);
-}
+const MISPLACED_IO_KEYS: &[(&str, &str)] = &[
+    ("description", "metadata.description"),
+    ("tags", "metadata.tags"),
+    ("classification", "metadata.classification"),
+    ("identity", "metadata.identity"),
+    ("governance", "metadata.governance"),
+    ("provenance", "metadata.provenance"),
+    ("documentation", "metadata.documentation"),
+    ("precondition", "preconditions"),
+    ("postcondition", "postconditions"),
+    ("preconditions", "preconditions (inputs only)"),
+    ("postconditions", "postconditions (outputs only)"),
+];
 
-fn validate_optional_inputs(ctx: &mut ValidationContext, contract: &TransformationContract) {
+pub(crate) fn validate_optional_inputs(
+    ctx: &mut ValidationContext,
+    contract: &TransformationContract,
+) {
     if contract.inputs.is_empty() {
         return;
     }
@@ -30,52 +40,78 @@ fn validate_optional_inputs(ctx: &mut ValidationContext, contract: &Transformati
     }
 }
 
-fn validate_io_extensions(ctx: &mut ValidationContext, contract: &TransformationContract) {
+pub(crate) fn validate_io_extensions(
+    ctx: &mut ValidationContext,
+    contract: &TransformationContract,
+) {
     for input in &contract.inputs {
-        for key in input.extensions.keys() {
-            if !is_namespaced_identifier(key) {
-                ctx.error(
-                    codes::INVALID_INTERFACE,
-                    DiagnosticCategory::Structure,
-                    format!("input extension key '{key}' must be namespaced"),
-                    Some(&format!("inputs.{}.{}", input.id, key)),
-                    Some("Use vendor:fieldName for input extensions"),
-                );
-            }
-        }
+        validate_io_extension_keys(ctx, &format!("inputs.{}", input.id), &input.extensions);
     }
-
     for output in &contract.outputs {
-        for key in output.extensions.keys() {
-            if !is_namespaced_identifier(key) {
+        validate_io_extension_keys(ctx, &format!("outputs.{}", output.id), &output.extensions);
+    }
+}
+
+fn validate_io_extension_keys(
+    ctx: &mut ValidationContext,
+    object_prefix: &str,
+    extensions: &indexmap::IndexMap<String, serde_json::Value>,
+) {
+    for key in extensions.keys() {
+        if key == "extensions" {
+            if extensions.get(key).is_some_and(|v| v.is_object()) {
                 ctx.error(
-                    codes::INVALID_INTERFACE,
+                    codes::INVALID_EXTENSION,
                     DiagnosticCategory::Structure,
-                    format!("output extension key '{key}' must be namespaced"),
-                    Some(&format!("outputs.{}.{}", output.id, key)),
-                    Some("Use vendor:fieldName for output extensions"),
+                    format!(
+                        "vendor keys must be flattened on {object_prefix}, not nested under 'extensions'"
+                    ),
+                    Some(&format!("{object_prefix}.extensions")),
+                    Some("Use vendor:fieldName directly on the input or output object"),
                 );
             }
+            continue;
+        }
+        if let Some(suggestion) = misplaced_io_key_suggestion(key) {
+            ctx.error(
+                codes::INVALID_INTERFACE,
+                DiagnosticCategory::Structure,
+                format!("'{key}' must be declared under {suggestion}"),
+                Some(&format!("{object_prefix}.{key}")),
+                Some(&format!("Move this field to {suggestion}")),
+            );
+            continue;
+        }
+        if !is_vendor_namespaced_identifier(key) {
+            ctx.error(
+                codes::INVALID_EXTENSION,
+                DiagnosticCategory::Structure,
+                format!("extension key '{key}' must use a vendor namespace"),
+                Some(&format!("{object_prefix}.{key}")),
+                Some("Use vendor:fieldName for input and output extensions"),
+            );
         }
     }
 }
 
-fn validate_streaming(_ctx: &mut ValidationContext, _contract: &TransformationContract) {
-    // StreamingMode enum deserialization rejects invalid values at parse time.
+fn misplaced_io_key_suggestion(key: &str) -> Option<&'static str> {
+    MISPLACED_IO_KEYS
+        .iter()
+        .find(|(misplaced, _)| *misplaced == key)
+        .map(|(_, suggestion)| *suggestion)
 }
 
-fn validate_conditions(ctx: &mut ValidationContext, contract: &TransformationContract) {
+pub(crate) fn validate_condition_rule_refs(
+    ctx: &mut ValidationContext,
+    contract: &TransformationContract,
+) {
     let rule_ids: HashSet<&str> = contract.rules.iter().map(|rule| rule.id.as_str()).collect();
-    let rule_phases: std::collections::HashMap<&str, RulePhase> = contract
-        .rules
-        .iter()
-        .map(|rule| (rule.id.as_str(), rule.phase))
-        .collect();
 
     for input in &contract.inputs {
         for (index, condition) in input.preconditions.iter().enumerate() {
             let object_ref = format!("inputs.{}.preconditions[{index}].rule", input.id);
-            if condition.rule.trim().is_empty() {
+            let rule_id = condition.rule.trim();
+            if rule_id.is_empty() {
                 ctx.error(
                     codes::INVALID_INTERFACE,
                     DiagnosticCategory::Reference,
@@ -85,24 +121,70 @@ fn validate_conditions(ctx: &mut ValidationContext, contract: &TransformationCon
                 );
                 continue;
             }
-            if !rule_ids.contains(condition.rule.as_str()) {
+            if !rule_ids.contains(rule_id) {
                 ctx.error(
                     codes::UNRESOLVED_REFERENCE,
                     DiagnosticCategory::Reference,
-                    format!("precondition references unknown rule '{}'", condition.rule),
+                    format!("precondition references unknown rule '{rule_id}'"),
                     Some(&object_ref),
                     Some("Declare the rule in rules[] or fix the reference"),
                 );
+            }
+        }
+    }
+
+    for output in &contract.outputs {
+        for (index, condition) in output.postconditions.iter().enumerate() {
+            let object_ref = format!("outputs.{}.postconditions[{index}].rule", output.id);
+            let rule_id = condition.rule.trim();
+            if rule_id.is_empty() {
+                ctx.error(
+                    codes::INVALID_INTERFACE,
+                    DiagnosticCategory::Reference,
+                    "postcondition rule reference is required",
+                    Some(&object_ref),
+                    Some("Reference a rule instance id from rules[]"),
+                );
                 continue;
             }
-            if let Some(phase) = rule_phases.get(condition.rule.as_str()) {
+            if !rule_ids.contains(rule_id) {
+                ctx.error(
+                    codes::UNRESOLVED_REFERENCE,
+                    DiagnosticCategory::Reference,
+                    format!("postcondition references unknown rule '{rule_id}'"),
+                    Some(&object_ref),
+                    Some("Declare the rule in rules[] or fix the reference"),
+                );
+            }
+        }
+    }
+}
+
+pub(crate) fn validate_condition_rule_phases(
+    ctx: &mut ValidationContext,
+    contract: &TransformationContract,
+) {
+    let rule_phases: HashMap<&str, RulePhase> = contract
+        .rules
+        .iter()
+        .map(|rule| (rule.id.as_str(), rule.phase))
+        .collect();
+
+    for input in &contract.inputs {
+        for (index, condition) in input.preconditions.iter().enumerate() {
+            let rule_id = condition.rule.trim();
+            if rule_id.is_empty() {
+                continue;
+            }
+            let object_ref = format!("inputs.{}.preconditions[{index}].rule", input.id);
+            if let Some(phase) = rule_phases.get(rule_id) {
                 if *phase != RulePhase::Precondition {
                     ctx.error(
                         codes::INVALID_INTERFACE,
-                        DiagnosticCategory::Reference,
+                        DiagnosticCategory::Semantic,
                         format!(
-                            "precondition references rule '{}' with phase '{phase:?}', expected precondition",
-                            condition.rule
+                            "precondition references rule '{rule_id}' with phase '{}', expected precondition",
+                            phase.as_str()
                         ),
                         Some(&object_ref),
                         Some("Use a rule with phase: precondition for input preconditions"),
@@ -114,35 +196,19 @@ fn validate_conditions(ctx: &mut ValidationContext, contract: &TransformationCon
 
     for output in &contract.outputs {
         for (index, condition) in output.postconditions.iter().enumerate() {
+            let rule_id = condition.rule.trim();
+            if rule_id.is_empty() {
+                continue;
+            }
             let object_ref = format!("outputs.{}.postconditions[{index}].rule", output.id);
-            if condition.rule.trim().is_empty() {
-                ctx.error(
-                    codes::INVALID_INTERFACE,
-                    DiagnosticCategory::Reference,
-                    "postcondition rule reference is required",
-                    Some(&object_ref),
-                    Some("Reference a rule instance id from rules[]"),
-                );
-                continue;
-            }
-            if !rule_ids.contains(condition.rule.as_str()) {
-                ctx.error(
-                    codes::UNRESOLVED_REFERENCE,
-                    DiagnosticCategory::Reference,
-                    format!("postcondition references unknown rule '{}'", condition.rule),
-                    Some(&object_ref),
-                    Some("Declare the rule in rules[] or fix the reference"),
-                );
-                continue;
-            }
-            if let Some(phase) = rule_phases.get(condition.rule.as_str()) {
+            if let Some(phase) = rule_phases.get(rule_id) {
                 if *phase != RulePhase::Postcondition {
                     ctx.error(
                         codes::INVALID_INTERFACE,
-                        DiagnosticCategory::Reference,
+                        DiagnosticCategory::Semantic,
                         format!(
-                            "postcondition references rule '{}' with phase '{phase:?}', expected postcondition",
-                            condition.rule
+                            "postcondition references rule '{rule_id}' with phase '{}', expected postcondition",
+                            phase.as_str()
                         ),
                         Some(&object_ref),
                         Some("Use a rule with phase: postcondition for output postconditions"),

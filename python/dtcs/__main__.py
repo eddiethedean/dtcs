@@ -7,7 +7,7 @@ import json
 import sys
 from pathlib import Path
 
-from dtcs import SPEC_VERSION, inspect, is_valid, parse_and_validate, parse_file
+from dtcs import SPEC_VERSION, inspect, is_valid, parse_file, validate_result
 
 
 def _render_report(report: dict, *, json_output: bool, mode: str) -> None:
@@ -88,18 +88,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     path = args.path
+    result = parse_file(str(path))
+    report = validate_result(result)
+
     if args.command == "validate":
-        report = _validate_path(path)
         _render_report(report, json_output=args.json, mode="validate")
         return 0 if is_valid(report) else 1
 
     if args.command == "diagnostics":
-        report = _validate_path(path)
         _render_report(report, json_output=args.json, mode="diagnostics")
         return 0 if is_valid(report) else 1
 
-    result = parse_file(str(path))
-    report = _validate_path(path)
     if not is_valid(report):
         _render_report(report, json_output=args.json, mode="diagnostics")
         return 1
@@ -136,15 +135,6 @@ def _package_version() -> str:
     from importlib.metadata import version
 
     return version("dtcs")
-
-
-def _validate_path(path: Path) -> dict:
-    content = path.read_bytes()
-    if path.suffix == ".json":
-        doc_format = "json"
-    else:
-        doc_format = "yaml"
-    return parse_and_validate(content, doc_format)
 
 
 if __name__ == "__main__":

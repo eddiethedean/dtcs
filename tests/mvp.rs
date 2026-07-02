@@ -304,6 +304,18 @@ fn cli_validate_succeeds_on_example() {
 }
 
 #[test]
+fn cli_validate_succeeds_on_phase_0_2_fixture() {
+    let path = fixture("valid_metadata.yaml");
+    let output = dtcs_bin()
+        .arg("validate")
+        .arg(&path)
+        .output()
+        .expect("run cli");
+    assert!(output.status.success());
+    assert!(String::from_utf8_lossy(&output.stdout).contains("valid"));
+}
+
+#[test]
 fn cli_validate_fails_on_invalid_contract() {
     let path = fixture("missing_lineage.yaml");
     let output = dtcs_bin()

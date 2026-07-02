@@ -1,0 +1,25 @@
+dtcsVersion: "1.0.0"
+id: "map.type"
+name: "Map Type"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "attributes"
+          type: "map<string,integer>"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "attributes"
+          type: "map<string,integer>"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

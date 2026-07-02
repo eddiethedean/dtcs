@@ -1,0 +1,29 @@
+dtcsVersion: "1.0.0"
+id: "function.missing_return"
+name: "Function Missing Return"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+functions:
+  - id: "sum_values"
+    function: "vendor:sum"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

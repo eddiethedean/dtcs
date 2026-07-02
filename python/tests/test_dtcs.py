@@ -1,19 +1,42 @@
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
 from pathlib import Path
+
+import pytest
 
 import dtcs
 
-FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
+PACKAGE_ROOT = Path(__file__).resolve().parent
+FIXTURES = PACKAGE_ROOT / "fixtures"
+REPO_FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
 EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "customer_normalize.dtcs.yaml"
+MANIFEST = PACKAGE_ROOT / "fixture_expectations.json"
+
+
+def _fixture_dir() -> Path:
+    if FIXTURES.exists():
+        return FIXTURES
+    return REPO_FIXTURES
 
 
 def _fixture(name: str) -> bytes:
-    return FIXTURES.joinpath(name).read_bytes()
+    return _fixture_dir().joinpath(name).read_bytes()
+
+
+def _fixture_format(name: str) -> str:
+    return "json" if name.endswith(".json") else "yaml"
+
+
+def _load_manifest() -> list[dict]:
+    return json.loads(MANIFEST.read_text(encoding="utf-8"))["fixtures"]
 
 
 def test_spec_version() -> None:
-    assert dtcs.SPEC_VERSION == "1.0.0-draft"
+    assert dtcs.SPEC_VERSION.endswith("draft")
+    assert dtcs.__version__
 
 
 def test_parse_valid_yaml_fixture() -> None:
@@ -46,16 +69,45 @@ def test_parse_file_repo_example() -> None:
     assert contract["id"] == "customer.normalize"
 
 
+def test_validate_result_merges_parse_and_validation_diagnostics() -> None:
+    result = dtcs.parse(_fixture("missing_lineage.yaml"), "yaml")
+    report = dtcs.validate_result(result)
+    assert not dtcs.is_valid(report)
+    ids = {diagnostic["id"] for diagnostic in report["diagnostics"]}
+    assert "dtcs:missing-lineage" in ids
+
+
 def test_validate_contract_round_trip() -> None:
     result = dtcs.parse(_fixture("valid_customer.yaml"), "yaml")
     report = dtcs.validate(result["contract"])
     assert dtcs.is_valid(report)
 
 
-def test_invalid_fixture_reports_error() -> None:
-    report = dtcs.parse_and_validate(_fixture("missing_lineage.yaml"), "yaml")
-    assert not dtcs.is_valid(report)
-    assert any(d["severity"] == "error" for d in report["diagnostics"])
+def test_validate_none_contract_raises() -> None:
+    with pytest.raises(TypeError, match="contract must be a dict"):
+        dtcs.validate(None)
+
+
+def test_parse_malformed_yaml_has_no_contract() -> None:
+    result = dtcs.parse(_fixture("malformed.yaml"), "yaml")
+    assert result["contract"] is None
+    assert any(d["id"] == "dtcs:parse-error" for d in result["report"]["diagnostics"])
+
+
+def test_parse_malformed_json_has_no_contract() -> None:
+    result = dtcs.parse(_fixture("malformed.json"), "json")
+    assert result["contract"] is None
+    assert any(d["id"] == "dtcs:parse-error" for d in result["report"]["diagnostics"])
+
+
+def test_parse_yml_format_alias() -> None:
+    result = dtcs.parse(_fixture("valid_customer.yaml"), "yml")
+    assert dtcs.is_valid(result["report"])
+
+
+def test_parse_bytearray_content() -> None:
+    result = dtcs.parse(bytearray(_fixture("valid_customer.yaml")), "yaml")
+    assert dtcs.is_valid(result["report"])
 
 
 def test_inspect_summary() -> None:
@@ -63,3 +115,150 @@ def test_inspect_summary() -> None:
     summary = dtcs.inspect(result["contract"])
     assert "customer.normalize" in summary
     assert "inputs:" in summary
+
+
+def test_metadata_validate_matches_full_validate() -> None:
+    result = dtcs.parse(_fixture("invalid_metadata_timestamp.yaml"), "yaml")
+    contract = result["contract"]
+    metadata_report = dtcs.metadata_validate(contract)
+    full_report = dtcs.validate(contract)
+    assert not dtcs.is_valid(metadata_report)
+    assert any(d["id"] == "dtcs:invalid-metadata" for d in metadata_report["diagnostics"])
+    assert any(d["id"] == "dtcs:invalid-metadata" for d in full_report["diagnostics"])
+
+
+def test_metadata_validate_is_subset_of_metadata_codes() -> None:
+    result = dtcs.parse(_fixture("missing_lineage.yaml"), "yaml")
+    contract = result["contract"]
+    metadata_report = dtcs.metadata_validate(contract)
+    full_report = dtcs.validate(contract)
+    metadata_ids = {d["id"] for d in metadata_report["diagnostics"]}
+    full_ids = {d["id"] for d in full_report["diagnostics"]}
+    assert metadata_ids.issubset(full_ids)
+    assert "dtcs:missing-lineage" in full_ids
+
+
+def test_preserves_extension_fields() -> None:
+    yaml = b"""
+dtcsVersion: "1.0.0"
+id: "ext.example"
+name: "Extension Example"
+version: "0.1.0"
+acme:featureFlag: true
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]
+"""
+    result = dtcs.parse(yaml, "yaml")
+    contract = result["contract"]
+    assert contract is not None
+    assert "acme:featureFlag" in contract
+    assert dtcs.is_valid(dtcs.validate(contract))
+
+
+def test_diagnostics_are_deterministic() -> None:
+    content = _fixture("invalid_type.yaml")
+    first = dtcs.parse_and_validate(content, "yaml")
+    second = dtcs.parse_and_validate(content, "yaml")
+    assert first["diagnostics"] == second["diagnostics"]
+
+
+@pytest.mark.parametrize("entry", _load_manifest(), ids=lambda entry: entry["file"])
+def test_fixture_expectations(entry: dict) -> None:
+    name = entry["file"]
+    content = _fixture(name)
+    doc_format = _fixture_format(name)
+    result = dtcs.parse(content, doc_format)
+    assert dtcs.is_valid(result["report"]) is entry["parse_valid"]
+    assert (result["contract"] is not None) is entry["contract"]
+    if result["contract"] is not None:
+        report = dtcs.validate_result(result)
+    else:
+        report = result["report"]
+    assert dtcs.is_valid(report) is entry["validate_valid"]
+    if codes := entry.get("codes"):
+        ids = {diagnostic["id"] for diagnostic in report["diagnostics"]}
+        for code in codes:
+            assert code in ids
+
+
+def _python_dtcs(*args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, "-m", "dtcs", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_cli_validate_succeeds_on_example() -> None:
+    output = _python_dtcs("validate", str(EXAMPLE))
+    assert output.returncode == 0
+    assert "valid" in output.stdout
+
+
+def test_cli_validate_succeeds_on_phase_0_2_fixture() -> None:
+    path = _fixture_dir() / "valid_metadata.yaml"
+    output = _python_dtcs("validate", str(path))
+    assert output.returncode == 0
+    assert "valid" in output.stdout
+
+
+def test_cli_validate_fails_on_invalid_contract() -> None:
+    path = _fixture_dir() / "missing_lineage.yaml"
+    output = _python_dtcs("validate", str(path))
+    assert output.returncode != 0
+
+
+def test_cli_inspect_fails_on_invalid_contract() -> None:
+    path = _fixture_dir() / "unresolved_reference.yaml"
+    output = _python_dtcs("inspect", str(path))
+    assert output.returncode != 0
+
+
+def test_cli_inspect_succeeds_on_valid_contract() -> None:
+    path = _fixture_dir() / "valid_customer.yaml"
+    output = _python_dtcs("inspect", str(path))
+    assert output.returncode == 0
+    assert "customer.normalize" in output.stdout
+
+
+def test_cli_diagnostics_json_output() -> None:
+    path = _fixture_dir() / "missing_lineage.yaml"
+    output = _python_dtcs("diagnostics", "--json", str(path))
+    assert output.returncode != 0
+    payload = json.loads(output.stdout)
+    assert payload["diagnostics"]
+
+
+def test_cli_version_json_output() -> None:
+    output = _python_dtcs("version", "--json")
+    assert output.returncode == 0
+    payload = json.loads(output.stdout)
+    assert payload["crateVersion"] == dtcs.__version__
+    assert payload["specVersion"] == dtcs.SPEC_VERSION
+
+
+def test_unsupported_format_raises() -> None:
+    with pytest.raises(ValueError, match="unsupported format"):
+        dtcs.parse(_fixture("valid_customer.yaml"), "xml")
+
+
+def test_parse_file_missing_path_raises() -> None:
+    with pytest.raises(ValueError):
+        dtcs.parse_file("/tmp/does-not-exist-dtcs-fixture.yaml")

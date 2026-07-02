@@ -1,11 +1,12 @@
 //! Metadata validation rules (SPEC Chapter 5 §12).
 
 use crate::diagnostics::{codes, DiagnosticCategory, DiagnosticStage};
+use crate::model::{is_namespaced_identifier, is_vendor_namespaced_identifier};
 use crate::model::{
-    ClassificationLevel, GovernanceMetadata, IdentityMetadata, Metadata, ProvenanceMetadata,
-    TransformationContract,
+    ClassificationLevel, DocumentationMetadata, GovernanceMetadata, IdentityMetadata, Metadata,
+    ProvenanceMetadata, TransformationContract,
 };
-use crate::validation::context::{is_namespaced_identifier, ValidationContext};
+use crate::validation::context::ValidationContext;
 
 pub(crate) fn validate_metadata(ctx: &mut ValidationContext, contract: &TransformationContract) {
     if let Some(metadata) = &contract.metadata {
@@ -103,17 +104,21 @@ fn validate_metadata_block(
         validate_governance(ctx, governance, object_ref);
     }
 
+    if let Some(documentation) = &metadata.documentation {
+        validate_documentation(ctx, documentation, object_ref);
+    }
+
     if let Some(provenance) = &metadata.provenance {
         validate_provenance(ctx, provenance, object_ref);
     }
 
     if metadata.classification == Some(ClassificationLevel::Restricted)
-        && metadata.governance.is_none()
+        && !has_restricted_governance(metadata.governance.as_ref())
     {
         ctx.error_with_stage(
             codes::INVALID_METADATA,
             DiagnosticCategory::Structure,
-            "restricted classification should include governance metadata",
+            "restricted classification requires governance.owner or governance.steward",
             Some(object_ref),
             Some("Add governance.owner or governance.steward for restricted objects"),
             DiagnosticStage::CanonicalObjectModel,
@@ -121,7 +126,20 @@ fn validate_metadata_block(
     }
 
     for key in metadata.extensions.keys() {
-        if !is_namespaced_identifier(key) {
+        if key == "extensions" {
+            if metadata.extensions.get(key).is_some_and(|v| v.is_object()) {
+                ctx.error_with_stage(
+                    codes::INVALID_EXTENSION,
+                    DiagnosticCategory::Structure,
+                    "vendor metadata keys must be flattened, not nested under 'extensions'",
+                    Some(&format!("{object_ref}.extensions")),
+                    Some("Use vendor:fieldName directly in the metadata block"),
+                    DiagnosticStage::CanonicalObjectModel,
+                );
+            }
+            continue;
+        }
+        if !is_vendor_namespaced_identifier(key) {
             ctx.error_with_stage(
                 codes::INVALID_METADATA,
                 DiagnosticCategory::Structure,
@@ -153,12 +171,13 @@ fn validate_identity(
                 DiagnosticStage::CanonicalObjectModel,
             );
         } else if let Some(expected) = object_id {
-            if identifier != expected {
+            if identifier.trim() != expected {
                 ctx.error_with_stage(
                     codes::INVALID_METADATA,
                     DiagnosticCategory::Structure,
                     format!(
-                        "metadata identity identifier '{identifier}' conflicts with object id '{expected}'"
+                        "metadata identity identifier '{}' conflicts with object id '{expected}'",
+                        identifier.trim()
                     ),
                     Some(&format!("{object_ref}.identity.identifier")),
                     Some("Remove identity.identifier or align it with the object id"),
@@ -179,12 +198,13 @@ fn validate_identity(
                 DiagnosticStage::CanonicalObjectModel,
             );
         } else if let Some(expected) = object_name {
-            if name != expected {
+            if name.trim() != expected {
                 ctx.error_with_stage(
                     codes::INVALID_METADATA,
                     DiagnosticCategory::Structure,
                     format!(
-                        "metadata identity name '{name}' conflicts with object name '{expected}'"
+                        "metadata identity name '{}' conflicts with object name '{expected}'",
+                        name.trim()
                     ),
                     Some(&format!("{object_ref}.identity.name")),
                     Some("Remove identity.name or align it with the object name"),
@@ -205,18 +225,51 @@ fn validate_identity(
                 DiagnosticStage::CanonicalObjectModel,
             );
         } else if let Some(expected) = object_version {
-            if version != expected {
+            if version.trim() != expected {
                 ctx.error_with_stage(
                     codes::INVALID_METADATA,
                     DiagnosticCategory::Structure,
                     format!(
-                        "metadata identity version '{version}' conflicts with object version '{expected}'"
+                        "metadata identity version '{}' conflicts with object version '{expected}'",
+                        version.trim()
                     ),
                     Some(&format!("{object_ref}.identity.version")),
                     Some("Remove identity.version or align it with the object version"),
                     DiagnosticStage::CanonicalObjectModel,
                 );
             }
+        }
+    }
+}
+
+fn validate_documentation(
+    ctx: &mut ValidationContext,
+    documentation: &DocumentationMetadata,
+    object_ref: &str,
+) {
+    for (index, reference) in documentation.references.iter().enumerate() {
+        if reference.trim().is_empty() {
+            ctx.error_with_stage(
+                codes::INVALID_METADATA,
+                DiagnosticCategory::Reference,
+                "documentation references entry must not be empty",
+                Some(&format!("{object_ref}.documentation.references[{index}]")),
+                None,
+                DiagnosticStage::CanonicalObjectModel,
+            );
+            continue;
+        }
+        if !is_valid_policy_ref(reference) {
+            ctx.error_with_stage(
+                codes::INVALID_METADATA,
+                DiagnosticCategory::Reference,
+                format!(
+                    "documentation reference '{reference}' must be a URI or namespaced identifier"
+                ),
+                Some(&format!("{object_ref}.documentation.references[{index}]")),
+                Some("Use https://... or vendor:reference-id"),
+                DiagnosticStage::CanonicalObjectModel,
+            );
         }
     }
 }
@@ -316,6 +369,19 @@ fn validate_provenance(
     }
 }
 
+fn has_restricted_governance(governance: Option<&GovernanceMetadata>) -> bool {
+    governance.is_some_and(|governance| {
+        governance
+            .owner
+            .as_ref()
+            .is_some_and(|owner| !owner.trim().is_empty())
+            || governance
+                .steward
+                .as_ref()
+                .is_some_and(|steward| !steward.trim().is_empty())
+    })
+}
+
 fn is_valid_policy_ref(value: &str) -> bool {
     value.starts_with("https://") || value.starts_with("http://") || is_namespaced_identifier(value)
 }
@@ -332,9 +398,16 @@ fn is_iso8601_timestamp(value: &str) -> bool {
         && value.as_bytes().get(4) == Some(&b'-')
         && value.as_bytes().get(7) == Some(&b'-')
     {
-        return value[..4].chars().all(|c| c.is_ascii_digit())
-            && value[5..7].chars().all(|c| c.is_ascii_digit())
-            && value[8..10].chars().all(|c| c.is_ascii_digit());
+        if !value[..4].chars().all(|c| c.is_ascii_digit())
+            || !value[5..7].chars().all(|c| c.is_ascii_digit())
+            || !value[8..10].chars().all(|c| c.is_ascii_digit())
+        {
+            return false;
+        }
+        let year: u32 = value[..4].parse().unwrap_or(0);
+        let month: u32 = value[5..7].parse().unwrap_or(0);
+        let day: u32 = value[8..10].parse().unwrap_or(0);
+        return valid_calendar_date(year, month, day);
     }
 
     // Datetime: YYYY-MM-DDTHH:MM:SS[.frac][Z|±HH:MM]
@@ -358,8 +431,36 @@ fn is_iso8601_timestamp(value: &str) -> bool {
     if segments.len() < 2 || segments.len() > 3 {
         return false;
     }
-    segments.iter().all(|segment| {
+    for (index, segment) in segments.iter().enumerate() {
         let digits = segment.split('.').next().unwrap_or(segment);
-        !digits.is_empty() && digits.chars().all(|c| c.is_ascii_digit())
-    })
+        if digits.is_empty() || !digits.chars().all(|c| c.is_ascii_digit()) {
+            return false;
+        }
+        let Ok(value) = digits.parse::<u32>() else {
+            return false;
+        };
+        let valid = match index {
+            0 => value <= 23,
+            1 | 2 => value <= 59,
+            _ => false,
+        };
+        if !valid {
+            return false;
+        }
+    }
+    true
+}
+
+fn valid_calendar_date(year: u32, month: u32, day: u32) -> bool {
+    if !(1..=12).contains(&month) {
+        return false;
+    }
+    let max_day = match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if year % 400 == 0 || (year % 4 == 0 && year % 100 != 0) => 29,
+        2 => 28,
+        _ => return false,
+    };
+    (1..=max_day).contains(&day)
 }

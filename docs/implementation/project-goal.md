@@ -1,21 +1,23 @@
 # Project Goal
 
-Build the first Rust crate for the Data Transformation Contract Standard (DTCS).
+Build the reference Rust crate for the Data Transformation Contract Standard (DTCS).
 
 `SPEC.md` is the source of truth.
 
-The crate should implement the foundational spec logic:
+## Implemented through 0.2.0
 
 - Canonical Object Model
 - YAML and JSON parsing
-- Validation phases
+- Seven-phase validation pipeline
 - Diagnostics
-- Type model
-- Semantic Action model
-- Function model
-- Rule model
-- Registry model
-- Versioning model
-- Compatibility model
+- Type model (primitives, composites, conversions, extension types, expression typing)
+- Metadata validation (identity, governance, provenance, classification, documentation)
+- Semantic Action, Function, and Rule identity validation
+- I/O interfaces (optional inputs, streaming, pre/postconditions)
+- CLI and Python bindings
 
-Execution, runtime behavior, backend compilation, and optimization are future milestones.
+## Stubs / future milestones
+
+- Registry model (`src/model/registry.rs` — minimal struct only)
+- Compatibility model (`src/compatibility/` — empty stub)
+- Execution, runtime behavior, backend compilation, and optimization

@@ -1,0 +1,29 @@
+dtcsVersion: "1.0.0"
+id: "contract.id"
+name: "Identity Conflict"
+version: "1.0.0"
+
+metadata:
+  identity:
+    identifier: "different.id"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -1,0 +1,27 @@
+dtcsVersion: "1.0.0"
+id: "bad.precondition"
+name: "Bad Precondition"
+version: "0.1.0"
+
+inputs:
+  - id: "source"
+    preconditions:
+      - rule: "missing_rule"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "result"
+      inputs: ["source"]

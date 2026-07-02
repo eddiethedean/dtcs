@@ -16,7 +16,7 @@
 //! dtcsVersion: "1.0.0"
 //! id: "example"
 //! name: "Example"
-//! version: "0.1.0"
+//! version: "0.2.0"
 //! inputs:
 //!   - id: "in"
 //!     schema:

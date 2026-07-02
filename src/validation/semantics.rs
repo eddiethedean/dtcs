@@ -1,7 +1,10 @@
 //! Semantic validation phase.
 
 use crate::diagnostics::{codes, DiagnosticCategory};
-use crate::model::{is_known_action, is_known_rule, TransformationContract};
+use crate::model::{
+    is_known_action, is_known_rule, is_vendor_namespaced_identifier, parse_logical_type,
+    LogicalType, TransformationContract,
+};
 
 use super::context::ValidationContext;
 use super::field_index::{FieldIndex, TargetResolution};
@@ -10,7 +13,7 @@ pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &Transfo
     let index = FieldIndex::from_contract(contract);
 
     for action in &contract.semantic_actions {
-        if !action.action.starts_with("dtcs:") && !action.action.contains(':') {
+        if !action.action.starts_with("dtcs:") && !is_vendor_namespaced_identifier(&action.action) {
             ctx.error(
                 codes::INVALID_SEMANTIC_ACTION,
                 DiagnosticCategory::Semantic,
@@ -37,7 +40,7 @@ pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &Transfo
     }
 
     for rule in &contract.rules {
-        if !rule.rule.starts_with("dtcs:") && !rule.rule.contains(':') {
+        if !rule.rule.starts_with("dtcs:") && !is_vendor_namespaced_identifier(&rule.rule) {
             ctx.error(
                 codes::INVALID_RULE,
                 DiagnosticCategory::Semantic,
@@ -97,7 +100,10 @@ fn validate_lowercase_target(
     ) else {
         return;
     };
-    if field.type_name != "string" {
+    if !matches!(
+        parse_logical_type(&field.type_name),
+        Ok(LogicalType::Primitive(name)) if name == "string"
+    ) {
         ctx.error(
             codes::INVALID_SEMANTIC_ACTION,
             DiagnosticCategory::Semantic,

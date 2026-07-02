@@ -61,6 +61,10 @@ Defined in [`src/diagnostics/codes.rs`](../../src/diagnostics/codes.rs):
 - `dtcs:invalid-semantic-action`
 - `dtcs:invalid-rule`
 - `dtcs:invalid-extension`
+- `dtcs:invalid-metadata` (Phase 0.2)
+- `dtcs:invalid-interface` (Phase 0.2)
+- `dtcs:type-incompatible` (Phase 0.2)
+- `dtcs:invalid-conversion` (Phase 0.2)
 
 ## Validation semantics
 

@@ -69,15 +69,6 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     );
 
     for input in &contract.inputs {
-        if input.id.trim().is_empty() {
-            ctx.error(
-                codes::MISSING_REQUIRED_FIELD,
-                DiagnosticCategory::Structure,
-                "input id is required",
-                Some("inputs"),
-                None,
-            );
-        }
         if let Some(schema) = &input.schema {
             check_duplicate_schema_fields(
                 ctx,
@@ -88,15 +79,6 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     }
 
     for output in &contract.outputs {
-        if output.id.trim().is_empty() {
-            ctx.error(
-                codes::MISSING_REQUIRED_FIELD,
-                DiagnosticCategory::Structure,
-                "output id is required",
-                Some("outputs"),
-                None,
-            );
-        }
         if let Some(schema) = &output.schema {
             check_duplicate_schema_fields(
                 ctx,

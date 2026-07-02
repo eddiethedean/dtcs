@@ -1,0 +1,31 @@
+dtcsVersion: "1.0.0"
+id: "invalid.http_rule"
+name: "Invalid HTTP Rule"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "bad_rule"
+    rule: "http://example.com/not_null"
+    target: "in.value"
+    phase: "postcondition"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -2,7 +2,7 @@
 
 use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyByteArray, PyDict};
 use serde::Serialize;
 
 use crate::diagnostics::inspect_contract;
@@ -29,19 +29,30 @@ fn parse_format(format: &str) -> PyResult<DocumentFormat> {
 }
 
 fn content_to_bytes(content: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
+    if content.is_none() {
+        return Err(PyTypeError::new_err("content must be str or bytes"));
+    }
     if let Ok(text) = content.extract::<String>() {
         return Ok(text.into_bytes());
     }
     if let Ok(data) = content.extract::<Vec<u8>>() {
         return Ok(data);
     }
-    Err(PyTypeError::new_err("content must be str or bytes"))
+    if let Ok(byte_array) = content.downcast::<PyByteArray>() {
+        return Ok(unsafe { byte_array.as_bytes().to_vec() });
+    }
+    Err(PyTypeError::new_err(
+        "content must be str, bytes, or bytearray",
+    ))
 }
 
 fn contract_from_py(
     py: Python<'_>,
     contract: &Bound<'_, PyAny>,
 ) -> PyResult<TransformationContract> {
+    if contract.is_none() {
+        return Err(PyTypeError::new_err("contract must be a dict, not None"));
+    }
     let json_mod = py.import("json")?;
     let json_str: String = json_mod.call_method1("dumps", (contract,))?.extract()?;
     serde_json::from_str(&json_str)
@@ -100,6 +111,13 @@ fn validate_document(
     value_to_py(py, &crate::parse_and_validate(&bytes, doc_format))
 }
 
+/// Validate metadata for a parsed transformation contract.
+#[pyfunction]
+fn metadata_validate(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    let contract = contract_from_py(py, contract)?;
+    value_to_py(py, &crate::metadata::validate(&contract))
+}
+
 /// Return a short human-readable contract summary.
 #[pyfunction]
 fn inspect(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<String> {
@@ -114,6 +132,7 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_document, m)?)?;
     m.add_function(wrap_pyfunction!(parse_path, m)?)?;
     m.add_function(wrap_pyfunction!(validate_contract, m)?)?;
+    m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;
     m.add_function(wrap_pyfunction!(inspect, m)?)?;
     Ok(())

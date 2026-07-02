@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::identifiers::is_vendor_namespaced_identifier;
 use super::metadata::Metadata;
 
 /// Rule evaluation phase per SPEC Chapter 19.
@@ -14,6 +15,18 @@ pub enum RulePhase {
     Execution,
     /// Evaluated after execution.
     Postcondition,
+}
+
+impl RulePhase {
+    /// Returns the serialized phase name.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Precondition => "precondition",
+            Self::Execution => "execution",
+            Self::Postcondition => "postcondition",
+        }
+    }
 }
 
 /// A declarative invariant rule.
@@ -39,11 +52,5 @@ pub const KNOWN_RULES: &[&str] = &["dtcs:not_null"];
 /// Returns `true` when the rule identifier is recognized.
 #[must_use]
 pub fn is_known_rule(rule: &str) -> bool {
-    KNOWN_RULES.contains(&rule) || is_namespaced(rule)
-}
-
-/// Returns `true` for vendor-namespaced rule identifiers.
-#[must_use]
-pub fn is_namespaced(identifier: &str) -> bool {
-    identifier.contains(':') && !identifier.starts_with("dtcs:")
+    KNOWN_RULES.contains(&rule) || is_vendor_namespaced_identifier(rule)
 }

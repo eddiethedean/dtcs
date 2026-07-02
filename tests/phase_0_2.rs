@@ -177,3 +177,186 @@ fn type_compatible_incompatible_primitives() {
         TypeCompatibility::Incompatible
     );
 }
+
+#[test]
+fn accepts_nested_collection_types() {
+    let report = parse_fixture("nested_collection_valid.yaml").validate();
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+    assert!(parse_logical_type("list<map<string,integer>>").is_ok());
+    assert!(parse_logical_type("tuple<string,integer>").is_ok());
+}
+
+#[test]
+fn rejects_type_trailing_garbage() {
+    let report = parse_fixture("invalid_type_trailing_garbage.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+    assert!(parse_logical_type("list<string>oops").is_err());
+}
+
+#[test]
+fn rejects_restricted_without_governance_contact() {
+    let report = parse_fixture("invalid_metadata_restricted.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_METADATA));
+}
+
+#[test]
+fn rejects_invalid_metadata_custom_key() {
+    let report = parse_fixture("invalid_metadata_custom_key.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_METADATA));
+}
+
+#[test]
+fn rejects_misplaced_io_extension_key() {
+    let report = parse_fixture("invalid_io_extension.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_INTERFACE));
+}
+
+#[test]
+fn rejects_unresolved_postcondition_rule() {
+    let report = parse_fixture("invalid_postcondition_rule.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::UNRESOLVED_REFERENCE));
+}
+
+#[test]
+fn rejects_postcondition_with_wrong_rule_phase() {
+    let report = parse_fixture("invalid_postcondition_phase.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_INTERFACE));
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("postcondition")));
+}
+
+#[test]
+fn accepts_valid_lossy_conversion() {
+    let report = parse_fixture("valid_conversion_lossy.yaml").validate();
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+}
+
+#[test]
+fn rejects_impossible_metadata_date() {
+    let report = parse_fixture("invalid_metadata_impossible_date.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_METADATA));
+}
+
+#[test]
+fn suggests_inputs_for_input_typo() {
+    let report = parse_fixture("typo_top_level_field.yaml").validate();
+    assert!(report.diagnostics.iter().any(|d| {
+        d.id == codes::UNKNOWN_FIELD
+            && d.remediation
+                .as_ref()
+                .is_some_and(|text| text.contains("inputs"))
+    }));
+}
+
+#[test]
+fn rejects_http_rule_identifier() {
+    let report = parse_fixture("invalid_http_rule.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_RULE));
+}
+
+#[test]
+fn rejects_http_action_identifier() {
+    let report = parse_fixture("invalid_http_action.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_SEMANTIC_ACTION));
+}
+
+#[test]
+fn rejects_http_extension_type() {
+    let report = parse_fixture("invalid_http_type.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}
+
+#[test]
+fn rejects_impossible_metadata_time() {
+    let report = parse_fixture("invalid_metadata_impossible_time.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_METADATA));
+}
+
+#[test]
+fn rejects_misplaced_postcondition_key() {
+    let report = parse_fixture("invalid_misplaced_postcondition.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_INTERFACE));
+}
+
+#[test]
+fn rejects_expression_missing_type() {
+    let report = parse_fixture("expression_missing_type.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::MISSING_REQUIRED_FIELD));
+}
+
+#[test]
+fn rejects_expression_type_mismatch() {
+    let report = parse_fixture("expression_type_mismatch.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}
+
+#[test]
+fn rejects_function_missing_return_type() {
+    let report = parse_fixture("function_missing_return_type.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::MISSING_REQUIRED_FIELD));
+}
+
+#[test]
+fn rejects_expression_invalid_operator() {
+    let report = parse_fixture("expression_invalid_operator.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}
+
+#[test]
+fn rejects_expression_unresolved_field() {
+    let report = parse_fixture("expression_unresolved_field.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}

@@ -16,9 +16,15 @@ version = "4"
 features = ["derive"]
 optional = true
 
+[dependencies.pyo3]
+version = "0.23"
+optional = true
+features = ["extension-module", "abi3-py39"]
+
 [features]
 default = ["cli"]
 cli = ["dep:clap"]
+python = ["dep:pyo3"]
 ```
 
 | Dependency | Used for |
@@ -28,6 +34,7 @@ cli = ["dep:clap"]
 | `semver` | `dtcsVersion` compatibility checks |
 | `indexmap` | Stable-order maps and extension fields |
 | `clap` | `dtcs` CLI (`cli` feature, on by default) |
+| `pyo3` | Python bindings (`python` feature, via maturin) |
 
 Use `serde` as the serialization layer.
 

@@ -35,28 +35,6 @@ pub(crate) fn validate_types(ctx: &mut ValidationContext, contract: &Transformat
             );
         }
     }
-
-    for expression in &contract.expressions {
-        if let Some(type_name) = &expression.type_name {
-            validate_declared_type(
-                ctx,
-                type_name,
-                &format!("expressions.{}.type", expression.id),
-            );
-        }
-    }
-
-    for function in &contract.functions {
-        if let Some(type_name) = &function.type_name {
-            validate_declared_type(ctx, type_name, &format!("functions.{}.type", function.id));
-        }
-    }
-}
-
-fn validate_declared_type(ctx: &mut ValidationContext, type_name: &str, object_ref: &str) {
-    if let Err(error) = parse_logical_type(type_name) {
-        emit_type_error(ctx, object_ref, type_name, error);
-    }
 }
 
 fn validate_field_type(
@@ -113,19 +91,19 @@ fn validate_conversion(
     };
 
     let from_field = type_compatible(field_type, &from_type);
-    let to_field = type_compatible(field_type, &to_type);
-    if from_field == TypeCompatibility::Incompatible {
+    if from_field != TypeCompatibility::Identical {
         ctx.error(
             codes::TYPE_INCOMPATIBLE,
             DiagnosticCategory::Type,
             format!(
-                "conversion source type '{}' is incompatible with field type",
+                "conversion source type '{}' must be identical to the declared field type",
                 conversion.from
             ),
             Some(&format!("{object_ref}.from")),
-            Some("Align conversion.from with the declared field type"),
+            Some("Set conversion.from to the field's declared logical type"),
         );
     }
+    let to_field = type_compatible(field_type, &to_type);
     if to_field == TypeCompatibility::Incompatible {
         ctx.error(
             codes::TYPE_INCOMPATIBLE,
@@ -196,15 +174,31 @@ fn emit_type_error(
                 Some("Use list<T>, map<K,V>, object<T...>, or tuple<T...> with correct arity"),
             );
         }
-        TypeParseError::Unknown(_)
-        | TypeParseError::UnknownParameter(_)
-        | TypeParseError::Malformed(_) => {
+        TypeParseError::Unknown(unknown) => {
             ctx.error(
                 codes::INVALID_TYPE,
                 DiagnosticCategory::Type,
-                format!("unknown logical type '{type_name}'"),
+                format!("unknown logical type '{unknown}'"),
                 Some(field_ref),
                 Some("Use a primitive, parameterized composite, or namespaced extension type"),
+            );
+        }
+        TypeParseError::UnknownParameter(param) => {
+            ctx.error(
+                codes::INVALID_TYPE,
+                DiagnosticCategory::Type,
+                format!("unknown nested type parameter '{param}' in '{type_name}'"),
+                Some(field_ref),
+                Some("Use a valid primitive, composite, or extension type for each parameter"),
+            );
+        }
+        TypeParseError::Malformed(detail) => {
+            ctx.error(
+                codes::INVALID_TYPE,
+                DiagnosticCategory::Type,
+                format!("malformed logical type '{type_name}': {detail}"),
+                Some(field_ref),
+                Some("Use syntax such as list<string> or map<string,integer>"),
             );
         }
     }

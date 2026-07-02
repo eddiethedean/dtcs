@@ -1,0 +1,27 @@
+dtcsVersion: "1.0.0"
+id: "invalid.misplaced_postcondition"
+name: "Invalid Misplaced Postcondition"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+    postcondition:
+      rule: "missing_rule"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

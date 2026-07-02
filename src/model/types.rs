@@ -2,6 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::identifiers::is_vendor_namespaced_identifier;
+
 /// A logical schema associated with an input or output.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Schema {
@@ -99,14 +101,11 @@ pub enum TypeParseError {
 #[must_use]
 pub fn is_extension_type_identifier(identifier: &str) -> bool {
     let identifier = identifier.trim();
-    if !identifier.contains(':') {
-        return false;
-    }
-    if identifier.starts_with("dtcs:") {
+    if !is_vendor_namespaced_identifier(identifier) {
         return false;
     }
     let prefix = identifier.split(':').next().unwrap_or("");
-    !prefix.is_empty() && !COMPOSITE_TYPES.contains(&prefix) && !PRIMITIVE_TYPES.contains(&prefix)
+    !COMPOSITE_TYPES.contains(&prefix) && !PRIMITIVE_TYPES.contains(&prefix)
 }
 
 /// Parse and validate a logical type expression.
@@ -132,25 +131,20 @@ pub fn parse_logical_type(type_name: &str) -> Result<LogicalType, TypeParseError
             }
             return Err(TypeParseError::Unknown(kind.to_string()));
         }
-        let Some(close) = type_name.rfind('>') else {
+        let Some(close) = find_matching_close(type_name, open) else {
             return Err(TypeParseError::Malformed(type_name.to_string()));
         };
         if close <= open {
+            return Err(TypeParseError::Malformed(type_name.to_string()));
+        }
+        if !type_name[close + 1..].trim().is_empty() {
             return Err(TypeParseError::Malformed(type_name.to_string()));
         }
         let inner = type_name[open + 1..close].trim();
         if inner.is_empty() {
             return Err(TypeParseError::Malformed(type_name.to_string()));
         }
-        let params: Vec<String> = inner
-            .split(',')
-            .map(str::trim)
-            .filter(|part| !part.is_empty())
-            .map(str::to_string)
-            .collect();
-        if params.is_empty() {
-            return Err(TypeParseError::Malformed(type_name.to_string()));
-        }
+        let params = split_type_parameters(inner)?;
         for param in &params {
             if parse_logical_type(param).is_err() {
                 return Err(TypeParseError::UnknownParameter(param.clone()));
@@ -168,6 +162,53 @@ pub fn parse_logical_type(type_name: &str) -> Result<LogicalType, TypeParseError
     }
 
     Err(TypeParseError::Unknown(type_name.to_string()))
+}
+
+/// Finds the closing `>` that matches the `<` at `open`.
+fn find_matching_close(type_name: &str, open: usize) -> Option<usize> {
+    let mut depth = 0;
+    for (offset, ch) in type_name[open..].char_indices() {
+        match ch {
+            '<' => depth += 1,
+            '>' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(open + offset);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
+/// Splits composite type parameters at top-level commas.
+fn split_type_parameters(inner: &str) -> Result<Vec<String>, TypeParseError> {
+    let mut params = Vec::new();
+    let mut depth = 0;
+    let mut start = 0;
+    for (index, ch) in inner.char_indices() {
+        match ch {
+            '<' => depth += 1,
+            '>' => depth -= 1,
+            ',' if depth == 0 => {
+                let part = inner[start..index].trim();
+                if !part.is_empty() {
+                    params.push(part.to_string());
+                }
+                start = index + 1;
+            }
+            _ => {}
+        }
+    }
+    let part = inner[start..].trim();
+    if !part.is_empty() {
+        params.push(part.to_string());
+    }
+    if params.is_empty() {
+        return Err(TypeParseError::Malformed(inner.to_string()));
+    }
+    Ok(params)
 }
 
 fn validate_composite_arity(kind: &str, actual: usize) -> Result<(), TypeParseError> {

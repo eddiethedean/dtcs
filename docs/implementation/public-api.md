@@ -57,6 +57,34 @@ let contract = result.into_contract().expect("valid parse");
 let report = metadata::validate(&contract);
 ```
 
+## Python API
+
+The `dtcs` package mirrors the Rust parse/validate surface. Contract dicts must use **camelCase** keys to match the Canonical Object Model (`dtcsVersion`, `semanticActions`, etc.).
+
+```python
+import dtcs
+
+result = dtcs.parse(yaml_text, "yaml")
+contract = result["contract"]
+report = dtcs.validate(contract)
+assert dtcs.is_valid(report)
+
+metadata_report = dtcs.metadata_validate(contract)
+merged = dtcs.validate_result(result)
+```
+
+## Type system (Phase 0.2)
+
+```rust
+use dtcs::{parse_logical_type, type_compatible, TypeCompatibility};
+
+let integer = parse_logical_type("integer").expect("primitive");
+let list = parse_logical_type("list<string>").expect("composite");
+assert_eq!(type_compatible(&integer, &integer), TypeCompatibility::Identical);
+```
+
+Expression and function typing runs during the Types validation phase. Expressions with bodies must declare a `type`; functions must declare a return `type`. The validator infers expression types from field references, literals, binary operators, and in-contract function calls.
+
 ## CLI
 
 The `dtcs` binary is enabled by default (`cli` feature):

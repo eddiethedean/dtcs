@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "expression.unresolved_field"
+name: "Expression Unresolved Field"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+expressions:
+  - id: "bad_ref"
+    expr: "in.missing * 2"
+    type: "integer"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

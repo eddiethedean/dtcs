@@ -38,10 +38,14 @@ dtcs/
       field_index.rs
       lineage.rs
       structural.rs
+      interfaces.rs
       types.rs
       references.rs
       semantics.rs
       extensions.rs
+    metadata/
+      mod.rs
+      validate.rs
     diagnostics/
       mod.rs
       codes.rs
@@ -58,9 +62,11 @@ dtcs/
       mod.rs
     bin/
       dtcs.rs
-  examples/
+  python/
+    dtcs/
   tests/
     fixtures/
+    fixture_expectations.json
 ```
 
 Keep modules small and aligned with `SPEC.md`.

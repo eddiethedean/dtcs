@@ -143,12 +143,43 @@ pub fn object_refs(contract: &TransformationContract) -> Vec<(String, String)> {
 /// Returns `true` when an identifier uses a namespace prefix.
 #[must_use]
 pub fn is_namespaced_identifier(identifier: &str) -> bool {
-    identifier.contains(':')
+    crate::model::is_namespaced_identifier(identifier)
+}
+
+/// Returns `true` for vendor-namespaced identifiers (excludes reserved `dtcs:` prefix).
+#[must_use]
+pub fn is_vendor_namespaced_identifier(identifier: &str) -> bool {
+    crate::model::is_vendor_namespaced_identifier(identifier)
 }
 
 /// Validates extension and unknown top-level fields captured by serde flatten.
 pub fn validate_extension_keys(ctx: &mut ValidationContext, contract: &TransformationContract) {
     for key in contract.extensions.keys() {
+        if key == "extensions" {
+            if contract.extensions.get(key).is_some_and(|v| v.is_object()) {
+                ctx.error(
+                    codes::INVALID_EXTENSION,
+                    DiagnosticCategory::Structure,
+                    "vendor keys must be flattened at the contract level, not nested under 'extensions'",
+                    Some(key),
+                    Some("Use vendor:fieldName at the top level instead of an extensions wrapper"),
+                );
+            }
+            continue;
+        }
+        if matches!(key.as_str(), "input" | "output")
+            && contract.extensions.get(key).is_some_and(|v| v.is_array())
+        {
+            let suggestion = if key == "input" { "inputs" } else { "outputs" };
+            ctx.error(
+                codes::UNKNOWN_FIELD,
+                DiagnosticCategory::Structure,
+                format!("unknown top-level field '{key}'"),
+                Some(key),
+                Some(&format!("Did you mean '{suggestion}'?")),
+            );
+            continue;
+        }
         if !is_namespaced_identifier(key) {
             ctx.error(
                 codes::UNKNOWN_FIELD,
@@ -156,6 +187,14 @@ pub fn validate_extension_keys(ctx: &mut ValidationContext, contract: &Transform
                 format!("unknown top-level field '{key}'"),
                 Some(key),
                 Some("Check for typos in standard field names such as inputs or outputs"),
+            );
+        } else if !is_vendor_namespaced_identifier(key) {
+            ctx.error(
+                codes::INVALID_EXTENSION,
+                DiagnosticCategory::Structure,
+                format!("extension key '{key}' must use a vendor namespace"),
+                Some(key),
+                Some("Use vendor:fieldName for contract-level extensions; dtcs: is reserved"),
             );
         }
     }

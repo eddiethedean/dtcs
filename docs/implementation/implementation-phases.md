@@ -1,4 +1,6 @@
-# Implementation Phases
+# Implementation Build Order
+
+> **Note:** This document describes the *build order* used to scaffold the crate. For release milestones and SPEC chapter coverage, see [ROADMAP.md](../../ROADMAP.md) (Phases 0.1–0.10).
 
 ## Rule
 

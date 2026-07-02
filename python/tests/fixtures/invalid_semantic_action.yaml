@@ -1,0 +1,12 @@
+dtcsVersion: "1.0.0"
+id: "broken"
+name: "Broken"
+version: "0.1.0"
+inputs:
+  - id: "in"
+outputs:
+  - id: "out"
+semanticActions:
+  - id: "bad_action"
+    action: "dtcs:unknown_action"
+    target: "in"
