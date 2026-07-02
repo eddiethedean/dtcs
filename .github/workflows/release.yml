@@ -14,15 +14,12 @@ jobs:
   checks:
     uses: ./.github/workflows/checks.yml
 
-  publish:
+  publish-crates-io:
     needs: checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - name: Verify tag matches crate and Python versions
         run: |
           crate_version=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
@@ -38,7 +35,59 @@ jobs:
           fi
       - name: cargo publish
         run: cargo publish --locked --token "$CARGO_REGISTRY_TOKEN"
+
+  build-python:
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build-sdist: true
+          - os: macos-latest
+            build-sdist: false
+          - os: windows-latest
+            build-sdist: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install macOS Rust targets
+        if: runner.os == 'macOS'
+        run: rustup target add aarch64-apple-darwin x86_64-apple-darwin
+      - name: Install maturin
+        run: pip install maturin
+      - name: Build wheels (macOS universal)
+        if: runner.os == 'macOS'
+        run: maturin build --release --features python --locked -i universal2 --out dist
+      - name: Build wheels
+        if: runner.os != 'macOS'
+        run: maturin build --release --features python --locked --out dist
+      - name: Build sdist
+        if: matrix.build-sdist
+        run: maturin sdist --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-dist-${{ matrix.os }}
+          path: dist/*
+          if-no-files-found: error
+
+  publish-pypi:
+    needs: build-python
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: python-dist-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Publish Python package to PyPI
         run: |
           pip install maturin
-          maturin publish --features python --locked
+          maturin upload --username __token__ --password "$MATURIN_PYPI_TOKEN" dist/*
