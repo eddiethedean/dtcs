@@ -1,19 +1,10 @@
 # Changelog
 
-## Unreleased
-
-Bug fixes from the Phase 0.3 audit (24 defects):
-
-- **Compatibility:** Directional integer/decimal comparison; optional input removal classified as breaking; required→optional as additive; scope-gated input type comparison; streaming/precondition/postcondition diffs; empty `objectRef` omitted from diagnostics; classification uses direction-aware breaking checks (backward vs forward safe).
-- **Validation:** Stricter `dtcsVersion` gate (exact 1.0.0 only); required schemas on inputs/outputs; ISO-8601 timezone offset validation; duplicate empty field names; version trim consistency; whitespace-only expression bodies still validate declared types; policy URI host validation; removed `.expect()` in expression typing.
-- **API:** Invalid `--scope` tokens rejected (exit code 2); `Diagnostic` JSON fields use camelCase (`objectRef`).
-- **Lineage / evolution:** Unknown `--impact` / `--dependency` IDs emit warnings; deprecation changes reported only on false→true transitions or replacement updates.
-- **Python:** CLI parity for evolve/lineage text output, compat exit codes, validation diagnostics on load failure, `is_valid()` treats missing severity as error, NaN rejection in `contract_from_py`.
-- **Hardening:** 16 MiB parser size limit; synthetic parse error when `into_contract` finds no contract.
-
 ## 0.3.0
 
 Phase 0.3 — Contract Analysis.
+
+### Features
 
 - Compatibility engine with five classifications (Identical, Backward/Forward Compatible, Conditionally Compatible, Incompatible)
 - Evolution analysis with change categories, deprecation detection, and migration hints
@@ -24,7 +15,22 @@ Phase 0.3 — Contract Analysis.
 - Fixtures under `tests/fixtures/compatibility/` for all classification levels
 - User documentation under `docs/user/` and adoption overview under `docs/adoption/`
 
-**Release:** pending `v0.3.0` tag (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+### Bug fixes
+
+Audit remediation (24 defects):
+
+- **Compatibility:** Directional integer/decimal comparison; optional input removal classified as breaking; required→optional as additive; scope-gated input type comparison; streaming/precondition/postcondition diffs; empty `objectRef` omitted from diagnostics; direction-aware classification (backward vs forward safe).
+- **Validation:** Stricter `dtcsVersion` gate (exact 1.0.0 only); required schemas on inputs/outputs; ISO-8601 timezone offset validation; duplicate empty field names; version trim consistency; whitespace-only expression bodies still validate declared types; policy URI host validation; removed `.expect()` in expression typing.
+- **API:** Invalid `--scope` tokens rejected (exit code 2).
+- **Lineage / evolution:** Unknown `--impact` / `--dependency` IDs emit warnings; deprecation changes reported only on false→true transitions or replacement updates.
+- **Python:** CLI parity for evolve/lineage text output, compat exit codes, validation diagnostics on load failure, `is_valid()` treats missing severity as error, NaN rejection in `contract_from_py`.
+- **Hardening:** 16 MiB parser size limit; synthetic parse error when `into_contract` finds no contract.
+
+### Breaking changes
+
+- Diagnostic JSON fields use camelCase (`objectRef` instead of `object_ref`) across validate, diagnostics, compat, and lineage output.
+
+**Release:** push tag `v0.3.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.2.0
 
