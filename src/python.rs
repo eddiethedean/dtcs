@@ -56,7 +56,20 @@ fn contract_from_py(
         return Err(PyTypeError::new_err("contract must be a dict, not None"));
     }
     let json_mod = py.import("json")?;
-    let json_str: String = json_mod.call_method1("dumps", (contract,))?.extract()?;
+    let json_str: String = json_mod
+        .call_method(
+            "dumps",
+            (contract,),
+            Some(&{
+                let kwargs = PyDict::new(py);
+                kwargs.set_item("allow_nan", false)?;
+                kwargs
+            }),
+        )
+        .map_err(|_| {
+            PyValueError::new_err("contract contains non-finite float values (NaN or Infinity)")
+        })?
+        .extract()?;
     serde_json::from_str(&json_str).map_err(|e| contract_deserialize_error(&e.to_string()))
 }
 
@@ -146,7 +159,9 @@ fn compat_analyze(
 ) -> PyResult<Py<PyAny>> {
     let source = contract_from_py(py, source)?;
     let target = contract_from_py(py, target)?;
-    let scope = ComparisonScope::from_tokens(&scope.unwrap_or_default());
+    let scope = ComparisonScope::from_tokens(&scope.unwrap_or_default()).map_err(|invalid| {
+        PyValueError::new_err(format!("invalid scope token(s): {}", invalid.join(", ")))
+    })?;
     value_to_py(py, &analyze_compatibility(&source, &target, scope))
 }
 

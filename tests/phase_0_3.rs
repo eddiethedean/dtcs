@@ -78,8 +78,9 @@ fn analyzes_evolution_between_revisions() {
 
 #[test]
 fn detects_deprecation_metadata() {
+    let baseline = load_contract(&compat_fixture("evolution/rev1.yaml"));
     let deprecated = load_contract(&compat_fixture("evolution/deprecated.yaml"));
-    let report = analyze_evolution(&deprecated, &deprecated);
+    let report = analyze_evolution(&baseline, &deprecated);
     assert!(report
         .changes
         .iter()
@@ -132,4 +133,58 @@ fn versioning_validate_is_public() {
     let contract = load_contract(&fixture("valid_customer.yaml"));
     let report = dtcs::versioning::validate(&contract);
     assert!(report.is_valid());
+}
+
+#[test]
+fn decimal_to_integer_is_not_backward_compatible() {
+    let old = load_contract(&compat_fixture("decimal_integer_old.yaml"));
+    let new = load_contract(&compat_fixture("decimal_integer_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_ne!(report.level, CompatibilityLevel::BackwardCompatible);
+    assert_ne!(report.level, CompatibilityLevel::Identical);
+}
+
+#[test]
+fn scoped_compat_interfaces_excludes_type_diffs() {
+    let old = load_contract(&compat_fixture("decimal_integer_old.yaml"));
+    let new = load_contract(&compat_fixture("decimal_integer_new.yaml"));
+    let scope = ComparisonScope::from_tokens(&["interfaces".into()]).expect("scope");
+    let report = analyze_compatibility(&old, &new, scope);
+    assert!(report.is_compatible());
+}
+
+#[test]
+fn streaming_mode_change_is_incompatible() {
+    let old = load_contract(&compat_fixture("streaming_old.yaml"));
+    let new = load_contract(&compat_fixture("streaming_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::Incompatible);
+}
+
+#[test]
+fn required_to_optional_input_is_backward_compatible() {
+    let old = load_contract(&compat_fixture("required_optional_old.yaml"));
+    let new = load_contract(&compat_fixture("required_optional_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::BackwardCompatible);
+}
+
+#[test]
+fn lineage_warns_on_unknown_impact_input() {
+    let contract = load_contract(&fixture("lineage_multi.yaml"));
+    let report = dtcs::lineage::analyze_with_options(&contract, Some("missing_input"), None);
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::UNRESOLVED_REFERENCE));
+}
+
+#[test]
+fn evolution_identical_deprecated_has_no_deprecation_change() {
+    let deprecated = load_contract(&compat_fixture("evolution/deprecated.yaml"));
+    let report = analyze_evolution(&deprecated, &deprecated);
+    assert!(!report
+        .changes
+        .iter()
+        .any(|c| c.object_ref.as_deref() == Some("metadata.deprecated")));
 }

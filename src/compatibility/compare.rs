@@ -109,66 +109,103 @@ fn compare_interfaces(
     scope: ComparisonScope,
     outcome: &mut ComparisonOutcome,
 ) {
-    compare_input_set(&source.inputs, &target.inputs, outcome);
-    compare_output_set(&source.outputs, &target.outputs, scope.types, outcome);
+    compare_input_set(
+        &source.inputs,
+        &target.inputs,
+        scope.interfaces,
+        scope.types,
+        outcome,
+    );
+    compare_output_set(
+        &source.outputs,
+        &target.outputs,
+        scope.interfaces,
+        scope.types,
+        outcome,
+    );
 }
 
-fn compare_input_set(source: &[Input], target: &[Input], outcome: &mut ComparisonOutcome) {
+fn compare_input_set(
+    source: &[Input],
+    target: &[Input],
+    compare_interfaces: bool,
+    compare_types: bool,
+    outcome: &mut ComparisonOutcome,
+) {
+    if !compare_interfaces && !compare_types {
+        return;
+    }
     let source_map: HashMap<_, _> = source.iter().map(|i| (i.id.as_str(), i)).collect();
     let target_map: HashMap<_, _> = target.iter().map(|i| (i.id.as_str(), i)).collect();
 
-    for (id, src) in &source_map {
-        let Some(tgt) = target_map.get(id) else {
-            if src.optional {
+    if compare_interfaces {
+        for (id, src) in &source_map {
+            let Some(tgt) = target_map.get(id) else {
+                if src.optional {
+                    outcome.push(InternalDiff {
+                        kind: DiffKind::Breaking,
+                        category: ChangeCategory::Interface,
+                        message: format!(
+                            "optional input '{id}' removed in target (backward-incompatible for source consumers)"
+                        ),
+                        object_ref: Some(format!("inputs.{id}")),
+                    });
+                    continue;
+                }
                 outcome.push(InternalDiff {
-                    kind: DiffKind::Additive,
+                    kind: DiffKind::Breaking,
                     category: ChangeCategory::Interface,
-                    message: format!("optional input '{id}' present in source but not in target"),
+                    message: format!("required input '{id}' removed in target"),
                     object_ref: Some(format!("inputs.{id}")),
                 });
                 continue;
-            }
-            outcome.push(InternalDiff {
-                kind: DiffKind::Breaking,
-                category: ChangeCategory::Interface,
-                message: format!("required input '{id}' removed in target"),
-                object_ref: Some(format!("inputs.{id}")),
-            });
-            continue;
-        };
-        if src.optional != tgt.optional && !tgt.optional {
-            outcome.push(InternalDiff {
-                kind: DiffKind::Breaking,
-                category: ChangeCategory::Interface,
-                message: format!("input '{id}' changed from optional to required"),
-                object_ref: Some(format!("inputs.{id}.optional")),
-            });
-        }
-    }
-
-    for (id, tgt) in &target_map {
-        if !source_map.contains_key(id) {
-            outcome.push(InternalDiff {
-                kind: if tgt.optional {
-                    DiffKind::Additive
+            };
+            if src.optional != tgt.optional {
+                if !tgt.optional {
+                    outcome.push(InternalDiff {
+                        kind: DiffKind::Breaking,
+                        category: ChangeCategory::Interface,
+                        message: format!("input '{id}' changed from optional to required"),
+                        object_ref: Some(format!("inputs.{id}.optional")),
+                    });
                 } else {
-                    DiffKind::Breaking
-                },
-                category: ChangeCategory::Interface,
-                message: format!("input '{id}' added in target"),
-                object_ref: Some(format!("inputs.{id}")),
-            });
+                    outcome.push(InternalDiff {
+                        kind: DiffKind::Additive,
+                        category: ChangeCategory::Interface,
+                        message: format!("input '{id}' changed from required to optional"),
+                        object_ref: Some(format!("inputs.{id}.optional")),
+                    });
+                }
+            }
+            compare_input_io_depth(id, src, tgt, outcome);
+        }
+
+        for (id, tgt) in &target_map {
+            if !source_map.contains_key(id) {
+                outcome.push(InternalDiff {
+                    kind: if tgt.optional {
+                        DiffKind::Additive
+                    } else {
+                        DiffKind::Breaking
+                    },
+                    category: ChangeCategory::Interface,
+                    message: format!("input '{id}' added in target"),
+                    object_ref: Some(format!("inputs.{id}")),
+                });
+            }
         }
     }
 
-    for (id, src) in &source_map {
-        if let Some(tgt) = target_map.get(id) {
-            compare_schemas(
-                &format!("inputs.{id}.schema"),
-                src.schema.as_ref(),
-                tgt.schema.as_ref(),
-                outcome,
-            );
+    if compare_types {
+        for (id, src) in &source_map {
+            if let Some(tgt) = target_map.get(id) {
+                compare_schemas(
+                    &format!("inputs.{id}.schema"),
+                    src.schema.as_ref(),
+                    tgt.schema.as_ref(),
+                    outcome,
+                );
+            }
         }
     }
 }
@@ -176,31 +213,43 @@ fn compare_input_set(source: &[Input], target: &[Input], outcome: &mut Compariso
 fn compare_output_set(
     source: &[Output],
     target: &[Output],
+    compare_interfaces: bool,
     compare_types: bool,
     outcome: &mut ComparisonOutcome,
 ) {
+    if !compare_interfaces && !compare_types {
+        return;
+    }
     let source_map: HashMap<_, _> = source.iter().map(|o| (o.id.as_str(), o)).collect();
     let target_map: HashMap<_, _> = target.iter().map(|o| (o.id.as_str(), o)).collect();
 
-    for id in source_map.keys() {
-        if !target_map.contains_key(id) {
-            outcome.push(InternalDiff {
-                kind: DiffKind::Breaking,
-                category: ChangeCategory::Interface,
-                message: format!("output '{id}' removed in target"),
-                object_ref: Some(format!("outputs.{id}")),
-            });
+    if compare_interfaces {
+        for id in source_map.keys() {
+            if !target_map.contains_key(id) {
+                outcome.push(InternalDiff {
+                    kind: DiffKind::Breaking,
+                    category: ChangeCategory::Interface,
+                    message: format!("output '{id}' removed in target"),
+                    object_ref: Some(format!("outputs.{id}")),
+                });
+            }
         }
-    }
 
-    for id in target_map.keys() {
-        if !source_map.contains_key(id) {
-            outcome.push(InternalDiff {
-                kind: DiffKind::Additive,
-                category: ChangeCategory::Interface,
-                message: format!("output '{id}' added in target"),
-                object_ref: Some(format!("outputs.{id}")),
-            });
+        for id in target_map.keys() {
+            if !source_map.contains_key(id) {
+                outcome.push(InternalDiff {
+                    kind: DiffKind::Additive,
+                    category: ChangeCategory::Interface,
+                    message: format!("output '{id}' added in target"),
+                    object_ref: Some(format!("outputs.{id}")),
+                });
+            }
+        }
+
+        for (id, src) in &source_map {
+            if let Some(tgt) = target_map.get(id) {
+                compare_output_io_depth(id, src, tgt, outcome);
+            }
         }
     }
 
@@ -216,6 +265,102 @@ fn compare_output_set(
             }
         }
     }
+}
+
+fn compare_input_io_depth(
+    id: &str,
+    source: &Input,
+    target: &Input,
+    outcome: &mut ComparisonOutcome,
+) {
+    compare_streaming(
+        &format!("inputs.{id}.streaming"),
+        source.streaming.as_ref(),
+        target.streaming.as_ref(),
+        outcome,
+    );
+    compare_conditions(
+        &format!("inputs.{id}.preconditions"),
+        &source.preconditions,
+        &target.preconditions,
+        ChangeCategory::Interface,
+        "precondition",
+        outcome,
+    );
+}
+
+fn compare_output_io_depth(
+    id: &str,
+    source: &Output,
+    target: &Output,
+    outcome: &mut ComparisonOutcome,
+) {
+    compare_streaming(
+        &format!("outputs.{id}.streaming"),
+        source.streaming.as_ref(),
+        target.streaming.as_ref(),
+        outcome,
+    );
+    compare_conditions(
+        &format!("outputs.{id}.postconditions"),
+        &source.postconditions,
+        &target.postconditions,
+        ChangeCategory::Interface,
+        "postcondition",
+        outcome,
+    );
+}
+
+fn compare_streaming(
+    object_ref: &str,
+    source: Option<&crate::model::StreamingDeclaration>,
+    target: Option<&crate::model::StreamingDeclaration>,
+    outcome: &mut ComparisonOutcome,
+) {
+    match (source, target) {
+        (None, None) => {}
+        (Some(_), None) | (None, Some(_)) => {
+            outcome.push(InternalDiff {
+                kind: DiffKind::Breaking,
+                category: ChangeCategory::Interface,
+                message: format!("streaming declaration changed at {object_ref}"),
+                object_ref: Some(object_ref.into()),
+            });
+        }
+        (Some(src), Some(tgt)) if src.mode != tgt.mode => {
+            outcome.push(InternalDiff {
+                kind: DiffKind::Breaking,
+                category: ChangeCategory::Interface,
+                message: format!(
+                    "streaming mode changed from {:?} to {:?} at {object_ref}",
+                    src.mode, tgt.mode
+                ),
+                object_ref: Some(object_ref.into()),
+            });
+        }
+        (Some(_), Some(_)) => {}
+    }
+}
+
+fn compare_conditions(
+    object_ref: &str,
+    source: &[crate::model::InterfaceCondition],
+    target: &[crate::model::InterfaceCondition],
+    category: ChangeCategory,
+    label: &str,
+    outcome: &mut ComparisonOutcome,
+) {
+    let src_rules: HashSet<_> = source.iter().map(|c| c.rule.as_str()).collect();
+    let tgt_rules: HashSet<_> = target.iter().map(|c| c.rule.as_str()).collect();
+    if src_rules == tgt_rules {
+        return;
+    }
+    outcome.push(InternalDiff {
+        kind: DiffKind::Breaking,
+        category,
+        message: format!("{label} set changed at {object_ref}"),
+        object_ref: Some(object_ref.into()),
+    });
 }
 
 fn compare_schemas(
@@ -290,29 +435,40 @@ fn compare_field_types(
 
     if source.type_name != target.type_name {
         if let (Some(src_t), Some(tgt_t)) = (&src_type, &tgt_type) {
-            match type_compatible(src_t, tgt_t) {
-                TypeCompatibility::Identical => {}
-                TypeCompatibility::Compatible => {
-                    outcome.push(InternalDiff {
-                        kind: DiffKind::Additive,
-                        category: ChangeCategory::Type,
-                        message: format!(
-                            "field '{name}' type widened from '{}' to '{}'",
-                            source.type_name, target.type_name
-                        ),
-                        object_ref: Some(format!("{object_ref}.fields.{name}.type")),
-                    });
-                }
-                TypeCompatibility::Incompatible => {
-                    outcome.push(InternalDiff {
-                        kind: DiffKind::Breaking,
-                        category: ChangeCategory::Type,
-                        message: format!(
-                            "field '{name}' type changed from '{}' to '{}'",
-                            source.type_name, target.type_name
-                        ),
-                        object_ref: Some(format!("{object_ref}.fields.{name}.type")),
-                    });
+            if let Some(diff) = directional_primitive_type_diff(
+                src_t,
+                tgt_t,
+                &source.type_name,
+                &target.type_name,
+                name,
+                object_ref,
+            ) {
+                outcome.push(diff);
+            } else {
+                match type_compatible(src_t, tgt_t) {
+                    TypeCompatibility::Identical => {}
+                    TypeCompatibility::Compatible => {
+                        outcome.push(InternalDiff {
+                            kind: DiffKind::Additive,
+                            category: ChangeCategory::Type,
+                            message: format!(
+                                "field '{name}' type widened from '{}' to '{}'",
+                                source.type_name, target.type_name
+                            ),
+                            object_ref: Some(format!("{object_ref}.fields.{name}.type")),
+                        });
+                    }
+                    TypeCompatibility::Incompatible => {
+                        outcome.push(InternalDiff {
+                            kind: DiffKind::Breaking,
+                            category: ChangeCategory::Type,
+                            message: format!(
+                                "field '{name}' type changed from '{}' to '{}'",
+                                source.type_name, target.type_name
+                            ),
+                            object_ref: Some(format!("{object_ref}.fields.{name}.type")),
+                        });
+                    }
                 }
             }
         } else {
@@ -342,6 +498,44 @@ fn compare_field_types(
             message: format!("field '{name}' changed from non-nullable to nullable"),
             object_ref: Some(format!("{object_ref}.fields.{name}.nullable")),
         });
+    }
+}
+
+fn directional_primitive_type_diff(
+    src_t: &crate::model::LogicalType,
+    tgt_t: &crate::model::LogicalType,
+    src_name: &str,
+    tgt_name: &str,
+    field_name: &str,
+    object_ref: &str,
+) -> Option<InternalDiff> {
+    use crate::model::LogicalType;
+    match (src_t, tgt_t) {
+        (LogicalType::Primitive(src_p), LogicalType::Primitive(tgt_p))
+            if src_p == "integer" && tgt_p == "decimal" =>
+        {
+            Some(InternalDiff {
+                kind: DiffKind::Additive,
+                category: ChangeCategory::Type,
+                message: format!(
+                    "field '{field_name}' type widened from '{src_name}' to '{tgt_name}'"
+                ),
+                object_ref: Some(format!("{object_ref}.fields.{field_name}.type")),
+            })
+        }
+        (LogicalType::Primitive(src_p), LogicalType::Primitive(tgt_p))
+            if src_p == "decimal" && tgt_p == "integer" =>
+        {
+            Some(InternalDiff {
+                kind: DiffKind::Breaking,
+                category: ChangeCategory::Type,
+                message: format!(
+                    "field '{field_name}' type narrowed from '{src_name}' to '{tgt_name}'"
+                ),
+                object_ref: Some(format!("{object_ref}.fields.{field_name}.type")),
+            })
+        }
+        _ => None,
     }
 }
 
@@ -619,14 +813,19 @@ pub fn diagnostics_from_outcome(outcome: &ComparisonOutcome) -> Vec<Diagnostic> 
                 DiffKind::Additive => (codes::CONDITIONAL_COMPATIBILITY, Severity::Warning),
                 DiffKind::Neutral => (codes::CONDITIONAL_COMPATIBILITY, Severity::Warning),
             };
-            Diagnostic::new(
+            let mut diagnostic = Diagnostic::new(
                 id,
                 severity,
                 DiagnosticStage::Analysis,
                 DiagnosticCategory::Compatibility,
                 &d.message,
-            )
-            .with_object_ref(d.object_ref.clone().unwrap_or_default())
+            );
+            if let Some(ref object_ref) = d.object_ref {
+                if !object_ref.is_empty() {
+                    diagnostic = diagnostic.with_object_ref(object_ref.clone());
+                }
+            }
+            diagnostic
         })
         .collect()
 }

@@ -91,7 +91,7 @@ def version_validate(contract: dict) -> dict:
 def is_valid(report: dict) -> bool:
     """Return True when a diagnostic report contains no error-level diagnostics."""
     return not any(
-        diagnostic.get("severity") == "error"
+        diagnostic.get("severity") in (None, "error")
         for diagnostic in report.get("diagnostics", [])
     )
 

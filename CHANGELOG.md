@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+Bug fixes from the Phase 0.3 audit (24 defects):
+
+- **Compatibility:** Directional integer/decimal comparison; optional input removal classified as breaking; required→optional as additive; scope-gated input type comparison; streaming/precondition/postcondition diffs; empty `objectRef` omitted from diagnostics; classification uses direction-aware breaking checks (backward vs forward safe).
+- **Validation:** Stricter `dtcsVersion` gate (exact 1.0.0 only); required schemas on inputs/outputs; ISO-8601 timezone offset validation; duplicate empty field names; version trim consistency; whitespace-only expression bodies still validate declared types; policy URI host validation; removed `.expect()` in expression typing.
+- **API:** Invalid `--scope` tokens rejected (exit code 2); `Diagnostic` JSON fields use camelCase (`objectRef`).
+- **Lineage / evolution:** Unknown `--impact` / `--dependency` IDs emit warnings; deprecation changes reported only on false→true transitions or replacement updates.
+- **Python:** CLI parity for evolve/lineage text output, compat exit codes, validation diagnostics on load failure, `is_valid()` treats missing severity as error, NaN rejection in `contract_from_py`.
+- **Hardening:** 16 MiB parser size limit; synthetic parse error when `into_contract` finds no contract.
+
 ## 0.3.0
 
 Phase 0.3 — Contract Analysis.

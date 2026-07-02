@@ -318,3 +318,64 @@ def test_cli_lineage_json_output() -> None:
     assert output.returncode == 0
     payload = json.loads(output.stdout)
     assert payload["impact"]["outputs"]
+
+
+def test_diagnostics_json_uses_camel_case_object_ref() -> None:
+    path = _fixture_dir() / "missing_lineage.yaml"
+    output = _python_dtcs("diagnostics", "--json", str(path))
+    payload = json.loads(output.stdout)
+    diagnostic = payload["diagnostics"][0]
+    assert "objectRef" in diagnostic or diagnostic.get("objectRef") is None
+    assert "object_ref" not in diagnostic
+
+
+def test_is_valid_treats_missing_severity_as_error() -> None:
+    report = {"diagnostics": [{"id": "dtcs:unknown", "message": "boom"}]}
+    assert not dtcs.is_valid(report)
+
+
+def test_compat_analyze_rejects_invalid_scope() -> None:
+    source = dtcs.parse_file(str(_fixture_dir() / "compatibility/backward_old.yaml"))["contract"]
+    target = dtcs.parse_file(str(_fixture_dir() / "compatibility/backward_new.yaml"))["contract"]
+    with pytest.raises(ValueError, match="invalid scope"):
+        dtcs.compat_analyze(source, target, ["not-a-scope"])
+
+
+def test_cli_compat_rejects_invalid_scope() -> None:
+    old = _fixture_dir() / "compatibility" / "backward_old.yaml"
+    new = _fixture_dir() / "compatibility" / "backward_new.yaml"
+    output = _python_dtcs("compat", "--scope", "not-a-scope", str(old), str(new))
+    assert output.returncode == 2
+
+
+def test_contract_from_py_rejects_nan() -> None:
+    contract = {
+        "dtcsVersion": "1.0.0",
+        "id": "nan.example",
+        "name": "NaN Example",
+        "version": "0.1.0",
+        "inputs": [
+            {
+                "id": "in",
+                "schema": {
+                    "fields": [
+                        {"name": "value", "type": "integer", "nullable": False},
+                    ]
+                },
+            }
+        ],
+        "outputs": [
+            {
+                "id": "out",
+                "schema": {
+                    "fields": [
+                        {"name": "value", "type": "integer", "nullable": False},
+                    ]
+                },
+            }
+        ],
+        "lineage": {"mappings": [{"output": "out", "inputs": ["in"]}]},
+        "acme:ratio": float("nan"),
+    }
+    with pytest.raises(ValueError, match="non-finite"):
+        dtcs.validate(contract)

@@ -4,6 +4,7 @@ use super::{DiagnosticCategory, DiagnosticStage, Severity};
 
 /// A spec-level diagnostic record.
 #[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Diagnostic {
     /// Stable `dtcs:` diagnostic identifier.
     pub id: String,

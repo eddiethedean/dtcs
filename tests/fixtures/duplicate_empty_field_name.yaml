@@ -1,0 +1,28 @@
+dtcsVersion: "1.0.0"
+id: "duplicate.empty.field"
+name: "Duplicate Empty Field Names"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: ""
+          type: "string"
+          nullable: false
+        - name: ""
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

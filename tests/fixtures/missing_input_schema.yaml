@@ -1,0 +1,20 @@
+dtcsVersion: "1.0.0"
+id: "missing.input.schema"
+name: "Missing Input Schema"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

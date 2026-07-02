@@ -66,6 +66,12 @@
     {"file": "expression_nullable_field.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
     {"file": "invalid_version.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-version"]},
     {"file": "version_conflict.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-metadata", "dtcs:version-conflict"]},
-    {"file": "lineage_multi.yaml", "parse_valid": true, "contract": true, "validate_valid": true}
+    {"file": "lineage_multi.yaml", "parse_valid": true, "contract": true, "validate_valid": true},
+    {"file": "invalid_dtcs_version_patch999.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:unsupported-version"]},
+    {"file": "invalid_dtcs_version_prerelease.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:unsupported-version"]},
+    {"file": "missing_input_schema.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:missing-required-field"]},
+    {"file": "duplicate_empty_field_name.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:duplicate-identifier"]},
+    {"file": "expression_whitespace_body_invalid_type.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
+    {"file": "invalid_metadata_timestamp_offset.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-metadata"]}
   ]
 }

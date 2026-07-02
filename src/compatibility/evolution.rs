@@ -53,7 +53,7 @@ pub fn analyze_evolution(
     let compare_outcome = super::compare::compare_contracts(older, newer, ComparisonScope::all());
     let mut changes = compare_outcome.changes;
 
-    changes.extend(detect_deprecations(newer));
+    changes.extend(detect_deprecation_changes(older, newer));
     let migration_hints = migration_hints_for(&compatibility.level, &changes);
 
     diagnostics.extend(compatibility.diagnostics);
@@ -69,27 +69,36 @@ pub fn analyze_evolution(
     }
 }
 
-fn detect_deprecations(contract: &TransformationContract) -> Vec<ContractChange> {
+fn detect_deprecation_changes(
+    older: &TransformationContract,
+    newer: &TransformationContract,
+) -> Vec<ContractChange> {
     let mut changes = Vec::new();
-    if let Some(metadata) = &contract.metadata {
-        if metadata.deprecated == Some(true) {
+    let old_meta = older.metadata.as_ref();
+    let new_meta = newer.metadata.as_ref();
+
+    let old_deprecated = old_meta.and_then(|m| m.deprecated).unwrap_or(false);
+    let new_deprecated = new_meta.and_then(|m| m.deprecated).unwrap_or(false);
+    if !old_deprecated && new_deprecated {
+        changes.push(ContractChange {
+            category: ChangeCategory::Metadata,
+            message: "contract metadata marks this revision as deprecated".into(),
+            object_ref: Some("metadata.deprecated".into()),
+        });
+    }
+
+    let old_replacement = old_meta.and_then(|m| m.replacement.as_deref());
+    let new_replacement = new_meta.and_then(|m| m.replacement.as_deref());
+    if new_deprecated && old_replacement != new_replacement {
+        if let Some(replacement) = new_replacement {
             changes.push(ContractChange {
                 category: ChangeCategory::Metadata,
-                message: "contract metadata marks this revision as deprecated".into(),
-                object_ref: Some("metadata.deprecated".into()),
-            });
-        }
-        if metadata.replacement.is_some() {
-            changes.push(ContractChange {
-                category: ChangeCategory::Metadata,
-                message: format!(
-                    "replacement contract: {}",
-                    metadata.replacement.as_deref().unwrap_or("")
-                ),
+                message: format!("replacement contract: {replacement}"),
                 object_ref: Some("metadata.replacement".into()),
             });
         }
     }
+
     changes
 }
 

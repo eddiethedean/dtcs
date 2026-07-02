@@ -59,7 +59,7 @@ pub fn validate(contract: &TransformationContract) -> DiagnosticReport {
     if let Some(metadata) = &contract.metadata {
         if let Some(identity) = &metadata.identity {
             if let Some(meta_version) = &identity.version {
-                if meta_version != &contract.version {
+                if meta_version.trim() != contract.version.trim() {
                     diagnostics.push(
                         Diagnostic::new(
                             codes::VERSION_CONFLICT,

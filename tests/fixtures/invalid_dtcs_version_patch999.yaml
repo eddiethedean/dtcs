@@ -1,0 +1,25 @@
+dtcsVersion: "1.0.999"
+id: "bad.version.patch"
+name: "Bad Patch Version"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -31,15 +31,25 @@ pub(crate) fn validate_expressions(ctx: &mut ValidationContext, contract: &Trans
     }
 
     for expression in &contract.expressions {
+        let object_ref = format!("expressions.{}", expression.id);
         let has_body = expression
             .expr
             .as_ref()
             .is_some_and(|body| !body.trim().is_empty());
+
+        if let Some(declared_type) = expression.type_name.as_deref() {
+            if let Err(error) = parse_logical_type(declared_type) {
+                emit_type_error(ctx, &format!("{object_ref}.type"), declared_type, error);
+                if !has_body {
+                    continue;
+                }
+            }
+        }
+
         if !has_body {
             continue;
         }
 
-        let object_ref = format!("expressions.{}", expression.id);
         let Some(declared_type) = expression.type_name.as_deref() else {
             ctx.error(
                 codes::MISSING_REQUIRED_FIELD,
@@ -51,14 +61,16 @@ pub(crate) fn validate_expressions(ctx: &mut ValidationContext, contract: &Trans
             continue;
         };
 
-        if let Err(error) = parse_logical_type(declared_type) {
-            emit_type_error(ctx, &format!("{object_ref}.type"), declared_type, error);
-            continue;
-        }
+        let declared = match parse_logical_type(declared_type) {
+            Ok(parsed) => parsed,
+            Err(error) => {
+                emit_type_error(ctx, &format!("{object_ref}.type"), declared_type, error);
+                continue;
+            }
+        };
 
         match infer_expression_type(expression.expr.as_deref().unwrap_or(""), &index, &functions) {
             Ok(inferred) => {
-                let declared = parse_logical_type(declared_type).expect("validated above");
                 if inferred.nullable {
                     ctx.error(
                         codes::INVALID_TYPE,

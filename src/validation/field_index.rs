@@ -73,6 +73,10 @@ impl FieldIndex {
         is_input: bool,
     ) {
         for field in fields {
+            let qualified = format!("{interface_id}.{}", field.name);
+            if self.qualified.contains_key(&qualified) {
+                continue;
+            }
             let location = FieldLocation {
                 interface_id: interface_id.to_string(),
                 field_name: field.name.clone(),
@@ -80,7 +84,6 @@ impl FieldIndex {
                 nullable: field.nullable,
                 is_input,
             };
-            let qualified = format!("{interface_id}.{}", field.name);
             self.qualified.insert(qualified, location.clone());
             self.by_name
                 .entry(field.name.clone())

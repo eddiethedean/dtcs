@@ -81,10 +81,14 @@ impl ComparisonScope {
     }
 
     /// Parse scope from CLI tokens such as `interfaces,types`.
-    #[must_use]
-    pub fn from_tokens(tokens: &[String]) -> Self {
+    pub fn from_tokens(tokens: &[String]) -> Result<Self, Vec<String>> {
+        Self::from_tokens_strict(tokens)
+    }
+
+    /// Parse scope from CLI tokens, rejecting unknown tokens.
+    pub fn from_tokens_strict(tokens: &[String]) -> Result<Self, Vec<String>> {
         if tokens.is_empty() {
-            return Self::all();
+            return Ok(Self::all());
         }
         let mut scope = Self {
             interfaces: false,
@@ -94,6 +98,7 @@ impl ComparisonScope {
             metadata: false,
             extensions: false,
         };
+        let mut invalid = Vec::new();
         for token in tokens {
             match token.as_str() {
                 "interfaces" => scope.interfaces = true,
@@ -102,9 +107,12 @@ impl ComparisonScope {
                 "lineage" => scope.lineage = true,
                 "metadata" => scope.metadata = true,
                 "extensions" => scope.extensions = true,
-                "all" => return Self::all(),
-                _ => {}
+                "all" => return Ok(Self::all()),
+                other => invalid.push(other.to_string()),
             }
+        }
+        if !invalid.is_empty() {
+            return Err(invalid);
         }
         if !scope.interfaces
             && !scope.types
@@ -113,9 +121,9 @@ impl ComparisonScope {
             && !scope.metadata
             && !scope.extensions
         {
-            return Self::all();
+            return Err(vec!["no valid scope aspects specified".into()]);
         }
-        scope
+        Ok(scope)
     }
 }
 

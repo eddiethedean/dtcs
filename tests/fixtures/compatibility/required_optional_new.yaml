@@ -1,0 +1,26 @@
+dtcsVersion: "1.0.0"
+id: "compat.required.optional"
+name: "Required Optional New"
+version: "1.1.0"
+
+inputs:
+  - id: "in"
+    optional: true
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

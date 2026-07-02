@@ -10,7 +10,13 @@ fn is_supported_dtcs_version(version: &str) -> bool {
         return true;
     }
     semver::Version::parse(version)
-        .map(|parsed| parsed.major == 1 && parsed.minor == 0)
+        .map(|parsed| {
+            parsed.major == 1
+                && parsed.minor == 0
+                && parsed.patch == 0
+                && parsed.pre.is_empty()
+                && parsed.build.is_empty()
+        })
         .unwrap_or(false)
 }
 

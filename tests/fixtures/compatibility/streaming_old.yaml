@@ -1,0 +1,27 @@
+dtcsVersion: "1.0.0"
+id: "compat.streaming"
+name: "Streaming Old"
+version: "1.0.0"
+
+inputs:
+  - id: "in"
+    streaming:
+      mode: unbounded
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -84,6 +84,11 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     }
 
     for input in &contract.inputs {
+        validate_interface_schema(
+            ctx,
+            &format!("inputs.{}.schema", input.id),
+            input.schema.as_ref(),
+        );
         if let Some(schema) = &input.schema {
             check_duplicate_schema_fields(
                 ctx,
@@ -94,6 +99,11 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     }
 
     for output in &contract.outputs {
+        validate_interface_schema(
+            ctx,
+            &format!("outputs.{}.schema", output.id),
+            output.schema.as_ref(),
+        );
         if let Some(schema) = &output.schema {
             check_duplicate_schema_fields(
                 ctx,
@@ -106,14 +116,53 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     warn_ambiguous_field_names(ctx, &index);
 }
 
+fn validate_interface_schema(
+    ctx: &mut ValidationContext,
+    object_ref: &str,
+    schema: Option<&crate::model::Schema>,
+) {
+    match schema {
+        None => {
+            ctx.error(
+                codes::MISSING_REQUIRED_FIELD,
+                DiagnosticCategory::Structure,
+                "schema with at least one field is required",
+                Some(object_ref),
+                Some("Declare a schema with one or more typed fields for each interface"),
+            );
+        }
+        Some(schema) if schema.fields.is_empty() => {
+            ctx.error(
+                codes::MISSING_REQUIRED_FIELD,
+                DiagnosticCategory::Structure,
+                "schema must declare at least one field",
+                Some(object_ref),
+                Some("Add one or more fields to the interface schema"),
+            );
+        }
+        Some(_) => {}
+    }
+}
+
 fn check_duplicate_schema_fields(
     ctx: &mut ValidationContext,
     object_ref: &str,
     fields: &[crate::model::Field],
 ) {
     let mut seen = HashSet::new();
+    let mut empty_count = 0usize;
     for field in fields {
         if field.name.trim().is_empty() {
+            empty_count += 1;
+            if empty_count > 1 {
+                ctx.error(
+                    codes::DUPLICATE_IDENTIFIER,
+                    DiagnosticCategory::Structure,
+                    "duplicate empty schema field name",
+                    Some(object_ref),
+                    Some("Use unique non-empty field names within each schema"),
+                );
+            }
             continue;
         }
         if !seen.insert(field.name.clone()) {

@@ -1,0 +1,25 @@
+dtcsVersion: "1.0.0"
+id: "compat.decimal"
+name: "Decimal Integer Old"
+version: "1.0.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "amount"
+          type: "decimal"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "amount"
+          type: "decimal"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

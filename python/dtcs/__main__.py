@@ -40,7 +40,7 @@ def _render_report(report: dict, *, json_output: bool, mode: str) -> None:
         category = diagnostic.get("category", "syntax")
         message = diagnostic.get("message", "")
         print(f"[{severity}] {code} ({category}) - {message}")
-        if object_ref := diagnostic.get("object_ref"):
+        if object_ref := diagnostic.get("objectRef"):
             print(f"  at: {object_ref}")
         if remediation := diagnostic.get("remediation"):
             print(f"  hint: {remediation}")
@@ -56,6 +56,7 @@ def _load_valid_contract(path: Path) -> dict:
         raise SystemExit(str(error)) from error
     report = validate_result(result)
     if not is_valid(report):
+        _render_report(report, json_output=False, mode="validate")
         raise SystemExit(f"validation failed for {path}")
     contract = result.get("contract")
     if contract is None:
@@ -132,12 +133,17 @@ def main(argv: list[str] | None = None) -> int:
         source = _load_valid_contract(args.source)
         target = _load_valid_contract(args.target)
         scope = [part for part in args.scope.split(",") if part] if args.scope else None
-        report = compat_analyze(source, target, scope)
+        try:
+            report = compat_analyze(source, target, scope)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 2
         if args.json:
             print(json.dumps(report, indent=2))
         else:
             print(f"compatibility: {report.get('level')}")
-        return 0 if report.get("level") != "incompatible" else 1
+        level = report.get("level")
+        return 0 if level and level != "incompatible" else 1
 
     if args.command == "evolve":
         older = _load_valid_contract(args.older)
@@ -148,7 +154,7 @@ def main(argv: list[str] | None = None) -> int:
         else:
             print(
                 f"evolution: {report.get('compatibility')} "
-                f"(same identity: {report.get('same_identity')})"
+                f"(same identity: {report.get('sameIdentity')})"
             )
         return 0 if report.get("sameIdentity") and report.get("compatibility") != "incompatible" else 1
 
@@ -160,6 +166,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             for edge in report.get("graph", []):
                 print(f"{edge['output']} <- {edge['inputs']}")
+            if impact := report.get("impact"):
+                print(f"impact {impact['input']}: {impact['outputs']}")
+            if dependency := report.get("dependency"):
+                print(f"dependency {dependency['output']}: {dependency['inputs']}")
+            governance = report.get("governance") or {}
+            if owner := governance.get("owner"):
+                print(f"governance owner: {owner}")
+            if steward := governance.get("steward"):
+                print(f"governance steward: {steward}")
         return 0
 
     path = args.path

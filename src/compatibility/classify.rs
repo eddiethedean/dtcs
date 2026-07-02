@@ -47,10 +47,10 @@ pub(crate) fn classify_pair(
         return CompatibilityLevel::Identical;
     }
     let reverse = compare_contracts(target, source, scope);
-    if reverse.is_clean() {
-        return CompatibilityLevel::Identical;
-    }
-    if forward.has_breaking() || reverse.has_breaking() {
+    let backward_safe = !forward.has_breaking();
+    let forward_safe = !reverse.has_breaking();
+
+    if !backward_safe && !forward_safe {
         if forward.has_conditional()
             && !forward.diffs.iter().any(|d| {
                 matches!(d.kind, super::types::DiffKind::Breaking)
@@ -61,22 +61,41 @@ pub(crate) fn classify_pair(
         }
         return CompatibilityLevel::Incompatible;
     }
-    if forward.has_conditional() || reverse.has_conditional() {
-        return CompatibilityLevel::ConditionallyCompatible;
+
+    if backward_safe && forward_safe {
+        if forward.has_conditional() || reverse.has_conditional() {
+            return CompatibilityLevel::ConditionallyCompatible;
+        }
+        if forward.has_additive() && !reverse.has_additive() {
+            return CompatibilityLevel::BackwardCompatible;
+        }
+        if reverse.has_additive() && !forward.has_additive() {
+            return CompatibilityLevel::ForwardCompatible;
+        }
+        if forward.has_additive() && reverse.has_additive() {
+            return if interface_footprint(target) >= interface_footprint(source) {
+                CompatibilityLevel::BackwardCompatible
+            } else {
+                CompatibilityLevel::ForwardCompatible
+            };
+        }
+        return CompatibilityLevel::Incompatible;
     }
-    if forward.has_additive() && !reverse.has_additive() {
+
+    if backward_safe {
+        if forward.has_conditional() {
+            return CompatibilityLevel::ConditionallyCompatible;
+        }
         return CompatibilityLevel::BackwardCompatible;
     }
-    if reverse.has_additive() && !forward.has_additive() {
+
+    if forward_safe {
+        if reverse.has_conditional() {
+            return CompatibilityLevel::ConditionallyCompatible;
+        }
         return CompatibilityLevel::ForwardCompatible;
     }
-    if forward.has_additive() && reverse.has_additive() {
-        return if interface_footprint(target) >= interface_footprint(source) {
-            CompatibilityLevel::BackwardCompatible
-        } else {
-            CompatibilityLevel::ForwardCompatible
-        };
-    }
+
     CompatibilityLevel::Incompatible
 }
 

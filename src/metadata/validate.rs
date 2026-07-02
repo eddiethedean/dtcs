@@ -383,7 +383,13 @@ fn has_restricted_governance(governance: Option<&GovernanceMetadata>) -> bool {
 }
 
 fn is_valid_policy_ref(value: &str) -> bool {
-    value.starts_with("https://") || value.starts_with("http://") || is_namespaced_identifier(value)
+    if value.starts_with("https://") {
+        return value.len() > 8 && value.as_bytes().get(8) != Some(&b'/');
+    }
+    if value.starts_with("http://") {
+        return value.len() > 7 && value.as_bytes().get(7) != Some(&b'/');
+    }
+    is_namespaced_identifier(value)
 }
 
 /// Lightweight ISO-8601 date/datetime validation without external dependencies.
@@ -419,14 +425,12 @@ fn is_iso8601_timestamp(value: &str) -> bool {
         return false;
     }
     let time_part = &value[11..];
-    let time_part = time_part.strip_suffix('Z').unwrap_or(time_part);
-    let time_part = if let Some((base, _offset)) = time_part.split_once('+') {
-        base
-    } else if time_part.matches('-').count() >= 1 && time_part.len() > 8 {
-        time_part.split_at(8).0
-    } else {
-        time_part
-    };
+    let (time_part, offset) = split_datetime_offset(time_part);
+    if let Some(offset) = offset {
+        if !is_valid_utc_offset(offset) {
+            return false;
+        }
+    }
     let segments: Vec<&str> = time_part.split(':').collect();
     if segments.len() < 2 || segments.len() > 3 {
         return false;
@@ -463,4 +467,39 @@ fn valid_calendar_date(year: u32, month: u32, day: u32) -> bool {
         _ => return false,
     };
     (1..=max_day).contains(&day)
+}
+
+fn split_datetime_offset(time_part: &str) -> (&str, Option<&str>) {
+    if let Some(stripped) = time_part.strip_suffix('Z') {
+        return (stripped, Some("Z"));
+    }
+    if let Some(index) = time_part.rfind('+') {
+        return (&time_part[..index], Some(&time_part[index + 1..]));
+    }
+    if time_part.len() > 6 {
+        if let Some(index) = time_part.rfind('-') {
+            if index > time_part.find(':').unwrap_or(0) {
+                return (&time_part[..index], Some(&time_part[index + 1..]));
+            }
+        }
+    }
+    (time_part, None)
+}
+
+fn is_valid_utc_offset(offset: &str) -> bool {
+    if offset == "Z" {
+        return true;
+    }
+    let bytes = offset.as_bytes();
+    if bytes.len() != 5 || bytes[2] != b':' {
+        return false;
+    }
+    if !offset[..2].chars().all(|c| c.is_ascii_digit())
+        || !offset[3..].chars().all(|c| c.is_ascii_digit())
+    {
+        return false;
+    }
+    let hour: u32 = offset[..2].parse().unwrap_or(99);
+    let minute: u32 = offset[3..].parse().unwrap_or(99);
+    hour <= 14 && minute <= 59
 }

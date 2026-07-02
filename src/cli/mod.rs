@@ -134,7 +134,13 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
         } => {
             let source_contract = load_valid_contract(&source)?;
             let target_contract = load_valid_contract(&target)?;
-            let scope = ComparisonScope::from_tokens(&scope);
+            let scope = match ComparisonScope::from_tokens(&scope) {
+                Ok(scope) => scope,
+                Err(invalid) => {
+                    eprintln!("invalid scope token(s): {}", invalid.join(", "));
+                    return Ok(2);
+                }
+            };
             let report = analyze_compatibility(&source_contract, &target_contract, scope);
             if json {
                 println!(

@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use serde::{Deserialize, Serialize};
 
+use crate::diagnostics::{codes, Diagnostic, DiagnosticCategory, DiagnosticStage, Severity};
 use crate::model::TransformationContract;
 
 /// Directed lineage edge from output to inputs.
@@ -42,6 +43,9 @@ pub struct LineageAnalysisReport {
     pub impact: Option<LineageImpactResult>,
     /// Governance summary.
     pub governance: LineageGovernance,
+    /// Analysis warnings and errors.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub diagnostics: Vec<Diagnostic>,
 }
 
 /// Dependency analysis for one output.
@@ -79,6 +83,52 @@ pub fn analyze_with_options(
 ) -> LineageAnalysisReport {
     let graph = build_graph(contract);
     let reverse = reverse_graph(&graph);
+    let mut diagnostics = Vec::new();
+
+    let input_ids: HashSet<_> = contract
+        .inputs
+        .iter()
+        .map(|input| input.id.as_str())
+        .collect();
+    let output_ids: HashSet<_> = contract
+        .outputs
+        .iter()
+        .map(|output| output.id.as_str())
+        .collect();
+
+    if let Some(input) = impact_input {
+        if !input_ids.contains(input)
+            && !graph
+                .iter()
+                .any(|edge| edge.inputs.iter().any(|id| id == input))
+        {
+            diagnostics.push(
+                Diagnostic::new(
+                    codes::UNRESOLVED_REFERENCE,
+                    Severity::Warning,
+                    DiagnosticStage::Analysis,
+                    DiagnosticCategory::Reference,
+                    format!("impact query input '{input}' was not found in the contract"),
+                )
+                .with_object_ref(format!("inputs.{input}")),
+            );
+        }
+    }
+
+    if let Some(output) = dependency_output {
+        if !output_ids.contains(output) && !graph.iter().any(|edge| edge.output == output) {
+            diagnostics.push(
+                Diagnostic::new(
+                    codes::UNRESOLVED_REFERENCE,
+                    Severity::Warning,
+                    DiagnosticStage::Analysis,
+                    DiagnosticCategory::Reference,
+                    format!("dependency query output '{output}' was not found in the contract"),
+                )
+                .with_object_ref(format!("outputs.{output}")),
+            );
+        }
+    }
 
     LineageAnalysisReport {
         dependency: dependency_output.map(|output| LineageDependencyResult {
@@ -95,6 +145,7 @@ pub fn analyze_with_options(
         }),
         governance: governance_from(contract),
         graph,
+        diagnostics,
     }
 }
 
@@ -143,6 +194,7 @@ fn transitive_impact(input: &str, reverse: &HashMap<String, Vec<String>>) -> Vec
         }
     }
 
+    seen.remove(input);
     let mut outputs: Vec<_> = seen.into_iter().collect();
     outputs.sort();
     outputs

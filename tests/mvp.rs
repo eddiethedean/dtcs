@@ -370,3 +370,38 @@ fn cli_version_reports_spec() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     assert!(stdout.contains(SPEC_VERSION));
 }
+
+#[test]
+fn rejects_oversized_document() {
+    use dtcs::parser::MAX_DOCUMENT_BYTES;
+    let oversized = vec![b' '; MAX_DOCUMENT_BYTES + 1];
+    let result = parse(&oversized, DocumentFormat::Yaml);
+    assert!(result
+        .report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::PARSE_ERROR));
+}
+
+#[test]
+fn into_contract_without_contract_emits_parse_error() {
+    let result = dtcs::ParseResult {
+        contract: None,
+        report: dtcs::DiagnosticReport::default(),
+    };
+    let err = result.into_contract().expect_err("should fail");
+    assert!(err.diagnostics.iter().any(|d| d.id == codes::PARSE_ERROR));
+}
+
+#[test]
+fn cli_compat_rejects_invalid_scope() {
+    let old = fixture("compatibility/backward_old.yaml");
+    let new = fixture("compatibility/backward_new.yaml");
+    let output = dtcs_bin()
+        .args(["compat", "--scope", "not-a-scope"])
+        .arg(&old)
+        .arg(&new)
+        .output()
+        .expect("run cli");
+    assert_eq!(output.status.code(), Some(2));
+}

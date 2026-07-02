@@ -28,7 +28,20 @@ impl ParseResult {
         match (self.contract, self.report.is_valid()) {
             (Some(contract), true) => Ok(contract),
             (_, false) => Err(self.report),
-            (None, true) => Err(self.report),
+            (None, true) => {
+                let mut report = self.report;
+                emit(
+                    &mut report,
+                    Diagnostic::new(
+                        codes::PARSE_ERROR,
+                        Severity::Error,
+                        DiagnosticStage::Parse,
+                        DiagnosticCategory::Syntax,
+                        "parse succeeded but no contract was produced",
+                    ),
+                );
+                Err(report)
+            }
         }
     }
 
@@ -64,9 +77,18 @@ impl DocumentFormat {
     }
 }
 
+/// Maximum DTCS document size accepted by the parser (16 MiB).
+pub const MAX_DOCUMENT_BYTES: usize = 16 * 1024 * 1024;
+
 /// Parse a DTCS document from bytes.
 #[must_use]
 pub fn parse(content: &[u8], format: DocumentFormat) -> ParseResult {
+    if content.len() > MAX_DOCUMENT_BYTES {
+        return failure(format!(
+            "document exceeds maximum size of {} bytes",
+            MAX_DOCUMENT_BYTES
+        ));
+    }
     match format {
         DocumentFormat::Yaml => parse_yaml(content),
         DocumentFormat::Json => parse_json(content),
