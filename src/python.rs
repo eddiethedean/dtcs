@@ -13,7 +13,9 @@ fn value_to_py(py: Python<'_>, value: &impl Serialize) -> PyResult<Py<PyAny>> {
     let json = serde_json::to_string(value)
         .map_err(|e| PyValueError::new_err(format!("serialization failed: {e}")))?;
     let json_mod = py.import("json")?;
-    json_mod.call_method1("loads", (json,)).map(|obj| obj.unbind())
+    json_mod
+        .call_method1("loads", (json,))
+        .map(|obj| obj.unbind())
 }
 
 fn parse_format(format: &str) -> PyResult<DocumentFormat> {
@@ -36,7 +38,10 @@ fn content_to_bytes(content: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
     Err(PyTypeError::new_err("content must be str or bytes"))
 }
 
-fn contract_from_py(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<TransformationContract> {
+fn contract_from_py(
+    py: Python<'_>,
+    contract: &Bound<'_, PyAny>,
+) -> PyResult<TransformationContract> {
     let json_mod = py.import("json")?;
     let json_str: String = json_mod.call_method1("dumps", (contract,))?.extract()?;
     serde_json::from_str(&json_str)
@@ -85,7 +90,11 @@ fn validate_contract(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<Py
 /// Parse and validate a DTCS document in one step.
 #[pyfunction]
 #[pyo3(signature = (content, format="yaml"))]
-fn validate_document(py: Python<'_>, content: &Bound<'_, PyAny>, format: &str) -> PyResult<Py<PyAny>> {
+fn validate_document(
+    py: Python<'_>,
+    content: &Bound<'_, PyAny>,
+    format: &str,
+) -> PyResult<Py<PyAny>> {
     let bytes = content_to_bytes(content)?;
     let doc_format = parse_format(format)?;
     value_to_py(py, &crate::parse_and_validate(&bytes, doc_format))
