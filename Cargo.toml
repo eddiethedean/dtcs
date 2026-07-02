@@ -1,0 +1,40 @@
+[package]
+name = "dtcs"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Reference implementation of the Data Transformation Contract Standard (DTCS)"
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["dtcs", "data-transformation", "contracts", "validation"]
+categories = ["parsing", "data-structures"]
+repository = "https://github.com/dtcs/dtcs"
+documentation = "https://docs.rs/dtcs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+miette = { version = "7", features = ["fancy"] }
+semver = { version = "1", features = ["serde"] }
+indexmap = { version = "2", features = ["serde"] }
+
+[dependencies.clap]
+version = "4"
+features = ["derive"]
+optional = true
+
+[features]
+default = ["cli"]
+cli = ["dep:clap"]
+
+[[bin]]
+name = "dtcs"
+path = "src/bin/dtcs.rs"
+required-features = ["cli"]
+
+[lints.rust]
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

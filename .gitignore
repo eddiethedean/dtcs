@@ -1,0 +1,16 @@
+# Rust
+/target/
+**/*.rs.bk
+
+# Editor and OS
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Environment
+.env
+.env.*

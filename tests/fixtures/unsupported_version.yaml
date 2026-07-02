@@ -1,0 +1,22 @@
+dtcsVersion: "9.9.9"
+id: "broken"
+name: "Broken"
+version: "0.1.0"
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

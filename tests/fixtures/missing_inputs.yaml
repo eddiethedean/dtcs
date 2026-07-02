@@ -1,0 +1,11 @@
+dtcsVersion: "1.0.0"
+id: "broken"
+name: "Broken"
+version: "0.1.0"
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
