@@ -34,3 +34,5 @@ pub const INVALID_INTERFACE: &str = "dtcs:invalid-interface";
 pub const TYPE_INCOMPATIBLE: &str = "dtcs:type-incompatible";
 /// Invalid type conversion declaration.
 pub const INVALID_CONVERSION: &str = "dtcs:invalid-conversion";
+/// Invalid function declaration.
+pub const INVALID_FUNCTION: &str = "dtcs:invalid-function";

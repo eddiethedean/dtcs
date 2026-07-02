@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::identifiers::is_vendor_namespaced_identifier;
 use super::metadata::Metadata;
 
 /// A declared function parameter (SPEC Chapter 18 §5).
@@ -35,4 +36,13 @@ pub struct Function {
     /// Object metadata (SPEC Chapter 5 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
+}
+
+/// Known standard functions for Phase 0.2 validation.
+pub const KNOWN_FUNCTIONS: &[&str] = &[];
+
+/// Returns `true` when the function identifier is recognized.
+#[must_use]
+pub fn is_known_function(function: &str) -> bool {
+    KNOWN_FUNCTIONS.contains(&function) || is_vendor_namespaced_identifier(function)
 }

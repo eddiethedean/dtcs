@@ -1,23 +1,28 @@
 dtcsVersion: "1.0.0"
-id: "bad.map"
-name: "Bad Map Arity"
+id: "expression.nullable.field"
+name: "Expression Nullable Field"
 version: "0.1.0"
 
 inputs:
   - id: "in"
     schema:
       fields:
-        - name: "attributes"
-          type: "map<string>"
-          nullable: false
+        - name: "value"
+          type: "integer"
+          nullable: true
 
 outputs:
   - id: "out"
     schema:
       fields:
         - name: "value"
-          type: "string"
+          type: "integer"
           nullable: false
+
+expressions:
+  - id: "nullable_ref"
+    expr: "in.value"
+    type: "integer"
 
 lineage:
   mappings:

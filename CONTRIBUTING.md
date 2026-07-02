@@ -59,7 +59,7 @@ cargo test --locked
 cargo clippy --all-targets -- -D warnings
 cargo fmt --all -- --check
 cargo publish --dry-run --locked
-maturin build --features python --locked --release
+maturin develop --no-default-features --features python --locked
 pytest python/tests -v
 ```
 
@@ -68,7 +68,7 @@ pytest python/tests -v
 1. Describe whether the change is specification, implementation, or editorial.
 2. Link related issues or design discussions when available.
 3. Include or update tests for behavioral changes.
-4. Ensure `cargo test` passes.
+4. Ensure `cargo test` and `pytest python/tests -v` pass.
 
 ## Questions
 

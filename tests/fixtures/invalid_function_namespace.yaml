@@ -1,15 +1,12 @@
 dtcsVersion: "1.0.0"
-id: "expression.invalid_operator"
-name: "Expression Invalid Operator"
+id: "invalid.function.namespace"
+name: "Invalid Function Namespace"
 version: "0.1.0"
 
 inputs:
   - id: "in"
     schema:
       fields:
-        - name: "label"
-          type: "string"
-          nullable: false
         - name: "value"
           type: "integer"
           nullable: false
@@ -18,14 +15,14 @@ outputs:
   - id: "out"
     schema:
       fields:
-        - name: "label"
-          type: "string"
+        - name: "value"
+          type: "integer"
           nullable: false
 
-expressions:
-  - id: "bad_expr"
-    expr: "in.label * in.value"
-    type: "string"
+functions:
+  - id: "bare_sum"
+    function: "sum"
+    type: "integer"
 
 lineage:
   mappings:

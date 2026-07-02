@@ -1,0 +1,45 @@
+dtcsVersion: "1.0.0"
+id: "function.call.arity"
+name: "Function Call Arity"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "a"
+          type: "integer"
+          nullable: false
+        - name: "b"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+functions:
+  - id: "add_two"
+    function: "vendor:add"
+    type: "integer"
+    parameters:
+      - name: "left"
+        type: "integer"
+        optional: false
+      - name: "right"
+        type: "integer"
+        optional: false
+
+expressions:
+  - id: "missing_arg"
+    expr: "add_two(in.a)"
+    type: "integer"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

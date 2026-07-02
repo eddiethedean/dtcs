@@ -360,3 +360,93 @@ fn rejects_expression_unresolved_field() {
         .iter()
         .any(|d| d.id == codes::INVALID_TYPE));
 }
+
+#[test]
+fn accepts_expression_precedence_multiply() {
+    let report = parse_fixture("expression_precedence_multiply.yaml").validate();
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+}
+
+#[test]
+fn accepts_expression_precedence_compare() {
+    let report = parse_fixture("expression_precedence_compare.yaml").validate();
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+}
+
+#[test]
+fn rejects_duplicate_io_id() {
+    let report = parse_fixture("duplicate_io_id.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::DUPLICATE_IDENTIFIER));
+}
+
+#[test]
+fn rejects_expression_narrowing_decimal() {
+    let report = parse_fixture("expression_narrowing_decimal.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}
+
+#[test]
+fn accepts_expression_unary_minus() {
+    let report = parse_fixture("expression_unary_minus.yaml").validate();
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+}
+
+#[test]
+fn rejects_invalid_function_namespace() {
+    let report = parse_fixture("invalid_function_namespace.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_FUNCTION));
+}
+
+#[test]
+fn rejects_invalid_dtcs_function() {
+    let report = parse_fixture("invalid_dtcs_function.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_FUNCTION));
+}
+
+#[test]
+fn rejects_function_optional_param_order() {
+    let report = parse_fixture("function_optional_param_order.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_FUNCTION));
+}
+
+#[test]
+fn rejects_function_call_arity() {
+    let report = parse_fixture("function_call_arity.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}
+
+#[test]
+fn rejects_lowercase_nullable_target() {
+    let report = parse_fixture("lowercase_nullable_target.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_SEMANTIC_ACTION));
+}
+
+#[test]
+fn rejects_expression_nullable_field() {
+    let report = parse_fixture("expression_nullable_field.yaml").validate();
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_TYPE));
+}

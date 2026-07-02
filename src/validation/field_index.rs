@@ -89,29 +89,13 @@ impl FieldIndex {
         }
     }
 
-    /// Returns all input identifiers.
-    #[allow(dead_code)]
+    /// Returns `true` when an identifier is declared on both inputs and outputs.
     #[must_use]
-    pub fn input_ids(&self) -> &HashSet<String> {
-        &self.input_ids
-    }
-
-    /// Returns all output identifiers.
-    #[allow(dead_code)]
-    #[must_use]
-    pub fn output_ids(&self) -> &HashSet<String> {
-        &self.output_ids
-    }
-
-    /// Returns all interface identifiers.
-    #[allow(dead_code)]
-    #[must_use]
-    pub fn interface_ids(&self) -> HashSet<String> {
+    pub fn has_io_id_collision(&self) -> bool {
         self.input_ids
-            .iter()
-            .chain(self.output_ids.iter())
-            .cloned()
-            .collect()
+            .intersection(&self.output_ids)
+            .next()
+            .is_some()
     }
 
     /// Resolve a target against declared interfaces and schema fields.

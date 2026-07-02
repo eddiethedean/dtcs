@@ -55,8 +55,16 @@ fn contract_from_py(
     }
     let json_mod = py.import("json")?;
     let json_str: String = json_mod.call_method1("dumps", (contract,))?.extract()?;
-    serde_json::from_str(&json_str)
-        .map_err(|e| PyValueError::new_err(format!("invalid contract: {e}")))
+    serde_json::from_str(&json_str).map_err(|e| contract_deserialize_error(&e.to_string()))
+}
+
+fn contract_deserialize_error(message: &str) -> PyErr {
+    if message.contains("unknown field") && message.contains('_') {
+        return PyValueError::new_err(format!(
+            "invalid contract: {message}. DTCS contracts use camelCase keys (for example dtcsVersion, semanticActions)"
+        ));
+    }
+    PyValueError::new_err(format!("invalid contract: {message}"))
 }
 
 fn parse_result_to_py(py: Python<'_>, result: ParseResult) -> PyResult<Py<PyAny>> {

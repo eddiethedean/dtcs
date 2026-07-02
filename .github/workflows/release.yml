@@ -23,7 +23,12 @@ jobs:
       - name: Verify tag matches crate and Python versions
         run: |
           crate_version=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
-          py_version=$(grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
+          py_version=$(python - <<'PY'
+import tomllib
+from pathlib import Path
+print(tomllib.loads(Path("pyproject.toml").read_text())["project"]["version"])
+PY
+)
           tag_version="${GITHUB_REF_NAME#v}"
           if [ "$crate_version" != "$tag_version" ]; then
             echo "Tag ${GITHUB_REF_NAME} (v${tag_version}) does not match Cargo.toml version ${crate_version}"
@@ -74,7 +79,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --features python --locked --compatibility pypi
+          args: --release --out dist --no-default-features --features python --locked --compatibility pypi
           sccache: "true"
           manylinux: ${{ matrix.platform.manylinux || 'auto' }}
       - uses: actions/upload-artifact@v4
@@ -107,7 +112,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --features python --locked --compatibility pypi
+          args: --release --out dist --no-default-features --features python --locked --compatibility pypi
           sccache: "true"
           manylinux: musllinux_1_2
       - uses: actions/upload-artifact@v4
@@ -142,7 +147,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --features python --locked --compatibility pypi
+          args: --release --out dist --no-default-features --features python --locked --compatibility pypi
           sccache: "true"
       - uses: actions/upload-artifact@v4
         with:
@@ -170,7 +175,7 @@ jobs:
         uses: PyO3/maturin-action@v1
         with:
           target: ${{ matrix.platform.target }}
-          args: --release --out dist --features python --locked --compatibility pypi
+          args: --release --out dist --no-default-features --features python --locked --compatibility pypi
           sccache: "true"
       - uses: actions/upload-artifact@v4
         with:
@@ -214,4 +219,4 @@ jobs:
       - name: Publish Python package to PyPI
         run: |
           pip install maturin
-          maturin upload --username __token__ --password "$MATURIN_PYPI_TOKEN" dist/*
+          maturin upload --skip-existing --username __token__ --password "$MATURIN_PYPI_TOKEN" dist/*

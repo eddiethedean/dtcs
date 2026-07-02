@@ -2,8 +2,8 @@
 
 use crate::diagnostics::{codes, DiagnosticCategory};
 use crate::model::{
-    is_known_action, is_known_rule, is_vendor_namespaced_identifier, parse_logical_type,
-    LogicalType, TransformationContract,
+    is_known_action, is_known_function, is_known_rule, is_vendor_namespaced_identifier,
+    parse_logical_type, LogicalType, TransformationContract,
 };
 
 use super::context::ValidationContext;
@@ -81,6 +81,30 @@ pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &Transfo
             );
         }
     }
+
+    for function in &contract.functions {
+        if !function.function.starts_with("dtcs:")
+            && !is_vendor_namespaced_identifier(&function.function)
+        {
+            ctx.error(
+                codes::INVALID_FUNCTION,
+                DiagnosticCategory::Semantic,
+                format!("function '{}' must be namespaced", function.function),
+                Some(&format!("functions.{}.function", function.id)),
+                Some("Use a dtcs: identifier or vendor namespace"),
+            );
+            continue;
+        }
+        if function.function.starts_with("dtcs:") && !is_known_function(&function.function) {
+            ctx.error(
+                codes::INVALID_FUNCTION,
+                DiagnosticCategory::Semantic,
+                format!("unsupported standard function '{}'", function.function),
+                Some(&format!("functions.{}.function", function.id)),
+                Some("Use a standardized function identifier"),
+            );
+        }
+    }
 }
 
 fn validate_lowercase_target(
@@ -110,6 +134,19 @@ fn validate_lowercase_target(
             format!(
                 "dtcs:lowercase requires a string field; '{}' is '{}'",
                 field.field_name, field.type_name
+            ),
+            Some(&object_ref),
+            Some("Target a non-nullable string schema field"),
+        );
+        return;
+    }
+    if field.nullable {
+        ctx.error(
+            codes::INVALID_SEMANTIC_ACTION,
+            DiagnosticCategory::Semantic,
+            format!(
+                "dtcs:lowercase cannot target nullable field '{}'",
+                field.field_name
             ),
             Some(&object_ref),
             Some("Target a non-nullable string schema field"),

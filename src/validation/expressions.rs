@@ -11,6 +11,13 @@ use crate::model::{
 use super::context::ValidationContext;
 use super::field_index::{FieldIndex, TargetResolution};
 
+/// Inferred expression type including nullability from field references.
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct InferredExprType {
+    logical: LogicalType,
+    nullable: bool,
+}
+
 pub(crate) fn validate_expressions(ctx: &mut ValidationContext, contract: &TransformationContract) {
     let index = FieldIndex::from_contract(contract);
     let functions: HashMap<&str, &Function> = contract
@@ -52,13 +59,21 @@ pub(crate) fn validate_expressions(ctx: &mut ValidationContext, contract: &Trans
         match infer_expression_type(expression.expr.as_deref().unwrap_or(""), &index, &functions) {
             Ok(inferred) => {
                 let declared = parse_logical_type(declared_type).expect("validated above");
-                if !types_assignable(&inferred, &declared) {
+                if inferred.nullable {
+                    ctx.error(
+                        codes::INVALID_TYPE,
+                        DiagnosticCategory::Type,
+                        "expression references nullable fields but declares a non-null type",
+                        Some(&format!("{object_ref}.type")),
+                        Some("Use nullable-compatible typing or target non-nullable fields"),
+                    );
+                } else if !types_assignable(&inferred.logical, &declared) {
                     ctx.error(
                         codes::INVALID_TYPE,
                         DiagnosticCategory::Type,
                         format!(
                             "expression type '{declared_type}' does not match inferred type '{}'",
-                            format_logical_type(&inferred)
+                            format_logical_type(&inferred.logical)
                         ),
                         Some(&format!("{object_ref}.type")),
                         Some("Align the declared type with the expression semantics"),
@@ -96,6 +111,7 @@ fn validate_function_declaration(ctx: &mut ValidationContext, function: &Functio
     }
 
     let mut seen = HashSet::new();
+    let mut optional_started = false;
     for (index, parameter) in function.parameters.iter().enumerate() {
         let param_ref = format!("{object_ref}.parameters[{index}]");
         if parameter.name.trim().is_empty() {
@@ -117,6 +133,20 @@ fn validate_function_declaration(ctx: &mut ValidationContext, function: &Functio
                 Some("Use unique parameter names within each function"),
             );
         }
+        if parameter.optional {
+            optional_started = true;
+        } else if optional_started {
+            ctx.error(
+                codes::INVALID_FUNCTION,
+                DiagnosticCategory::Type,
+                format!(
+                    "required parameter '{}' must appear before optional parameters",
+                    parameter.name
+                ),
+                Some(&format!("{param_ref}.name")),
+                Some("Declare optional parameters as a trailing suffix"),
+            );
+        }
         if let Err(error) = parse_logical_type(&parameter.type_name) {
             emit_type_error(
                 ctx,
@@ -129,74 +159,170 @@ fn validate_function_declaration(ctx: &mut ValidationContext, function: &Functio
 }
 
 fn types_assignable(inferred: &LogicalType, declared: &LogicalType) -> bool {
-    matches!(
-        type_compatible(inferred, declared),
-        TypeCompatibility::Identical | TypeCompatibility::Compatible
-    )
+    match type_compatible(inferred, declared) {
+        TypeCompatibility::Identical => true,
+        TypeCompatibility::Compatible => matches!(
+            (inferred, declared),
+            (
+                LogicalType::Primitive(a),
+                LogicalType::Primitive(b)
+            ) if a == "integer" && b == "decimal"
+        ),
+        TypeCompatibility::Incompatible => false,
+    }
 }
 
 fn infer_expression_type(
     expr: &str,
     index: &FieldIndex,
     functions: &HashMap<&str, &Function>,
-) -> Result<LogicalType, String> {
+) -> Result<InferredExprType, String> {
     let expr = expr.trim();
     if expr.is_empty() {
         return Err("expression body is empty".into());
     }
-    infer_node(expr, index, functions)
+    infer_comparison(expr, index, functions)
 }
 
-fn infer_node(
+fn infer_comparison(
     expr: &str,
     index: &FieldIndex,
     functions: &HashMap<&str, &Function>,
-) -> Result<LogicalType, String> {
+) -> Result<InferredExprType, String> {
+    if let Some((left, op, right)) =
+        split_binary_leftmost(expr, &["==", "!=", "<=", ">=", "<", ">"])
+    {
+        let left_type = infer_additive(left, index, functions)?;
+        let right_type = infer_additive(right, index, functions)?;
+        let logical = infer_binary_type(op, &left_type.logical, &right_type.logical)?;
+        return Ok(InferredExprType {
+            logical,
+            nullable: false,
+        });
+    }
+    infer_additive(expr, index, functions)
+}
+
+fn infer_additive(
+    expr: &str,
+    index: &FieldIndex,
+    functions: &HashMap<&str, &Function>,
+) -> Result<InferredExprType, String> {
+    if let Some((left, op, right)) = split_binary_leftmost(expr, &["+", "-"]) {
+        let left_type = infer_additive(left, index, functions)?;
+        let right_type = infer_multiplicative(right, index, functions)?;
+        let logical = infer_binary_type(op, &left_type.logical, &right_type.logical)?;
+        return Ok(InferredExprType {
+            logical,
+            nullable: left_type.nullable || right_type.nullable,
+        });
+    }
+    infer_multiplicative(expr, index, functions)
+}
+
+fn infer_multiplicative(
+    expr: &str,
+    index: &FieldIndex,
+    functions: &HashMap<&str, &Function>,
+) -> Result<InferredExprType, String> {
+    if let Some((left, op, right)) = split_binary_leftmost(expr, &["*", "/"]) {
+        let left_type = infer_multiplicative(left, index, functions)?;
+        let right_type = infer_unary(right, index, functions)?;
+        let logical = infer_binary_type(op, &left_type.logical, &right_type.logical)?;
+        return Ok(InferredExprType {
+            logical,
+            nullable: left_type.nullable || right_type.nullable,
+        });
+    }
+    infer_unary(expr, index, functions)
+}
+
+fn infer_unary(
+    expr: &str,
+    index: &FieldIndex,
+    functions: &HashMap<&str, &Function>,
+) -> Result<InferredExprType, String> {
+    let expr = expr.trim();
+    if let Some(rest) = expr.strip_prefix('-') {
+        let inner = infer_unary(rest, index, functions)?;
+        let logical = negate_type(&inner.logical)?;
+        return Ok(InferredExprType {
+            logical,
+            nullable: inner.nullable,
+        });
+    }
+    if let Some(rest) = expr.strip_prefix('+') {
+        return infer_unary(rest, index, functions);
+    }
+    infer_primary(expr, index, functions)
+}
+
+fn infer_primary(
+    expr: &str,
+    index: &FieldIndex,
+    functions: &HashMap<&str, &Function>,
+) -> Result<InferredExprType, String> {
     let expr = expr.trim();
     if let Some(inner) = strip_outer_parens(expr) {
-        return infer_node(inner, index, functions);
+        return infer_comparison(inner, index, functions);
     }
-
-    if let Some((left, op, right)) = split_binary(
-        expr,
-        &["==", "!=", "<=", ">=", "<", ">", "+", "-", "*", "/"],
-    ) {
-        let left_type = infer_node(left, index, functions)?;
-        let right_type = infer_node(right, index, functions)?;
-        return infer_binary_type(op, &left_type, &right_type);
-    }
-
     if let Some((name, args_source)) = split_call(expr) {
-        return infer_call_type(name, args_source, index, functions);
+        let logical = infer_call_type(name, args_source, index, functions)?;
+        return Ok(InferredExprType {
+            logical,
+            nullable: false,
+        });
     }
-
     infer_atom(expr, index)
 }
 
-fn infer_atom(expr: &str, index: &FieldIndex) -> Result<LogicalType, String> {
+fn negate_type(logical: &LogicalType) -> Result<LogicalType, String> {
+    match logical {
+        LogicalType::Primitive(name) if is_numeric_primitive(name) => Ok(logical.clone()),
+        _ => Err(format!(
+            "unary '-' requires a numeric operand, found '{}'",
+            format_logical_type(logical)
+        )),
+    }
+}
+
+fn infer_atom(expr: &str, index: &FieldIndex) -> Result<InferredExprType, String> {
     let expr = expr.trim();
     if expr.eq_ignore_ascii_case("true") || expr.eq_ignore_ascii_case("false") {
-        return Ok(LogicalType::Primitive("boolean".into()));
+        return Ok(non_null(LogicalType::Primitive("boolean".into())));
     }
     if (expr.starts_with('"') && expr.ends_with('"'))
         || (expr.starts_with('\'') && expr.ends_with('\''))
     {
-        return Ok(LogicalType::Primitive("string".into()));
+        return Ok(non_null(LogicalType::Primitive("string".into())));
     }
     if expr.parse::<i64>().is_ok() {
-        return Ok(LogicalType::Primitive("integer".into()));
+        return Ok(non_null(LogicalType::Primitive("integer".into())));
     }
     if expr.parse::<f64>().is_ok() && expr.contains('.') {
-        return Ok(LogicalType::Primitive("decimal".into()));
+        return Ok(non_null(LogicalType::Primitive("decimal".into())));
     }
 
     resolve_field_type(expr, index)
 }
 
-fn resolve_field_type(target: &str, index: &FieldIndex) -> Result<LogicalType, String> {
+fn non_null(logical: LogicalType) -> InferredExprType {
+    InferredExprType {
+        logical,
+        nullable: false,
+    }
+}
+
+fn resolve_field_type(target: &str, index: &FieldIndex) -> Result<InferredExprType, String> {
     match index.resolve(target) {
-        TargetResolution::Field(field) => parse_logical_type(&field.type_name)
-            .map_err(|_| format!("field '{target}' has invalid logical type")),
+        TargetResolution::Field(field) => {
+            let logical = parse_logical_type(&field.type_name)
+                .map_err(|_| format!("field '{target}' has invalid logical type"))?;
+            Ok(InferredExprType {
+                logical,
+                nullable: field.nullable,
+            })
+        }
         TargetResolution::Ambiguous(_) => Err(format!("field reference '{target}' is ambiguous")),
         TargetResolution::Interface { id, .. } => Err(format!(
             "expression reference '{id}' must target a schema field"
@@ -276,36 +402,48 @@ fn infer_call_type(
         .map_err(|_| format!("function '{name}' has invalid return type"))?;
 
     let args = split_args(args_source);
-    let required = function
-        .parameters
-        .iter()
-        .filter(|parameter| !parameter.optional)
-        .count();
-    if args.len() < required || args.len() > function.parameters.len() {
+    if args.len() > function.parameters.len() {
         return Err(format!(
-            "function '{name}' expects {} parameter(s), found {}",
+            "function '{name}' expects at most {} parameter(s), found {}",
             function.parameters.len(),
             args.len()
         ));
     }
 
+    for (param_index, parameter) in function.parameters.iter().enumerate() {
+        if !parameter.optional && param_index >= args.len() {
+            return Err(format!(
+                "function '{name}' missing required argument for parameter '{}'",
+                parameter.name
+            ));
+        }
+    }
+
     for (arg_index, arg) in args.iter().enumerate() {
-        let arg_type = infer_node(arg, index, functions)?;
-        if let Some(parameter) = function.parameters.get(arg_index) {
-            let param_type = parse_logical_type(&parameter.type_name).map_err(|_| {
-                format!(
-                    "function '{name}' parameter '{}' has invalid type",
-                    parameter.name
-                )
-            })?;
-            if type_compatible(&arg_type, &param_type) == TypeCompatibility::Incompatible {
-                return Err(format!(
-                    "argument {} to function '{name}' has type '{}', expected '{}'",
-                    arg_index + 1,
-                    format_logical_type(&arg_type),
-                    parameter.type_name
-                ));
-            }
+        let arg_type = infer_comparison(arg, index, functions)?;
+        let Some(parameter) = function.parameters.get(arg_index) else {
+            return Err(format!("function '{name}' received too many arguments"));
+        };
+        let param_type = parse_logical_type(&parameter.type_name).map_err(|_| {
+            format!(
+                "function '{name}' parameter '{}' has invalid type",
+                parameter.name
+            )
+        })?;
+        if !types_assignable(&arg_type.logical, &param_type) {
+            return Err(format!(
+                "argument {} to function '{name}' has type '{}', expected '{}'",
+                arg_index + 1,
+                format_logical_type(&arg_type.logical),
+                parameter.type_name
+            ));
+        }
+        if arg_type.nullable && !parameter.optional {
+            return Err(format!(
+                "argument {} to function '{name}' references nullable fields but parameter '{}' is required",
+                arg_index + 1,
+                parameter.name
+            ));
         }
     }
 
@@ -361,24 +499,28 @@ fn strip_outer_parens(expr: &str) -> Option<&str> {
     }
 }
 
-fn split_binary<'a>(expr: &'a str, operators: &[&'a str]) -> Option<(&'a str, &'a str, &'a str)> {
+fn split_binary_leftmost<'a>(
+    expr: &'a str,
+    operators: &[&'a str],
+) -> Option<(&'a str, &'a str, &'a str)> {
     let mut depth = 0;
     let mut in_string = false;
     let mut quote = '\0';
     let bytes = expr.as_bytes();
-    let mut index = expr.len();
-    while index > 0 {
-        index -= 1;
+    let mut index = 0;
+    while index < expr.len() {
         let ch = expr[index..].chars().next()?;
         if in_string {
             if ch == quote && (index == 0 || bytes[index - 1] != b'\\') {
                 in_string = false;
             }
+            index += ch.len_utf8();
             continue;
         }
         if ch == '"' || ch == '\'' {
             in_string = true;
             quote = ch;
+            index += ch.len_utf8();
             continue;
         }
         match ch {
@@ -387,6 +529,10 @@ fn split_binary<'a>(expr: &'a str, operators: &[&'a str]) -> Option<(&'a str, &'
             _ if depth == 0 => {
                 for op in operators {
                     if expr[index..].starts_with(op) {
+                        // Skip unary + / - at expression start.
+                        if index == 0 && (*op == "+" || *op == "-") {
+                            continue;
+                        }
                         let left = expr[..index].trim();
                         let right = expr[index + op.len()..].trim();
                         if !left.is_empty() && !right.is_empty() {
@@ -397,6 +543,7 @@ fn split_binary<'a>(expr: &'a str, operators: &[&'a str]) -> Option<(&'a str, &'
             }
             _ => {}
         }
+        index += ch.len_utf8();
     }
     None
 }
@@ -487,8 +634,7 @@ fn emit_type_error(
 mod tests {
     use super::*;
 
-    #[test]
-    fn infers_integer_multiplication() {
+    fn test_index() -> FieldIndex {
         let contract = crate::model::TransformationContract::from_yaml(
             r#"
 dtcsVersion: "1.0.0"
@@ -499,6 +645,12 @@ inputs:
   - id: "in"
     schema:
       fields:
+        - name: "a"
+          type: "integer"
+          nullable: false
+        - name: "b"
+          type: "integer"
+          nullable: false
         - name: "value"
           type: "integer"
           nullable: false
@@ -517,9 +669,29 @@ lineage:
         )
         .into_contract()
         .expect("contract");
-        let index = FieldIndex::from_contract(&contract);
+        FieldIndex::from_contract(&contract)
+    }
+
+    #[test]
+    fn infers_multiplication_before_addition() {
+        let index = test_index();
         let inferred =
-            infer_expression_type("in.value * 2", &index, &HashMap::new()).expect("type");
-        assert_eq!(inferred, LogicalType::Primitive("integer".into()));
+            infer_expression_type("in.a + in.b * 2", &index, &HashMap::new()).expect("type");
+        assert_eq!(inferred.logical, LogicalType::Primitive("integer".into()));
+    }
+
+    #[test]
+    fn infers_comparison_after_addition() {
+        let index = test_index();
+        let inferred =
+            infer_expression_type("in.a < in.b + 1", &index, &HashMap::new()).expect("type");
+        assert_eq!(inferred.logical, LogicalType::Primitive("boolean".into()));
+    }
+
+    #[test]
+    fn infers_unary_minus() {
+        let index = test_index();
+        let inferred = infer_expression_type("-in.value", &index, &HashMap::new()).expect("type");
+        assert_eq!(inferred.logical, LogicalType::Primitive("integer".into()));
     }
 }

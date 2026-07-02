@@ -19,7 +19,7 @@ pub use action::{is_known_action, SemanticAction};
 pub use contract::{TransformationContract, SUPPORTED_DTCS_VERSIONS};
 pub use expression::Expression;
 pub use extension::ExtensionBlock;
-pub use function::{Function, FunctionParameter};
+pub use function::{is_known_function, Function, FunctionParameter};
 pub use identifiers::{is_namespaced_identifier, is_vendor_namespaced_identifier};
 pub use interface::{Input, InterfaceCondition, Output, StreamingDeclaration, StreamingMode};
 pub use lineage::{Lineage, LineageMapping};

@@ -1,13 +1,16 @@
 dtcsVersion: "1.0.0"
-id: "expression.type"
-name: "Expression Type"
+id: "expression.precedence.multiply"
+name: "Expression Precedence Multiply"
 version: "0.1.0"
 
 inputs:
   - id: "in"
     schema:
       fields:
-        - name: "value"
+        - name: "a"
+          type: "integer"
+          nullable: false
+        - name: "b"
           type: "integer"
           nullable: false
 
@@ -20,13 +23,8 @@ outputs:
           nullable: false
 
 expressions:
-  - id: "double_value"
-    expr: "in.value * 2"
-    type: "integer"
-
-functions:
-  - id: "sum_values"
-    function: "vendor:sum"
+  - id: "sum_then_multiply"
+    expr: "in.a + in.b * 2"
     type: "integer"
 
 lineage:

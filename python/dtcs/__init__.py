@@ -17,7 +17,7 @@ SPEC_VERSION = _spec_version()
 try:
     __version__ = version("dtcs")
 except PackageNotFoundError:
-    __version__ = "0.2.0"
+    __version__ = "0.0.0+dev"
 
 
 def parse(content: str | bytes, format: str = "yaml") -> dict:

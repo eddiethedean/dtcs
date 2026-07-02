@@ -1,10 +1,10 @@
 dtcsVersion: "1.0.0"
-id: "function.missing_return"
-name: "Function Missing Return"
+id: "duplicate.io.id"
+name: "Duplicate IO ID"
 version: "0.1.0"
 
 inputs:
-  - id: "in"
+  - id: "shared"
     schema:
       fields:
         - name: "value"
@@ -12,18 +12,14 @@ inputs:
           nullable: false
 
 outputs:
-  - id: "out"
+  - id: "shared"
     schema:
       fields:
         - name: "value"
           type: "integer"
           nullable: false
 
-functions:
-  - id: "sum_values"
-    function: "vendor:sum"
-
 lineage:
   mappings:
-    - output: "out"
-      inputs: ["in"]
+    - output: "shared"
+      inputs: ["shared"]

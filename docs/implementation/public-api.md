@@ -69,9 +69,41 @@ contract = result["contract"]
 report = dtcs.validate(contract)
 assert dtcs.is_valid(report)
 
-metadata_report = dtcs.metadata_validate(contract)
+result = dtcs.parse_file("contract.dtcs.yaml")
 merged = dtcs.validate_result(result)
+report = dtcs.parse_and_validate(yaml_text, "yaml")
+
+metadata_report = dtcs.metadata_validate(contract)
+summary = dtcs.inspect(contract)
 ```
+
+| Symbol | Description |
+|--------|-------------|
+| `dtcs.SPEC_VERSION` | DTCS specification version targeted by this build |
+| `dtcs.__version__` | Installed package version (`0.0.0+dev` when running from source without metadata) |
+| `parse` / `parse_file` | Parse YAML or JSON into `{"contract": ..., "report": ...}` |
+| `validate` / `metadata_validate` | Validate a parsed contract dict |
+| `validate_result` | Merge parse-time and validation diagnostics |
+| `parse_and_validate` | Parse and validate in one step |
+| `inspect` | Human-readable contract summary |
+| `is_valid` | True when a diagnostic report has no error-severity items |
+
+## CLI
+
+Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install dtcs`) install a `dtcs` command on `PATH`.
+
+The `dtcs` binary is enabled by default in the Rust crate (`cli` feature):
+
+```bash
+dtcs validate contract.yaml
+dtcs validate contract.yaml --json
+dtcs inspect contract.yaml
+dtcs inspect contract.yaml --json
+dtcs diagnostics contract.yaml --json
+dtcs version
+```
+
+The Python package exposes the same subcommands via `python -m dtcs` or the `dtcs` console script.
 
 ## Type system (Phase 0.2)
 
@@ -83,17 +115,6 @@ let list = parse_logical_type("list<string>").expect("composite");
 assert_eq!(type_compatible(&integer, &integer), TypeCompatibility::Identical);
 ```
 
-Expression and function typing runs during the Types validation phase. Expressions with bodies must declare a `type`; functions must declare a return `type`. The validator infers expression types from field references, literals, binary operators, and in-contract function calls.
-
-## CLI
-
-The `dtcs` binary is enabled by default (`cli` feature):
-
-```bash
-dtcs validate contract.yaml
-dtcs inspect contract.yaml
-dtcs diagnostics contract.yaml --json
-dtcs version
-```
+Expression and function typing runs during the Types validation phase. Expressions with bodies must declare a `type`; functions must declare a return `type`. The validator infers expression types from field references, literals, unary operators, precedence-aware binary operators, and in-contract function calls.
 
 Use terminology from [`SPEC.md`](../../SPEC.md). When this guide conflicts with the specification, **SPEC.md wins**.

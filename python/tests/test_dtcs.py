@@ -10,16 +10,14 @@ import pytest
 import dtcs
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
-FIXTURES = PACKAGE_ROOT / "fixtures"
-REPO_FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures"
-EXAMPLE = Path(__file__).resolve().parents[2] / "examples" / "customer_normalize.dtcs.yaml"
-MANIFEST = PACKAGE_ROOT / "fixture_expectations.json"
+REPO_ROOT = Path(__file__).resolve().parents[2]
+FIXTURES = REPO_ROOT / "tests" / "fixtures"
+EXAMPLE = REPO_ROOT / "examples" / "customer_normalize.dtcs.yaml"
+MANIFEST = REPO_ROOT / "tests" / "fixture_expectations.json"
 
 
 def _fixture_dir() -> Path:
-    if FIXTURES.exists():
-        return FIXTURES
-    return REPO_FIXTURES
+    return FIXTURES
 
 
 def _fixture(name: str) -> bytes:
@@ -262,3 +260,26 @@ def test_unsupported_format_raises() -> None:
 def test_parse_file_missing_path_raises() -> None:
     with pytest.raises(ValueError):
         dtcs.parse_file("/tmp/does-not-exist-dtcs-fixture.yaml")
+
+
+def test_cli_missing_file_exits_cleanly() -> None:
+    output = _python_dtcs("validate", "/tmp/does-not-exist-dtcs-fixture.yaml")
+    assert output.returncode == 1
+    assert "traceback" not in output.stderr.lower()
+    assert output.stderr.strip()
+
+
+def test_cli_validate_json_output() -> None:
+    output = _python_dtcs("validate", "--json", str(EXAMPLE))
+    assert output.returncode == 0
+    payload = json.loads(output.stdout)
+    assert payload["valid"] is True
+    assert isinstance(payload["diagnostics"], list)
+
+
+def test_cli_inspect_json_output() -> None:
+    output = _python_dtcs("inspect", "--json", str(EXAMPLE))
+    assert output.returncode == 0
+    payload = json.loads(output.stdout)
+    assert payload["id"] == "customer.normalize"
+    assert payload["inputs"] >= 1

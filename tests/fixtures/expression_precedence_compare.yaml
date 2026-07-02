@@ -1,13 +1,16 @@
 dtcsVersion: "1.0.0"
-id: "expression.unresolved_field"
-name: "Expression Unresolved Field"
+id: "expression.precedence.compare"
+name: "Expression Precedence Compare"
 version: "0.1.0"
 
 inputs:
   - id: "in"
     schema:
       fields:
-        - name: "value"
+        - name: "a"
+          type: "integer"
+          nullable: false
+        - name: "b"
           type: "integer"
           nullable: false
 
@@ -15,14 +18,14 @@ outputs:
   - id: "out"
     schema:
       fields:
-        - name: "value"
-          type: "integer"
+        - name: "flag"
+          type: "boolean"
           nullable: false
 
 expressions:
-  - id: "bad_ref"
-    expr: "in.missing * 2"
-    type: "integer"
+  - id: "compare_sum"
+    expr: "in.a < in.b + 1"
+    type: "boolean"
 
 lineage:
   mappings:

@@ -22,7 +22,7 @@ inputs:
           nullable: false
         - name: "email"
           type: "string"
-          nullable: true
+          nullable: false
 
 outputs:
   - id: "customer_clean"

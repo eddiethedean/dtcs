@@ -1,6 +1,6 @@
 dtcsVersion: "1.0.0"
-id: "extension.type"
-name: "Extension Type"
+id: "expression.narrowing.decimal"
+name: "Expression Narrowing Decimal"
 version: "0.1.0"
 
 inputs:
@@ -8,7 +8,7 @@ inputs:
     schema:
       fields:
         - name: "amount"
-          type: "vendor:Money"
+          type: "decimal"
           nullable: false
 
 outputs:
@@ -16,8 +16,13 @@ outputs:
     schema:
       fields:
         - name: "amount"
-          type: "vendor:Money"
+          type: "integer"
           nullable: false
+
+expressions:
+  - id: "narrow_decimal"
+    expr: "in.amount"
+    type: "integer"
 
 lineage:
   mappings:

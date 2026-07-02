@@ -37,6 +37,8 @@ cargo install dtcs --version 0.2.0
 pip install dtcs==0.2.0
 ```
 
+Both installs provide a `dtcs` CLI on `PATH` (`validate`, `inspect`, `diagnostics`, `version`).
+
 The current PyPI/crates.io release is `0.1.2` until `v0.2.0` is tagged. See [CONTRIBUTING.md](CONTRIBUTING.md#releasing) for the release workflow.
 
 ## Quick start

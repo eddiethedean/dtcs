@@ -12,6 +12,18 @@ Phase 0.2 — Contract Model.
 - Python CLI aligned with Rust (`parse_file` for all commands)
 - `validate_result()` and `__version__` exported from the Python package
 
+**0.2.0 follow-up fixes (no version bump):**
+
+- Expression operator precedence (`*`, `/` before `+`, `-`; comparisons bind correctly)
+- Reject duplicate identifiers across inputs and outputs
+- Directional integer/decimal assignability (no lossy narrowing)
+- Function namespace validation, optional-parameter ordering, and call arity checks
+- Unary minus in expressions; nullable field rejection in typed expressions
+- `dtcs:lowercase` rejects nullable string targets
+- Python CLI catches `parse_file` I/O errors without traceback; shared fixture manifest under `tests/`
+- CI Python version matrix; maturin builds with `--no-default-features --features python`
+- PyPI `--skip-existing` on release re-runs; robust `pyproject.toml` version parsing in CI
+
 **Release:** pending `v0.2.0` tag (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.1.2

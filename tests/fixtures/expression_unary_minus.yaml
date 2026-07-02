@@ -1,21 +1,29 @@
 dtcsVersion: "1.0.0"
-id: "broken id"
-name: "Broken"
+id: "expression.unary.minus"
+name: "Expression Unary Minus"
 version: "0.1.0"
+
 inputs:
   - id: "in"
     schema:
       fields:
         - name: "value"
-          type: "string"
+          type: "integer"
           nullable: false
+
 outputs:
   - id: "out"
     schema:
       fields:
         - name: "value"
-          type: "string"
+          type: "integer"
           nullable: false
+
+expressions:
+  - id: "negate"
+    expr: "-in.value"
+    type: "integer"
+
 lineage:
   mappings:
     - output: "out"

@@ -68,6 +68,21 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
         "rules",
     );
 
+    let index = FieldIndex::from_contract(contract);
+    if index.has_io_id_collision() {
+        for output in &contract.outputs {
+            if contract.inputs.iter().any(|input| input.id == output.id) {
+                ctx.error(
+                    codes::DUPLICATE_IDENTIFIER,
+                    DiagnosticCategory::Structure,
+                    format!("duplicate interface identifier '{}'", output.id),
+                    Some(&format!("outputs.{}.id", output.id)),
+                    Some("Use unique identifiers across inputs and outputs"),
+                );
+            }
+        }
+    }
+
     for input in &contract.inputs {
         if let Some(schema) = &input.schema {
             check_duplicate_schema_fields(
@@ -88,7 +103,6 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
         }
     }
 
-    let index = FieldIndex::from_contract(contract);
     warn_ambiguous_field_names(ctx, &index);
 }
 

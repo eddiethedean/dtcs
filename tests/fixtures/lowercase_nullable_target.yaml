@@ -1,22 +1,30 @@
 dtcsVersion: "1.0.0"
-id: "broken"
-name: "Broken"
+id: "lowercase.nullable.target"
+name: "Lowercase Nullable Target"
 version: "0.1.0"
+
 inputs:
   - id: "in"
     schema:
       fields:
-        - name: "value"
+        - name: "name"
           type: "string"
-          nullable: false
+          nullable: true
+
 outputs:
   - id: "out"
     schema:
       fields:
-        - name: "value"
+        - name: "name"
           type: "string"
           nullable: false
+
 semanticActions:
-  - id: "bad_target"
+  - id: "lower_name"
     action: "dtcs:lowercase"
-    target: "missing_field"
+    target: "in.name"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -52,6 +52,17 @@
     {"file": "expression_type_mismatch.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
     {"file": "function_missing_return_type.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:missing-required-field"]},
     {"file": "expression_invalid_operator.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
-    {"file": "expression_unresolved_field.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]}
+    {"file": "expression_unresolved_field.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
+    {"file": "expression_precedence_multiply.yaml", "parse_valid": true, "contract": true, "validate_valid": true},
+    {"file": "expression_precedence_compare.yaml", "parse_valid": true, "contract": true, "validate_valid": true},
+    {"file": "duplicate_io_id.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:duplicate-identifier"]},
+    {"file": "expression_narrowing_decimal.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
+    {"file": "expression_unary_minus.yaml", "parse_valid": true, "contract": true, "validate_valid": true},
+    {"file": "invalid_function_namespace.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-function"]},
+    {"file": "invalid_dtcs_function.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-function"]},
+    {"file": "function_optional_param_order.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-function"]},
+    {"file": "function_call_arity.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
+    {"file": "lowercase_nullable_target.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-semantic-action"]},
+    {"file": "expression_nullable_field.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]}
   ]
 }

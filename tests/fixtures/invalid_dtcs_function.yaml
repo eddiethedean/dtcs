@@ -1,23 +1,28 @@
 dtcsVersion: "1.0.0"
-id: "map.type"
-name: "Map Type"
+id: "invalid.dtcs.function"
+name: "Invalid DTCS Function"
 version: "0.1.0"
 
 inputs:
   - id: "in"
     schema:
       fields:
-        - name: "attributes"
-          type: "map<string,integer>"
+        - name: "value"
+          type: "integer"
           nullable: false
 
 outputs:
   - id: "out"
     schema:
       fields:
-        - name: "attributes"
-          type: "map<string,integer>"
+        - name: "value"
+          type: "integer"
           nullable: false
+
+functions:
+  - id: "unknown_fn"
+    function: "dtcs:unknown"
+    type: "integer"
 
 lineage:
   mappings:
