@@ -56,8 +56,22 @@ dtcs diagnostics contract.yaml
 dtcs version
 ```
 
-## Phase 7 — Compatibility and Plan Stubs
+## Phase 7 — Contract Analysis (Phase 0.3)
 
-- Add compatibility model skeleton.
-- Add Transformation Plan skeleton.
+- Compatibility comparison and five-level classification
+- Evolution analysis with change categories
+- Ch 25 versioning validation
+- Dataset-level lineage analysis
+
+Additional CLI commands:
+
+```bash
+dtcs compat source.yaml target.yaml
+dtcs evolve older.yaml newer.yaml
+dtcs lineage contract.yaml
+```
+
+## Phase 8 — Plan Stubs
+
+- Add Transformation Plan skeleton (`src/plan/`).
 - Do not implement compilers yet.

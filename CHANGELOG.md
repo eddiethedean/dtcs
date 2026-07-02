@@ -11,6 +11,9 @@ Phase 0.3 — Contract Analysis.
 - CLI: `dtcs compat`, `dtcs evolve`, `dtcs lineage`
 - Python: `compat_analyze`, `evolve_analyze`, `lineage_analyze`, `version_validate`
 - Fixtures under `tests/fixtures/compatibility/` for all classification levels
+- User documentation under `docs/user/` and adoption overview under `docs/adoption/`
+
+**Release:** pending `v0.3.0` tag (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.2.0
 
@@ -36,7 +39,7 @@ Phase 0.2 — Contract Model.
 - CI Python version matrix; maturin builds with `--no-default-features --features python`
 - PyPI `--skip-existing` on release re-runs; robust `pyproject.toml` version parsing in CI
 
-**Release:** pending `v0.2.0` tag (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+**Release:** published at `v0.2.0` (crates.io and PyPI).
 
 ## 0.1.2
 

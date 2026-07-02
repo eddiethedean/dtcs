@@ -30,7 +30,7 @@ The Rust reference crate lives in [src/](src/). Before implementing a module:
 
 ### Scope
 
-The reference crate through **0.2.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), and diagnostics. Do not add execution, compilation, or runtime features without an agreed milestone. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
+The reference crate through **0.3.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, and contract analysis (compatibility, evolution, versioning, and dataset-level lineage). Do not add execution, compilation, or runtime features without an agreed milestone. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 
 ### Code style
 

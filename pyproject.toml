@@ -29,7 +29,7 @@ dev = ["pytest>=8"]
 [project.urls]
 Homepage = "https://github.com/eddiethedean/dtcs"
 Repository = "https://github.com/eddiethedean/dtcs"
-Documentation = "https://github.com/eddiethedean/dtcs#readme"
+Documentation = "https://github.com/eddiethedean/dtcs/blob/main/docs/README.md"
 
 [project.scripts]
 dtcs = "dtcs.__main__:main"

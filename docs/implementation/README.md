@@ -6,10 +6,11 @@ See the canonical documentation index at [`docs/README.md`](../README.md).
 
 Treat [`SPEC.md`](../../SPEC.md) as the authoritative source of truth.
 
-The first implementation goal is:
+The implementation pipeline through Phase 0.3:
 
 ```text
 parse -> Canonical Object Model -> validate -> diagnostics
+                                              -> analyze (compat, evolution, lineage, versioning)
 ```
 
 Do not implement execution, optimization, or backend compilation yet.

@@ -62,17 +62,30 @@ let report = metadata::validate(&contract);
 ```rust
 use dtcs::{
     analyze_compatibility, analyze_evolution, analyze_lineage, ComparisonScope,
-    CompatibilityLevel,
+    CompatibilityLevel, parse_file,
 };
 
-let source = /* TransformationContract */;
-let target = /* TransformationContract */;
+let source = parse_file("examples/analysis/backward_old.yaml")?.into_contract()?;
+let target = parse_file("examples/analysis/backward_new.yaml")?.into_contract()?;
 
 let compat = analyze_compatibility(&source, &target, ComparisonScope::all());
 assert_eq!(compat.level, CompatibilityLevel::BackwardCompatible);
 
 let evolution = analyze_evolution(&source, &target);
 let lineage = analyze_lineage(&source);
+```
+
+```python
+import dtcs
+
+older = dtcs.parse_file("examples/analysis/backward_old.yaml")["contract"]
+newer = dtcs.parse_file("examples/analysis/backward_new.yaml")["contract"]
+
+compat = dtcs.compat_analyze(older, newer)
+assert compat["level"] == "backwardCompatible"
+
+evolution = dtcs.evolve_analyze(older, newer)
+lineage = dtcs.lineage_analyze(older)
 ```
 
 Versioning validation (Ch 25) runs during full contract validation when a `versioning` block is present, and is also available standalone:

@@ -1,4 +1,4 @@
-# Non-Goals for the First Rust Crate
+# Reference Implementation Boundaries
 
 Do not implement these yet:
 
@@ -13,7 +13,7 @@ Do not implement these yet:
 - Node bindings
 - Conformance profiles and Ch 23 certification suites
 
-The first crate should be a correct spec core based on [`SPEC.md`](../../SPEC.md).
+The reference crate should remain a correct spec core based on [`SPEC.md`](../../SPEC.md).
 
 ## In scope through 0.3.0
 
@@ -29,18 +29,6 @@ The first crate should be a correct spec core based on [`SPEC.md`](../../SPEC.md
 - Ch 25 versioning validation (Phase 0.3)
 - Dataset-level lineage analysis: dependency graph, impact, governance (Phase 0.3)
 - CLI (`validate`, `inspect`, `diagnostics`, `version`, `compat`, `evolve`, `lineage`)
-- Python bindings via maturin
-
-## In scope through 0.2.0
-
-- Parse YAML and JSON into the Canonical Object Model
-- Seven-phase validation with structured diagnostics
-- Metadata validation (Phase 0.2)
-- Type system: conversions, collections, extension types, expression typing (Phase 0.2)
-- I/O interfaces: optional inputs, streaming, pre/postconditions (Phase 0.2)
-- Lineage completeness enforcement
-- Scoped field reference resolution
-- CLI (`validate`, `inspect`, `diagnostics`, `version`)
 - Python bindings via maturin
 
 Lineage is **not** waived in the MVP core — contracts with outputs must declare provenance mappings.

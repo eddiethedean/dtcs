@@ -1,0 +1,44 @@
+dtcsVersion: "1.0.0"
+id: "lineage.multi"
+name: "Multi IO Lineage"
+version: "1.0.0"
+
+metadata:
+  governance:
+    owner: "data-platform"
+    steward: "analytics"
+
+inputs:
+  - id: "customers"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+  - id: "orders"
+    schema:
+      fields:
+        - name: "customer_id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "customer_summary"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+  - id: "order_enriched"
+    schema:
+      fields:
+        - name: "customer_id"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "customer_summary"
+      inputs: ["customers"]
+    - output: "order_enriched"
+      inputs: ["orders", "customers"]
