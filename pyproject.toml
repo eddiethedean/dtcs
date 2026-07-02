@@ -23,6 +23,9 @@ classifiers = [
 ]
 dependencies = []
 
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
 [project.urls]
 Homepage = "https://github.com/dtcs/dtcs"
 Repository = "https://github.com/dtcs/dtcs"
@@ -35,6 +38,3 @@ dtcs = "dtcs.__main__:main"
 features = ["python"]
 python-source = "python"
 module-name = "dtcs._native"
-
-[dependency-groups]
-dev = ["pytest>=8"]
