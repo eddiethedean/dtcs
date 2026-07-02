@@ -62,7 +62,7 @@ jobs:
         run: pip install maturin
       - name: Build wheels (macOS universal)
         if: runner.os == 'macOS'
-        run: maturin build --release --features python --locked -i universal2 --out dist
+        run: maturin build --release --features python --locked --universal2 --out dist
       - name: Build wheels
         if: runner.os != 'macOS'
         run: maturin build --release --features python --locked --out dist
