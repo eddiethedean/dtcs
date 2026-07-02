@@ -167,6 +167,7 @@ Expression typing in 0.2 performs static analysis of declared expression bodies 
 
 - [x] [Ch 4 §14](SPEC.md#chapter-4----type-system), [Ch 5 §13](SPEC.md#chapter-5----metadata), [Ch 6 §15](SPEC.md#chapter-6----inputs-and-outputs): chapter conformance
 - [x] Fixture corpus extended with metadata, streaming, and optional-input cases
+- [ ] Publish to crates.io and PyPI at `0.2.0` (tag `v0.2.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

@@ -30,13 +30,38 @@ The Rust reference crate lives in [src/](src/). Before implementing a module:
 
 ### Scope
 
-The initial crate targets parsing, the canonical object model, validation, and diagnostics. Do not add execution, compilation, or runtime features without an agreed milestone. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
+The reference crate through **0.2.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), and diagnostics. Do not add execution, compilation, or runtime features without an agreed milestone. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 
 ### Code style
 
 - Run `cargo fmt` and `cargo clippy` before submitting changes.
 - Keep modules aligned with [docs/implementation/crate-layout.md](docs/implementation/crate-layout.md).
 - Prefer conservative behavior when the spec is ambiguous; document open questions with a `TODO` referencing the spec section.
+
+## Releasing
+
+Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a semver tag is pushed:
+
+```bash
+# Ensure Cargo.toml and pyproject.toml are both 0.2.0 and CI is green
+git tag v0.2.0
+git push origin v0.2.0
+```
+
+The workflow verifies the tag matches `Cargo.toml` and `pyproject.toml`, runs checks, publishes to crates.io, builds multi-platform Python wheels, and uploads to PyPI.
+
+Required repository secrets: `CARGO_REGISTRY_TOKEN`, `PYPI_API_TOKEN`.
+
+Before tagging, confirm locally:
+
+```bash
+cargo test --locked
+cargo clippy --all-targets -- -D warnings
+cargo fmt --all -- --check
+cargo publish --dry-run --locked
+maturin build --features python --locked --release
+pytest python/tests -v
+```
 
 ## Pull requests
 

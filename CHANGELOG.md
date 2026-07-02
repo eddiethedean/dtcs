@@ -10,7 +10,14 @@ Phase 0.2 — Contract Model.
 - Namespace validation hardening (reject `http:` / `https:` false positives)
 - Python/Rust fixture parity via shared `tests/fixture_expectations.json`
 - Python CLI aligned with Rust (`parse_file` for all commands)
+- `validate_result()` and `__version__` exported from the Python package
+
+**Release:** pending `v0.2.0` tag (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
+## 0.1.2
+
+Phase 0.1 — Foundation: parser, COM, seven-phase validation, diagnostics, CLI, Python bindings.
 
 ## 0.1.x
 
-Phase 0.1 — Foundation: parser, COM, seven-phase validation, diagnostics, CLI, Python bindings.
+Earlier 0.1.x releases established the initial validation pipeline and distribution tooling.

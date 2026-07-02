@@ -8,7 +8,7 @@ readme = "README.md"
 license = "Apache-2.0"
 keywords = ["dtcs", "data-transformation", "contracts", "validation"]
 categories = ["parsing", "data-structures"]
-repository = "https://github.com/dtcs/dtcs"
+repository = "https://github.com/eddiethedean/dtcs"
 documentation = "https://docs.rs/dtcs"
 
 [lib]
