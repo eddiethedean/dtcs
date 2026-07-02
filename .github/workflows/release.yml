@@ -8,6 +8,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
 jobs:
   checks:
@@ -19,13 +20,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Verify tag matches crate version
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify tag matches crate and Python versions
         run: |
           crate_version=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
+          py_version=$(grep '^version' pyproject.toml | head -1 | cut -d'"' -f2)
           tag_version="${GITHUB_REF_NAME#v}"
           if [ "$crate_version" != "$tag_version" ]; then
             echo "Tag ${GITHUB_REF_NAME} (v${tag_version}) does not match Cargo.toml version ${crate_version}"
             exit 1
           fi
+          if [ "$py_version" != "$tag_version" ]; then
+            echo "Tag ${GITHUB_REF_NAME} (v${tag_version}) does not match pyproject.toml version ${py_version}"
+            exit 1
+          fi
       - name: cargo publish
         run: cargo publish --locked --token "$CARGO_REGISTRY_TOKEN"
+      - name: Publish Python package to PyPI
+        run: |
+          pip install maturin
+          maturin publish --features python --locked

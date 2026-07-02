@@ -56,6 +56,9 @@ pub mod validation;
 #[cfg(feature = "cli")]
 pub mod cli;
 
+#[cfg(feature = "python")]
+mod python;
+
 pub use diagnostics::{
     codes, inspect_contract, Diagnostic, DiagnosticCategory, DiagnosticReport, DiagnosticStage,
     Severity, ValidationReport,

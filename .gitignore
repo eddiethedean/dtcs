@@ -15,3 +15,13 @@
 # Environment
 .env
 .env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+.python-version
+venv/
+.venv/

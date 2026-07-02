@@ -19,6 +19,7 @@ This repository contains:
 | [docs/editorial/](https://github.com/dtcs/dtcs/tree/main/docs/editorial) | Authoring standards, style guide, and review process |
 | [docs/implementation/](https://github.com/dtcs/dtcs/tree/main/docs/implementation) | Rust reference implementation design and build guides |
 | [src/](https://github.com/dtcs/dtcs/tree/main/src) | Rust crate source (`dtcs`) |
+| [python/](https://github.com/dtcs/dtcs/tree/main/python) | Python package source (`dtcs` on PyPI) |
 | [examples/](https://github.com/dtcs/dtcs/tree/main/examples) | Sample DTCS transformation contracts |
 | [tests/](https://github.com/dtcs/dtcs/tree/main/tests) | Integration tests and fixtures |
 | [.github/workflows/](https://github.com/dtcs/dtcs/tree/main/.github/workflows) | CI pipeline |
@@ -40,6 +41,23 @@ cargo run -- validate examples/customer_normalize.dtcs.yaml
 cargo run -- inspect examples/customer_normalize.dtcs.yaml
 ```
 
+### Use the Python package
+
+```bash
+pip install maturin
+maturin develop --features python
+python -m dtcs validate examples/customer_normalize.dtcs.yaml
+python -m dtcs inspect examples/customer_normalize.dtcs.yaml
+pytest python/tests -v
+```
+
+```python
+import dtcs
+
+report = dtcs.parse_and_validate(open("examples/customer_normalize.dtcs.yaml", "rb").read())
+assert dtcs.is_valid(report)
+```
+
 The first implementation milestone is:
 
 ```text
@@ -54,6 +72,7 @@ Execution, backend compilation, and runtime behavior are out of scope for the in
 dtcs/
 ├── SPEC.md                 # Normative specification (source of truth)
 ├── Cargo.toml              # Rust crate manifest
+├── pyproject.toml          # Python package manifest (maturin)
 ├── Cargo.lock              # Pinned dependencies (binary crate)
 ├── README.md
 ├── CONTRIBUTING.md
@@ -64,6 +83,7 @@ dtcs/
 │   ├── editorial/          # Specification authoring process
 │   └── implementation/     # Reference implementation guides
 ├── examples/               # Example transformation contracts
+├── python/                 # Python package source
 ├── src/                    # Rust library, CLI binary, validation
 ├── tests/                  # Integration tests and fixtures
 └── .cursor/prompts/        # Cursor build prompt
