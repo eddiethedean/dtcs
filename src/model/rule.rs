@@ -2,7 +2,6 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::identifiers::is_vendor_namespaced_identifier;
 use super::metadata::Metadata;
 
 /// Rule evaluation phase per SPEC Chapter 19.
@@ -44,13 +43,4 @@ pub struct Rule {
     /// Object metadata (SPEC Chapter 5 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
-}
-
-/// Known standard rules for MVP validation.
-pub const KNOWN_RULES: &[&str] = &["dtcs:not_null"];
-
-/// Returns `true` when the rule identifier is recognized.
-#[must_use]
-pub fn is_known_rule(rule: &str) -> bool {
-    KNOWN_RULES.contains(&rule) || is_vendor_namespaced_identifier(rule)
 }

@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.4.0
+
+Phase 0.4 — Registries & Extensibility.
+
+### Features
+
+- Identifier registry model (`RegistryDocument`, `RegistryEntry`, categories, publication status, extension compatibility)
+- Embedded `dtcs:` catalog for actions (`dtcs:lowercase`), rules (`dtcs:not_null`), diagnostic codes, and the reserved `dtcs` namespace
+- Registry resolution APIs: `registry::resolve`, `registry::load`, `registry::default_registry`, `registry::load_merged`
+- Offline URI cache for registry documents (`registry::store_uri_cache`, `registry::load_uri_cached`)
+- Registry-aware validation: standard identifiers resolve through the catalog; `validate_with_registry` accepts vendor catalogs
+- Extension pass enforces mandatory unsupported extensions (`dtcs:unsupported-extension`)
+- CLI: `dtcs registry list`, `dtcs registry resolve [--registry PATH]`
+- Python: `registry_list`, `registry_resolve`, `registry_load`
+
+### Diagnostics
+
+- `dtcs:unknown-registry-entry`
+- `dtcs:invalid-registry`
+- `dtcs:unsupported-extension`
+
+**Release:** push tag `v0.4.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
 ## 0.3.0
 
 Phase 0.3 — Contract Analysis.

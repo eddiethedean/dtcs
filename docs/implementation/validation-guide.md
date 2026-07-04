@@ -14,6 +14,11 @@ The validation phases must follow `SPEC.md`:
 
 Validation should return a `ValidationReport`, not panic.
 
+Semantic and extension phases resolve `dtcs:` identifiers through the
+embedded registry (`registry::default_registry`). Callers may inject a
+vendor catalog with `validate_with_registry`. Unsupported mandatory
+extensions produce `dtcs:unsupported-extension`.
+
 Invalid contracts should produce diagnostics with:
 
 - id

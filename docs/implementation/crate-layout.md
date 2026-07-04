@@ -67,6 +67,11 @@ dtcs/
     lineage/
       mod.rs
       analysis.rs
+    registry/
+      mod.rs
+      builtin.rs
+      load.rs
+      cache.rs
     plan/
       mod.rs
     cli/
@@ -78,10 +83,12 @@ dtcs/
   tests/
     fixtures/
       compatibility/
+      registry/
     fixture_expectations.json
     mvp.rs
     phase_0_2.rs
     phase_0_3.rs
+    phase_0_4.rs
     manifest.rs
 ```
 

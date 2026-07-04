@@ -72,6 +72,15 @@ dtcs lineage examples/analysis/lineage_multi.yaml --impact customers
 dtcs lineage examples/analysis/lineage_multi.yaml --dependency order_enriched
 ```
 
+## Look up registry identifiers
+
+Standard actions, rules, and diagnostic codes live in the embedded registry:
+
+```bash
+dtcs registry list
+dtcs registry resolve dtcs:lowercase
+```
+
 ## Use from Python
 
 ```python
@@ -86,6 +95,10 @@ result = dtcs.parse_file("examples/customer_normalize.dtcs.yaml")
 contract = result["contract"]
 summary = dtcs.inspect(contract)
 print(summary)
+
+entry = dtcs.registry_resolve("dtcs:lowercase")
+assert entry is not None
+assert entry["category"] == "semanticAction"
 ```
 
 Contract dicts returned by `parse` and `parse_file` use **camelCase** keys (`dtcsVersion`, `semanticActions`, etc.).

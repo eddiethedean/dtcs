@@ -4,7 +4,7 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 
 `SPEC.md` is the source of truth.
 
-## Implemented through 0.3.0
+## Implemented through 0.4.0
 
 - Canonical Object Model
 - YAML and JSON parsing
@@ -18,10 +18,12 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 - Evolution analysis (change categories, deprecation, migration hints)
 - Ch 25 versioning validation
 - Dataset-level lineage analysis (dependency graph, impact, governance)
+- Identifier registry (embedded `dtcs:` catalog, file/URI load, offline cache)
+- Registry-aware extension validation (mandatory/optional processing)
 - CLI and Python bindings
 
 ## Stubs / future milestones
 
-- Registry model (`src/model/registry.rs` — minimal struct only)
+- Full standard libraries for actions, functions, and rules (Phase 0.5)
 - Transformation Plan lowering (`src/plan/` — skeleton only)
 - Execution, runtime behavior, backend compilation, and optimization

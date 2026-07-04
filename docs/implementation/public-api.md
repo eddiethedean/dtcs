@@ -96,6 +96,30 @@ use dtcs::versioning;
 let report = versioning::validate(&contract);
 ```
 
+## Registry (Phase 0.4)
+
+```rust
+use dtcs::{
+    default_registry, load_registry, resolve_registry, validate_with_registry,
+};
+
+let registry = default_registry();
+let entry = resolve_registry(registry, "dtcs:lowercase").expect("builtin action");
+
+let vendor = load_registry("vendor_catalog.yaml")?;
+let mut merged = registry.clone();
+merged.merge(&vendor);
+let report = validate_with_registry(&contract, &merged);
+```
+
+```python
+import dtcs
+
+entries = dtcs.registry_list()
+entry = dtcs.registry_resolve("dtcs:lowercase")
+catalog = dtcs.registry_load("vendor_catalog.yaml")
+```
+
 ## Python API
 
 The `dtcs` package mirrors the Rust parse/validate surface. Contract dicts must use **camelCase** keys to match the Canonical Object Model (`dtcsVersion`, `semanticActions`, etc.).
@@ -130,6 +154,9 @@ summary = dtcs.inspect(contract)
 | `evolve_analyze` | Evolution diff between two revisions of the same contract |
 | `lineage_analyze` | Dependency graph, impact, and governance summary |
 | `version_validate` | Ch 25 versioning block validation |
+| `registry_list` | List registry entries (optional vendor catalog path) |
+| `registry_resolve` | Resolve an identifier to a registry entry or `None` |
+| `registry_load` | Load a registry document from a file path |
 
 ## CLI
 
@@ -148,6 +175,9 @@ dtcs compat source.yaml target.yaml
 dtcs compat source.yaml target.yaml --json --scope interfaces,types
 dtcs evolve older.yaml newer.yaml --json
 dtcs lineage contract.yaml --impact INPUT_ID --json
+dtcs registry list
+dtcs registry resolve dtcs:lowercase --json
+dtcs registry resolve acme:transform --registry vendor_catalog.yaml
 ```
 
 The Python package exposes the same subcommands via `python -m dtcs` or the `dtcs` console script.

@@ -29,7 +29,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.1** | [Foundation](#phase-01--foundation) | Ch 1–3, 9–10, 17–20 (core) | **Complete** (`0.1.2`) |
 | **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
-| **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | Planned |
+| **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
 | **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | Planned |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | Planned |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | Planned |
@@ -211,7 +211,7 @@ Analyze contracts for interoperability, safe evolution, versioning, and lineage 
 
 ## Phase 0.4 — Registries & Extensibility
 
-**Target:** `0.4.x` · **Tier:** III · **Prerequisite:** 0.2
+**Target:** `0.4.x` · **Tier:** III · **Prerequisite:** 0.2 · **Status:** **Complete** (`0.4.0`)
 
 **Implements:** Validator (registry pass) · **SPEC:** [Ch 21](SPEC.md#chapter-21----extensibility)–[22](SPEC.md#chapter-22----registries)
 
@@ -241,8 +241,9 @@ Resolve `dtcs:` and vendor identifiers through authoritative registries; validat
 
 ### Exit criteria
 
-- [Ch 21 §12](SPEC.md#chapter-21----extensibility), [Ch 22 §12](SPEC.md#chapter-22----registries)
-- Every `dtcs:` identifier in fixtures resolves to a registry entry
+- [x] [Ch 21 §12](SPEC.md#chapter-21----extensibility), [Ch 22 §12](SPEC.md#chapter-22----registries)
+- [x] Every `dtcs:` identifier in valid contracts resolves to a registry entry
+- [ ] Publish to crates.io and PyPI at `0.4.0` (tag `v0.4.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

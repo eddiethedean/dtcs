@@ -334,6 +334,47 @@ def test_is_valid_treats_missing_severity_as_error() -> None:
     assert not dtcs.is_valid(report)
 
 
+def test_registry_resolve_builtin_action() -> None:
+    entry = dtcs.registry_resolve("dtcs:lowercase")
+    assert entry is not None
+    assert entry["id"] == "dtcs:lowercase"
+    assert entry["category"] == "semanticAction"
+
+
+def test_registry_list_includes_standard_entries() -> None:
+    entries = dtcs.registry_list()
+    ids = {entry["id"] for entry in entries}
+    assert "dtcs:lowercase" in ids
+    assert "dtcs:not_null" in ids
+    assert "dtcs:parse-error" in ids
+
+
+def test_registry_resolve_missing_returns_none() -> None:
+    assert dtcs.registry_resolve("dtcs:does-not-exist") is None
+
+
+def test_registry_load_vendor_catalog() -> None:
+    path = _fixture_dir() / "registry" / "vendor_catalog.yaml"
+    catalog = dtcs.registry_load(str(path))
+    assert catalog["id"] == "vendor.catalog"
+    assert "acme:transform" in catalog["entries"]
+
+
+def test_cli_registry_list_and_resolve() -> None:
+    listed = _python_dtcs("registry", "list", "--json")
+    assert listed.returncode == 0
+    entries = json.loads(listed.stdout)
+    assert any(entry["id"] == "dtcs:lowercase" for entry in entries)
+
+    resolved = _python_dtcs("registry", "resolve", "dtcs:lowercase", "--json")
+    assert resolved.returncode == 0
+    entry = json.loads(resolved.stdout)
+    assert entry["id"] == "dtcs:lowercase"
+
+    missing = _python_dtcs("registry", "resolve", "dtcs:does-not-exist")
+    assert missing.returncode == 1
+
+
 def test_compat_analyze_rejects_invalid_scope() -> None:
     source = dtcs.parse_file(str(_fixture_dir() / "compatibility/backward_old.yaml"))["contract"]
     target = dtcs.parse_file(str(_fixture_dir() / "compatibility/backward_new.yaml"))["contract"]

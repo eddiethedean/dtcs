@@ -48,3 +48,40 @@ pub const DEPRECATED_OBJECT: &str = "dtcs:deprecated-object";
 pub const INVALID_VERSION: &str = "dtcs:invalid-version";
 /// Conflicting version declarations.
 pub const VERSION_CONFLICT: &str = "dtcs:version-conflict";
+/// Unknown or unresolved registry entry.
+pub const UNKNOWN_REGISTRY_ENTRY: &str = "dtcs:unknown-registry-entry";
+/// Invalid registry document.
+pub const INVALID_REGISTRY: &str = "dtcs:invalid-registry";
+/// Unsupported mandatory extension.
+pub const UNSUPPORTED_EXTENSION: &str = "dtcs:unsupported-extension";
+
+/// All standardized diagnostic identifiers registered by this implementation.
+pub const ALL_CODES: &[&str] = &[
+    PARSE_ERROR,
+    UNSUPPORTED_VERSION,
+    MISSING_REQUIRED_FIELD,
+    DUPLICATE_IDENTIFIER,
+    INVALID_IDENTIFIER,
+    UNKNOWN_FIELD,
+    MISSING_LINEAGE,
+    AMBIGUOUS_REFERENCE,
+    INVALID_TYPE,
+    UNRESOLVED_REFERENCE,
+    INVALID_SEMANTIC_ACTION,
+    INVALID_RULE,
+    INVALID_EXTENSION,
+    INVALID_METADATA,
+    INVALID_INTERFACE,
+    TYPE_INCOMPATIBLE,
+    INVALID_CONVERSION,
+    INVALID_FUNCTION,
+    INCOMPATIBLE_CONTRACT,
+    CONDITIONAL_COMPATIBILITY,
+    EVOLUTION_BREAKING_CHANGE,
+    DEPRECATED_OBJECT,
+    INVALID_VERSION,
+    VERSION_CONFLICT,
+    UNKNOWN_REGISTRY_ENTRY,
+    INVALID_REGISTRY,
+    UNSUPPORTED_EXTENSION,
+];

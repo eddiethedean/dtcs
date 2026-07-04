@@ -16,7 +16,7 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 ## Reference implementation maturity
 
-| Component | Status (0.3.0) |
+| Component | Status (0.4.0) |
 |-----------|----------------|
 | Specification | Draft (`1.0.0-draft`, 26 chapters) |
 | Parser (YAML/JSON) | Complete |
@@ -27,6 +27,8 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Evolution analysis | Complete |
 | Versioning validation (Ch 25) | Complete |
 | Lineage analysis (dataset-level) | Complete |
+| Identifier registry & extensibility | Complete (Phase 0.4) |
+| Standard libraries (actions/functions/rules) | Not started (Phase 0.5) |
 | Transformation plan lowering | Not started (Phase 0.7) |
 | Execution / runtime | Not started (Phase 0.9) |
 | Conformance certification (Ch 23) | Not started (Phase 0.10) |

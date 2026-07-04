@@ -94,6 +94,37 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Inspect the identifier registry catalog.
+    Registry {
+        #[command(subcommand)]
+        /// Registry subcommand.
+        command: RegistryCommand,
+    },
+}
+
+/// Registry catalog commands.
+#[derive(Debug, Subcommand)]
+pub enum RegistryCommand {
+    /// List registry entries.
+    List {
+        /// Optional additional registry file to merge.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Resolve a registry identifier.
+    Resolve {
+        /// Identifier to resolve (for example `dtcs:lowercase`).
+        id: String,
+        /// Optional additional registry file to merge.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 /// Run the CLI application.
@@ -233,7 +264,80 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             }
             Ok(0)
         }
+        Command::Registry { command } => run_registry(command),
     }
+}
+
+fn run_registry(command: RegistryCommand) -> miette::Result<i32> {
+    match command {
+        RegistryCommand::List { registry, json } => {
+            let entries = crate::registry::list(registry.as_deref())
+                .map_err(|report| registry_report_error(&report))?;
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&entries).map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                for entry in &entries {
+                    println!(
+                        "{}  [{}]  {}  ({})",
+                        entry.id,
+                        entry.category.as_str(),
+                        entry.name,
+                        entry.status.as_str()
+                    );
+                }
+            }
+            Ok(0)
+        }
+        RegistryCommand::Resolve { id, registry, json } => {
+            let entry = crate::registry::resolve_with_path(&id, registry.as_deref())
+                .map_err(|report| registry_report_error(&report))?;
+            match entry {
+                Some(entry) => {
+                    if json {
+                        println!(
+                            "{}",
+                            serde_json::to_string_pretty(&entry)
+                                .map_err(|e| miette::miette!("{e}"))?
+                        );
+                    } else {
+                        println!("id: {}", entry.id);
+                        println!("name: {}", entry.name);
+                        println!("category: {}", entry.category.as_str());
+                        println!("version: {}", entry.version);
+                        println!("status: {}", entry.status.as_str());
+                        if let Some(definition) = &entry.definition {
+                            println!("definition: {definition}");
+                        }
+                        if let Some(compatibility) = entry.compatibility {
+                            println!("compatibility: {}", compatibility.as_str());
+                        }
+                        println!("supported: {}", entry.supported);
+                    }
+                    Ok(0)
+                }
+                None => {
+                    if json {
+                        println!("null");
+                    } else {
+                        eprintln!("unresolved registry entry: {id}");
+                    }
+                    Ok(1)
+                }
+            }
+        }
+    }
+}
+
+fn registry_report_error(report: &DiagnosticReport) -> miette::Error {
+    let messages: Vec<_> = report
+        .diagnostics
+        .iter()
+        .map(|d| d.message.as_str())
+        .collect();
+    miette::miette!("{}", messages.join("; "))
 }
 
 fn load_valid_contract(path: &PathBuf) -> miette::Result<TransformationContract> {

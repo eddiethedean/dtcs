@@ -2,14 +2,19 @@
 
 use crate::diagnostics::{codes, DiagnosticCategory};
 use crate::model::{
-    is_known_action, is_known_function, is_known_rule, is_vendor_namespaced_identifier,
-    parse_logical_type, LogicalType, TransformationContract,
+    is_vendor_namespaced_identifier, parse_logical_type, LogicalType, RegistryCategory,
+    RegistryDocument, TransformationContract,
 };
+use crate::registry;
 
 use super::context::ValidationContext;
 use super::field_index::{FieldIndex, TargetResolution};
 
-pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &TransformationContract) {
+pub(crate) fn validate_semantics(
+    ctx: &mut ValidationContext,
+    contract: &TransformationContract,
+    registry_doc: &RegistryDocument,
+) {
     let index = FieldIndex::from_contract(contract);
 
     for action in &contract.semantic_actions {
@@ -23,7 +28,10 @@ pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &Transfo
             );
             continue;
         }
-        if action.action.starts_with("dtcs:") && !is_known_action(&action.action) {
+        if action.action.starts_with("dtcs:")
+            && !registry::resolve(registry_doc, &action.action)
+                .is_some_and(|entry| entry.category == RegistryCategory::SemanticAction)
+        {
             ctx.error(
                 codes::INVALID_SEMANTIC_ACTION,
                 DiagnosticCategory::Semantic,
@@ -50,7 +58,10 @@ pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &Transfo
             );
             continue;
         }
-        if rule.rule.starts_with("dtcs:") && !is_known_rule(&rule.rule) {
+        if rule.rule.starts_with("dtcs:")
+            && !registry::resolve(registry_doc, &rule.rule)
+                .is_some_and(|entry| entry.category == RegistryCategory::Rule)
+        {
             ctx.error(
                 codes::INVALID_RULE,
                 DiagnosticCategory::Semantic,
@@ -95,7 +106,10 @@ pub(crate) fn validate_semantics(ctx: &mut ValidationContext, contract: &Transfo
             );
             continue;
         }
-        if function.function.starts_with("dtcs:") && !is_known_function(&function.function) {
+        if function.function.starts_with("dtcs:")
+            && !registry::resolve(registry_doc, &function.function)
+                .is_some_and(|entry| entry.category == RegistryCategory::Function)
+        {
             ctx.error(
                 codes::INVALID_FUNCTION,
                 DiagnosticCategory::Semantic,

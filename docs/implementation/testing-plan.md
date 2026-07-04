@@ -25,6 +25,7 @@ Integration tests: [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs).
 | Types | `map_type_valid.yaml`, `nested_collection_valid.yaml`, `valid_conversion_lossy.yaml`, `invalid_type_trailing_garbage.yaml` |
 | Expressions | `expression_with_type.yaml`, `expression_missing_type.yaml`, `expression_type_mismatch.yaml` |
 | Interfaces | `optional_input.yaml`, `input_precondition.yaml`, `invalid_io_extension.yaml`, `streaming_unbounded.yaml` |
+| Registry | `tests/fixtures/registry/`, `tests/phase_0_4.rs` |
 | Namespace safety | `invalid_http_rule.yaml`, `invalid_http_action.yaml`, `invalid_http_type.yaml` |
 
 ## Required test categories

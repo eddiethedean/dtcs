@@ -12,6 +12,8 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | `compat <source> <target>` | Compare compatibility between two contracts |
 | `evolve <older> <newer>` | Analyze evolution between two revisions |
 | `lineage <path>` | Analyze dataset-level lineage |
+| `registry list` | List identifier registry entries |
+| `registry resolve <id>` | Resolve a registry identifier |
 | `version` | Print tool and specification versions |
 
 All commands accept `--json` for structured output except where noted below.
@@ -96,6 +98,24 @@ dtcs lineage contract.yaml --json
 | `--dependency OUTPUT` | List inputs required by the given output |
 
 Always exits `0` on success.
+
+## registry
+
+```bash
+dtcs registry list
+dtcs registry list --json
+dtcs registry list --registry vendor_catalog.yaml
+dtcs registry resolve dtcs:lowercase
+dtcs registry resolve dtcs:lowercase --json
+dtcs registry resolve acme:transform --registry vendor_catalog.yaml
+```
+
+Inspects the embedded `dtcs:` identifier catalog. Optional `--registry` merges an additional YAML/JSON catalog (builtin `dtcs:` entries remain authoritative).
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | `list` succeeded, or `resolve` found the identifier |
+| `1` | Registry file invalid, or `resolve` did not find the identifier |
 
 ## version
 

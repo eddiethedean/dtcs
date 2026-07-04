@@ -39,3 +39,9 @@ Every valid contract with outputs must declare `lineage.mappings` tracing each o
 ## Field references
 
 When the same field name appears in multiple interface schemas, use qualified targets such as `customer_raw.email`.
+
+## Registry
+
+Identifier catalogs use `RegistryDocument` and `RegistryEntry` (SPEC Chapters 21–22).
+Contract-level references to external catalogs use `RegistryRef`.
+See [`src/registry/`](../../src/registry/) for resolution, loading, and the embedded catalog.

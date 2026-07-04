@@ -2,7 +2,7 @@
 
 Follow the architecture defined in `SPEC.md`.
 
-Implementation pipeline (Phase 0.3):
+Implementation pipeline (Phase 0.4):
 
 ```text
 DTCS Document
@@ -15,12 +15,12 @@ Canonical Object Model
         │
         ├──────────────────────────────┐
         ▼                              ▼
-Validator (0.1–0.2)              Analyzer (0.3)
+Validator (0.1–0.4)              Analyzer (0.3)
         │                              │
-        ▼                              ├─ compatibility::analyze
-Diagnostics                            ├─ analyze_evolution
-        │                              ├─ versioning::validate
-        │                              └─ lineage::analyze
+        │  registry::resolve           ├─ compatibility::analyze
+        │  extension pass              ├─ analyze_evolution
+        ▼                              ├─ versioning::validate
+Diagnostics                            └─ lineage::analyze
         │                              │
         │                              ▼
         │                         Analysis reports
@@ -29,6 +29,7 @@ Diagnostics                            ├─ analyze_evolution
 ```
 
 Analysis is **read-only** — it never mutates the Canonical Object Model.
+Registry resolution is also read-only; the embedded catalog is authoritative for `dtcs:` identifiers.
 
 Future pipeline:
 
@@ -48,4 +49,4 @@ Execution Plan
 Runtime
 ```
 
-For this crate through 0.3.0, implement through Diagnostics and Contract Analysis.
+For this crate through 0.4.0, implement through Diagnostics, Contract Analysis, and Registries.

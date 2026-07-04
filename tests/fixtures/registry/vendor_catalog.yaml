@@ -1,0 +1,28 @@
+id: "vendor.catalog"
+version: "1.0.0"
+governingSpecification: "1.0.0-draft"
+publicationStatus: standard
+entries:
+  acme:
+    name: "Acme Namespace"
+    category: extensionNamespace
+    version: "1.0.0"
+    status: standard
+    compatibility: optional
+    definition: "Optional vendor extension namespace"
+    supported: true
+  blocked:
+    name: "Blocked Namespace"
+    category: extensionNamespace
+    version: "1.0.0"
+    status: standard
+    compatibility: mandatory
+    definition: "Mandatory vendor extension namespace that this implementation does not support"
+    supported: false
+  acme:transform:
+    name: "Acme Transform"
+    category: semanticAction
+    version: "1.0.0"
+    status: standard
+    definition: "Vendor semantic action registered via external catalog"
+    supported: true

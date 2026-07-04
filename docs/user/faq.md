@@ -8,10 +8,12 @@ The Data Transformation Contract Standard (DTCS) is a vendor-neutral specificati
 
 ### What does the reference implementation do today?
 
-Through version 0.3.0, the reference tools can:
+Through version 0.4.0, the reference tools can:
 
 - Parse YAML/JSON into the Canonical Object Model
 - Validate contracts with structured diagnostics
+- Resolve `dtcs:` identifiers through the embedded registry
+- Load and merge vendor registry catalogs
 - Compare contracts for compatibility (five classification levels)
 - Analyze evolution between contract revisions
 - Validate versioning declarations (Ch 25)
@@ -36,8 +38,8 @@ Pre-built wheels are published for common platforms. If pip tries to compile fro
 ### How do I install a specific version?
 
 ```bash
-pip install dtcs==0.3.0
-cargo install dtcs --version 0.3.0
+pip install dtcs==0.4.0
+cargo install dtcs --version 0.4.0
 ```
 
 ## Contracts

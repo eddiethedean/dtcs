@@ -18,7 +18,8 @@ pub use phases::ValidationPhase;
 
 use crate::diagnostics::ValidationReport;
 use crate::metadata;
-use crate::model::TransformationContract;
+use crate::model::{RegistryDocument, TransformationContract};
+use crate::registry;
 
 use self::com::validate_com;
 use self::context::ValidationContext;
@@ -34,9 +35,18 @@ use self::semantics::validate_semantics;
 use self::structural::validate_structural;
 use self::types::validate_types;
 
-/// Validate a transformation contract and collect diagnostics.
+/// Validate a transformation contract using the embedded standard registry.
 #[must_use]
 pub fn validate(contract: &TransformationContract) -> ValidationReport {
+    validate_with_registry(contract, registry::default_registry())
+}
+
+/// Validate a transformation contract against a specific registry catalog.
+#[must_use]
+pub fn validate_with_registry(
+    contract: &TransformationContract,
+    registry: &RegistryDocument,
+) -> ValidationReport {
     let mut ctx = ValidationContext::new();
 
     for phase in ValidationPhase::ORDER {
@@ -62,11 +72,11 @@ pub fn validate(contract: &TransformationContract) -> ValidationReport {
                 validate_condition_rule_refs(&mut ctx, contract);
             }
             ValidationPhase::Semantics => {
-                validate_semantics(&mut ctx, contract);
+                validate_semantics(&mut ctx, contract, registry);
                 validate_condition_rule_phases(&mut ctx, contract);
             }
             ValidationPhase::Extensions => {
-                validate_extensions(&mut ctx, contract);
+                validate_extensions(&mut ctx, contract, registry);
                 validate_io_extensions(&mut ctx, contract);
             }
         }

@@ -1,0 +1,17 @@
+id: "invalid.duplicate"
+version: "1.0.0"
+governingSpecification: "1.0.0-draft"
+publicationStatus: standard
+entries:
+  acme:one:
+    id: "acme:dup"
+    name: "One"
+    category: semanticAction
+    version: "1.0.0"
+    status: standard
+  acme:two:
+    id: "acme:dup"
+    name: "Two"
+    category: semanticAction
+    version: "1.0.0"
+    status: standard

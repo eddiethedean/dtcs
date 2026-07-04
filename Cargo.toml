@@ -1,6 +1,6 @@
 [package]
 name = "dtcs"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2021"
 rust-version = "1.75"
 description = "Reference implementation of the Data Transformation Contract Standard (DTCS)"
@@ -21,6 +21,7 @@ serde_yaml = "0.9"
 miette = { version = "7", features = ["fancy"] }
 semver = { version = "1", features = ["serde"] }
 indexmap = { version = "2", features = ["serde"] }
+sha2 = "0.10"
 
 [dependencies.clap]
 version = "4"

@@ -200,6 +200,47 @@ fn version_validate(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<Py<
     value_to_py(py, &crate::versioning::validate(&contract))
 }
 
+/// List registry entries, optionally merged with a registry file.
+#[pyfunction]
+#[pyo3(signature = (registry_path=None))]
+fn registry_list(py: Python<'_>, registry_path: Option<String>) -> PyResult<Py<PyAny>> {
+    let path = registry_path.as_deref().map(std::path::Path::new);
+    let entries = crate::registry::list(path).map_err(registry_error)?;
+    value_to_py(py, &entries)
+}
+
+/// Resolve a registry identifier, optionally using an additional registry file.
+#[pyfunction]
+#[pyo3(signature = (id, registry_path=None))]
+fn registry_resolve(
+    py: Python<'_>,
+    id: &str,
+    registry_path: Option<String>,
+) -> PyResult<Py<PyAny>> {
+    let path = registry_path.as_deref().map(std::path::Path::new);
+    let entry = crate::registry::resolve_with_path(id, path).map_err(registry_error)?;
+    match entry {
+        Some(entry) => value_to_py(py, &entry),
+        None => Ok(py.None()),
+    }
+}
+
+/// Load a registry document from a file path.
+#[pyfunction]
+fn registry_load(py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
+    let document = crate::registry::load(path).map_err(registry_error)?;
+    value_to_py(py, &document)
+}
+
+fn registry_error(report: crate::diagnostics::DiagnosticReport) -> PyErr {
+    let messages: Vec<_> = report
+        .diagnostics
+        .iter()
+        .map(|d| d.message.as_str())
+        .collect();
+    PyValueError::new_err(messages.join("; "))
+}
+
 /// Native extension module for the Python `dtcs` package.
 #[pymodule]
 fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -214,5 +255,8 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(evolve_analyze, m)?)?;
     m.add_function(wrap_pyfunction!(lineage_analyze, m)?)?;
     m.add_function(wrap_pyfunction!(version_validate, m)?)?;
+    m.add_function(wrap_pyfunction!(registry_list, m)?)?;
+    m.add_function(wrap_pyfunction!(registry_resolve, m)?)?;
+    m.add_function(wrap_pyfunction!(registry_load, m)?)?;
     Ok(())
 }

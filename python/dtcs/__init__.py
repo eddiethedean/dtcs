@@ -11,6 +11,9 @@ from dtcs._native import lineage_analyze as _lineage_analyze
 from dtcs._native import metadata_validate as _metadata_validate
 from dtcs._native import parse_document as _parse_document
 from dtcs._native import parse_path as _parse_path
+from dtcs._native import registry_list as _registry_list
+from dtcs._native import registry_load as _registry_load
+from dtcs._native import registry_resolve as _registry_resolve
 from dtcs._native import spec_version as _spec_version
 from dtcs._native import validate_contract as _validate_contract
 from dtcs._native import validate_document as _validate_document
@@ -88,6 +91,21 @@ def version_validate(contract: dict) -> dict:
     return _version_validate(contract)
 
 
+def registry_list(registry_path: str | None = None) -> list[dict]:
+    """List registry entries, optionally merged with a registry file."""
+    return _registry_list(registry_path)
+
+
+def registry_resolve(id: str, registry_path: str | None = None) -> dict | None:
+    """Resolve a registry identifier, optionally using an additional registry file."""
+    return _registry_resolve(id, registry_path)
+
+
+def registry_load(path: str) -> dict:
+    """Load a registry document from a file path."""
+    return _registry_load(path)
+
+
 def is_valid(report: dict) -> bool:
     """Return True when a diagnostic report contains no error-level diagnostics."""
     return not any(
@@ -108,6 +126,9 @@ __all__ = [
     "parse",
     "parse_and_validate",
     "parse_file",
+    "registry_list",
+    "registry_load",
+    "registry_resolve",
     "validate",
     "validate_result",
     "version_validate",

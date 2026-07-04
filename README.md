@@ -15,11 +15,11 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.3.0` — validation + contract analysis |
+| **Reference implementation** | `0.4.0` — validation, analysis, and registries |
 | **Document `dtcsVersion`** | `1.0.0` (accepted for compatible 1.0.x releases) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
-**What you can do today:** validate YAML/JSON contracts, compare versions for compatibility, analyze evolution between revisions, and trace dataset lineage — all read-only, no execution engine required.
+**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry, compare versions for compatibility, analyze evolution between revisions, and trace dataset lineage — all read-only, no execution engine required.
 
 [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
@@ -37,7 +37,7 @@ dtcs validate examples/customer_normalize.dtcs.yaml
 
 Both packages install the `dtcs` CLI on `PATH`:
 
-`validate` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `version`
+`validate` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
 
 **Develop from source** (requires Rust + [maturin](https://www.maturin.rs/)): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -55,6 +55,9 @@ dtcs compat examples/analysis/backward_old.yaml examples/analysis/backward_new.y
 
 # Trace lineage impact
 dtcs lineage examples/analysis/lineage_multi.yaml --impact customers
+
+# Resolve a standard identifier
+dtcs registry resolve dtcs:lowercase
 ```
 
 ```python
@@ -70,7 +73,7 @@ Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full wal
 
 ## Pipeline
 
-The reference implementation through Phase 0.3:
+The reference implementation through Phase 0.4:
 
 ```text
 DTCS Document
@@ -80,11 +83,11 @@ Parser → Canonical Object Model
         │
         ├──────────────────────────────┐
         ▼                              ▼
-Validator (0.1–0.2)              Analyzer (0.3)
+Validator (0.1–0.4)              Analyzer (0.3)
         │                              │
-        ▼                              ├─ compatibility::analyze
-Diagnostics                            ├─ analyze_evolution
-        │                              ├─ versioning::validate
+        │  registry::resolve           ├─ compatibility::analyze
+        ▼                              ├─ analyze_evolution
+Diagnostics                            ├─ versioning::validate
         │                              └─ lineage::analyze
         │                              │
         │                              ▼
@@ -93,7 +96,7 @@ Diagnostics                            ├─ analyze_evolution
    (valid contracts only for analysis)
 ```
 
-Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis.
+Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation.
 
 Execution, backend compilation, and runtime behavior remain out of scope. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 

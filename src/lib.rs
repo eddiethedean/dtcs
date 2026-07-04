@@ -5,7 +5,8 @@
 //!
 //! ```text
 //! DTCS Document → Parser → Canonical Object Model → Validator → Diagnostics
-//!                                              └→ Analyzer → Analysis reports
+//!                                              ├→ Analyzer → Analysis reports
+//!                                              └→ Registry (identifier resolution)
 //! ```
 //!
 //! # Example
@@ -54,6 +55,7 @@ pub mod metadata;
 pub mod model;
 pub mod parser;
 pub mod plan;
+pub mod registry;
 pub mod validation;
 pub mod versioning;
 
@@ -73,11 +75,16 @@ pub use diagnostics::{
 };
 pub use lineage::{analyze as analyze_lineage, LineageAnalysisReport, LineageGovernance};
 pub use model::{
-    parse_logical_type, type_compatible, LogicalType, TransformationContract, TypeCompatibility,
-    TypeParseError,
+    parse_logical_type, type_compatible, ExtensionCompatibility, LogicalType, RegistryCategory,
+    RegistryDocument, RegistryEntry, RegistryEntryStatus, RegistryPublicationStatus, RegistryRef,
+    TransformationContract, TypeCompatibility, TypeParseError,
 };
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
-pub use validation::{validate, ValidationPhase};
+pub use registry::{
+    default_registry, is_known_action, is_known_function, is_known_rule, load as load_registry,
+    load_merged, resolve as resolve_registry, resolve_default,
+};
+pub use validation::{validate, validate_with_registry, ValidationPhase};
 
 /// Parse and validate a DTCS document in one step.
 #[must_use]

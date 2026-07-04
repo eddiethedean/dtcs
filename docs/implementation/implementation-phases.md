@@ -71,7 +71,21 @@ dtcs evolve older.yaml newer.yaml
 dtcs lineage contract.yaml
 ```
 
-## Phase 8 — Plan Stubs
+## Phase 8 — Registries & Extensibility (Phase 0.4)
+
+- Identifier registry model and embedded `dtcs:` catalog
+- File/URI loading with offline cache
+- Registry-aware semantic and extension validation
+- `validate_with_registry` for vendor catalogs
+
+Additional CLI commands:
+
+```bash
+dtcs registry list
+dtcs registry resolve <id>
+```
+
+## Phase 9 — Plan Stubs
 
 - Add Transformation Plan skeleton (`src/plan/`).
 - Do not implement compilers yet.
