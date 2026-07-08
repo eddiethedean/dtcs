@@ -66,8 +66,19 @@ fn contract_from_py(
                 kwargs
             }),
         )
-        .map_err(|_| {
-            PyValueError::new_err("contract contains non-finite float values (NaN or Infinity)")
+        .map_err(|err| {
+            // `json.dumps(..., allow_nan=False)` raises `ValueError` for NaN/Infinity, but it can
+            // also raise other exceptions (e.g. TypeError for non-serializable objects). Only
+            // map the former to our friendlier message; otherwise preserve the original error.
+            let message = err.to_string();
+            if message.contains("Out of range float values are not JSON compliant")
+                || message.contains("NaN")
+                || message.contains("Infinity")
+            {
+                PyValueError::new_err("contract contains non-finite float values (NaN or Infinity)")
+            } else {
+                err
+            }
         })?
         .extract()?;
     serde_json::from_str(&json_str).map_err(|e| contract_deserialize_error(&e.to_string()))

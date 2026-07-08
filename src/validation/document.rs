@@ -34,7 +34,7 @@ pub(crate) fn validate_document(ctx: &mut ValidationContext, contract: &Transfor
             codes::UNSUPPORTED_VERSION,
             DiagnosticCategory::Compatibility,
             format!(
-                "unsupported dtcsVersion '{}'; supported versions include 1.0.x",
+                "unsupported dtcsVersion '{}'; supported version is 1.0.0",
                 contract.dtcs_version
             ),
             Some("dtcsVersion"),

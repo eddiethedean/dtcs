@@ -53,7 +53,17 @@ pub fn load_uri_cached(uri: &str) -> Result<RegistryDocument, DiagnosticReport> 
         );
         return Err(report);
     }
-    load::load(&path)
+    // Cached registries may be stored under a path whose extension was derived
+    // from the URI. To avoid format/extension mismatches, parse by sniffing both
+    // supported encodings.
+    let bytes = std::fs::read(&path).map_err(io_error)?;
+    match load::load_bytes(&bytes, DocumentFormat::Yaml) {
+        Ok(document) => Ok(document),
+        Err(yaml_error) => match load::load_bytes(&bytes, DocumentFormat::Json) {
+            Ok(document) => Ok(document),
+            Err(_json_error) => Err(yaml_error),
+        },
+    }
 }
 
 /// Store registry bytes in the offline cache for `uri`.

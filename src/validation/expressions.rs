@@ -209,7 +209,7 @@ fn infer_comparison(
         let logical = infer_binary_type(op, &left_type.logical, &right_type.logical)?;
         return Ok(InferredExprType {
             logical,
-            nullable: false,
+            nullable: left_type.nullable || right_type.nullable,
         });
     }
     infer_additive(expr, index, functions)
@@ -578,16 +578,21 @@ fn split_args(args_source: &str) -> Vec<&str> {
     let mut in_string = false;
     let mut quote = '\0';
     let mut start = 0;
-    for (index, ch) in args_source.char_indices() {
+    let bytes = args_source.as_bytes();
+    let mut index = 0;
+    while index < args_source.len() {
+        let ch = args_source[index..].chars().next().unwrap_or('\0');
         if in_string {
-            if ch == quote {
+            if ch == quote && (index == 0 || bytes[index - 1] != b'\\') {
                 in_string = false;
             }
+            index += ch.len_utf8();
             continue;
         }
         if ch == '"' || ch == '\'' {
             in_string = true;
             quote = ch;
+            index += ch.len_utf8();
             continue;
         }
         match ch {
@@ -602,6 +607,7 @@ fn split_args(args_source: &str) -> Vec<&str> {
             }
             _ => {}
         }
+        index += ch.len_utf8();
     }
     let part = args_source[start..].trim();
     if !part.is_empty() {
@@ -705,5 +711,17 @@ lineage:
         let index = test_index();
         let inferred = infer_expression_type("-in.value", &index, &HashMap::new()).expect("type");
         assert_eq!(inferred.logical, LogicalType::Primitive("integer".into()));
+    }
+
+    #[test]
+    fn split_args_ignores_commas_inside_strings() {
+        let args = split_args(r#""a,b", in.a"#);
+        assert_eq!(args, vec![r#""a,b""#, "in.a"]);
+    }
+
+    #[test]
+    fn split_args_handles_escaped_quotes_inside_strings() {
+        let args = split_args(r#""a\",b", in.a"#);
+        assert_eq!(args, vec![r#""a\",b""#, "in.a"]);
     }
 }

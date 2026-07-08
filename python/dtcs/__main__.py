@@ -91,7 +91,8 @@ def _build_parser() -> argparse.ArgumentParser:
     compat_parser = subparsers.add_parser("compat", help="Compare contract compatibility")
     compat_parser.add_argument("source", type=Path)
     compat_parser.add_argument("target", type=Path)
-    compat_parser.add_argument("--scope", default="")
+    # Accept both comma-delimited and repeated flags: `--scope a,b` or `--scope a --scope b`.
+    compat_parser.add_argument("--scope", action="append", default=[])
     compat_parser.add_argument("--json", action="store_true")
 
     evolve_parser = subparsers.add_parser("evolve", help="Analyze contract evolution")
@@ -190,7 +191,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "compat":
         source = _load_valid_contract(args.source)
         target = _load_valid_contract(args.target)
-        scope = [part for part in args.scope.split(",") if part] if args.scope else None
+        scope_tokens: list[str] = []
+        for item in args.scope or []:
+            scope_tokens.extend(part.strip() for part in str(item).split(","))
+        scope_tokens = [token for token in scope_tokens if token]
+        scope = scope_tokens or None
         try:
             report = compat_analyze(source, target, scope)
         except ValueError as error:
@@ -200,6 +205,13 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, indent=2))
         else:
             print(f"compatibility: {report.get('level')}")
+            for aspect in report.get("aspects", []) or []:
+                print(f"  {aspect.get('aspect')}: {aspect.get('message')}")
+            for diagnostic in report.get("diagnostics", []) or []:
+                severity = diagnostic.get("severity", "error")
+                code = diagnostic.get("id", "dtcs:unknown")
+                message = diagnostic.get("message", "")
+                print(f"[{severity}] {code} - {message}")
         level = report.get("level")
         return 0 if level and level != "incompatible" else 1
 

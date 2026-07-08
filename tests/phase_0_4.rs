@@ -272,6 +272,24 @@ fn offline_uri_cache_roundtrip() {
 }
 
 #[test]
+fn offline_uri_cache_roundtrip_json_content_with_yaml_uri() {
+    let uri = "https://example.invalid/dtcs/vendor_catalog.yaml";
+    let yaml_bytes = read(&registry_fixture("vendor_catalog.yaml"));
+    let registry =
+        dtcs::registry::load_bytes(&yaml_bytes, DocumentFormat::Yaml).expect("parse fixture");
+    let json_bytes = serde_json::to_vec(&registry).expect("to json");
+
+    let path =
+        dtcs::registry::store_uri_cache(uri, &json_bytes, DocumentFormat::Json).expect("store");
+    assert!(path.exists());
+
+    let loaded = dtcs::registry::load_uri_cached(uri).expect("cache load");
+    assert!(resolve_registry(&loaded, "acme:transform").is_some());
+
+    dtcs::registry::cache_remove(uri).expect("cache remove");
+}
+
+#[test]
 fn cli_registry_list_and_resolve() {
     let bin = env!("CARGO_BIN_EXE_dtcs");
 

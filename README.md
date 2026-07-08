@@ -16,7 +16,7 @@ This repository contains:
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
 | **Reference implementation** | `0.4.0` — validation, analysis, and registries |
-| **Document `dtcsVersion`** | `1.0.0` (accepted for compatible 1.0.x releases) |
+| **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
 **What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry, compare versions for compatibility, analyze evolution between revisions, and trace dataset lineage — all read-only, no execution engine required.

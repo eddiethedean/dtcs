@@ -103,10 +103,6 @@ fn warns_on_version_metadata_conflict() {
         .diagnostics
         .iter()
         .any(|d| d.id == codes::INVALID_METADATA));
-    assert!(report
-        .diagnostics
-        .iter()
-        .any(|d| d.id == codes::VERSION_CONFLICT));
 }
 
 #[test]

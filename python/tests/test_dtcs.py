@@ -420,3 +420,36 @@ def test_contract_from_py_rejects_nan() -> None:
     }
     with pytest.raises(ValueError, match="non-finite"):
         dtcs.validate(contract)
+
+
+def test_contract_from_py_preserves_non_nan_dump_errors() -> None:
+    contract = {
+        "dtcsVersion": "1.0.0",
+        "id": "dump_error.example",
+        "name": "Dump Error Example",
+        "version": "0.1.0",
+        "inputs": [
+            {
+                "id": "in",
+                "schema": {
+                    "fields": [
+                        {"name": "value", "type": "integer", "nullable": False},
+                    ]
+                },
+            }
+        ],
+        "outputs": [
+            {
+                "id": "out",
+                "schema": {
+                    "fields": [
+                        {"name": "value", "type": "integer", "nullable": False},
+                    ]
+                },
+            }
+        ],
+        "lineage": {"mappings": [{"output": "out", "inputs": ["in"]}]},
+        "acme:notSerializable": {1, 2, 3},
+    }
+    with pytest.raises(TypeError, match="not JSON serializable"):
+        dtcs.validate(contract)

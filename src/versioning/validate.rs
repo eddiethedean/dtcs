@@ -56,31 +56,6 @@ pub fn validate(contract: &TransformationContract) -> DiagnosticReport {
         }
     }
 
-    if let Some(metadata) = &contract.metadata {
-        if let Some(identity) = &metadata.identity {
-            if let Some(meta_version) = &identity.version {
-                if meta_version.trim() != contract.version.trim() {
-                    diagnostics.push(
-                        Diagnostic::new(
-                            codes::VERSION_CONFLICT,
-                            Severity::Warning,
-                            DiagnosticStage::Validation,
-                            DiagnosticCategory::Compatibility,
-                            format!(
-                                "metadata.identity.version '{meta_version}' differs from contract version '{}'",
-                                contract.version
-                            ),
-                        )
-                        .with_object_ref("metadata.identity.version")
-                        .with_remediation(
-                            "Align metadata.identity.version with the top-level version field",
-                        ),
-                    );
-                }
-            }
-        }
-    }
-
     DiagnosticReport { diagnostics }
 }
 

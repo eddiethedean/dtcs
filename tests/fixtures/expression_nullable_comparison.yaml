@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "expression.nullable.comparison"
+name: "Expression Nullable Comparison"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+expressions:
+  - id: "nullable_compare"
+    expr: "in.value == 1"
+    type: "boolean"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

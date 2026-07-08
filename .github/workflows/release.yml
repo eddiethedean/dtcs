@@ -20,6 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Verify tag matches crate and Python versions
         run: |
           crate_version=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
@@ -213,5 +216,5 @@ jobs:
           python-version: "3.12"
       - name: Publish Python package to PyPI
         run: |
-          pip install maturin
+          pip install "maturin>=1,<2"
           maturin upload --skip-existing --username __token__ --password "$MATURIN_PYPI_TOKEN" dist/*
