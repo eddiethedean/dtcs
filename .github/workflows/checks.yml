@@ -49,4 +49,4 @@ jobs:
       - name: cargo build
         run: cargo build --locked --all-targets
       - name: cargo publish (dry run)
-        run: cargo publish --dry-run --locked
+        run: cargo publish --dry-run --locked --allow-dirty
