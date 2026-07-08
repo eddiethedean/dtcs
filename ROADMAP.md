@@ -30,7 +30,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
-| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | Planned |
+| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **In progress** (starter catalog; `0.5.0` pending release) |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | Planned |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | Planned |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | Planned |
@@ -57,9 +57,9 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | 14 | [Engine Capability Model](SPEC.md#chapter-14----engine-capability-model) | 0.9 | Full |
 | 15 | [Compilation](SPEC.md#chapter-15----compilation) | 0.8 partial, 0.9 | Optimization boundary (0.8); compilation (0.9) |
 | 16 | [Runtime](SPEC.md#chapter-16----runtime) | 0.9 | Full |
-| 17 | [Semantic Actions](SPEC.md#chapter-17----semantic-actions) | 0.1 partial, 0.5, 0.8 | Identity (0.1); library (0.5); optimization (0.8) |
-| 18 | [Function Model](SPEC.md#chapter-18----function-model) | 0.1 partial, 0.5, 0.8 | Identity (0.1); library (0.5); optimization (0.8) |
-| 19 | [Rule Model](SPEC.md#chapter-19----rule-model) | 0.1 partial, 0.5, 0.8 | Identity (0.1); library (0.5); optimization (0.8) |
+| 17 | [Semantic Actions](SPEC.md#chapter-17----semantic-actions) | 0.1 partial, 0.5 partial, 0.8 | Identity (0.1); starter library (0.5); optimization (0.8) |
+| 18 | [Function Model](SPEC.md#chapter-18----function-model) | 0.1 partial, 0.5 partial, 0.8 | Identity (0.1); starter library (0.5); optimization (0.8) |
+| 19 | [Rule Model](SPEC.md#chapter-19----rule-model) | 0.1 partial, 0.5 partial, 0.8 | Identity (0.1); starter library (0.5); optimization (0.8) |
 | 20 | [Diagnostics](SPEC.md#chapter-20----diagnostics) | 0.1 | Full; stage codes added per phase |
 | 21 | [Extensibility](SPEC.md#chapter-21----extensibility) | 0.4 | Full |
 | 22 | [Registries](SPEC.md#chapter-22----registries) | 0.4 | Full |
@@ -249,7 +249,7 @@ Resolve `dtcs:` and vendor identifiers through authoritative registries; validat
 
 ## Phase 0.5 — Standard Libraries
 
-**Target:** `0.5.x` · **Tier:** III · **Prerequisite:** 0.4
+**Target:** `0.5.x` · **Tier:** III · **Prerequisite:** 0.4 · **Status:** In progress (starter catalog in tree; `0.5.0` release pending)
 
 **Implements:** Validator (library-aware semantics) · **SPEC:** [Ch 17](SPEC.md#chapter-17----semantic-actions)–[19](SPEC.md#chapter-19----rule-model)
 
@@ -257,23 +257,34 @@ Resolve `dtcs:` and vendor identifiers through authoritative registries; validat
 
 Publish the complete `dtcs:` standard libraries in the built-in registry ([Ch 2 §8–11](SPEC.md#chapter-2----core-concepts)).
 
-### Deliverables
+### Delivered so far
+
+| Area | Work | Status |
+|------|------|--------|
+| Embedded catalogs | YAML registry docs under `src/registry/builtin/` for semantic actions, functions, and rules | Done |
+| Starter semantic actions | `dtcs:lowercase`, `dtcs:uppercase`, `dtcs:capitalize`, `dtcs:trim`, `dtcs:normalize_whitespace`, `dtcs:hash_sha256` | Done |
+| Starter functions | `dtcs:concat`, `dtcs:coalesce`, `dtcs:length`, `dtcs:lower`, `dtcs:upper`, `dtcs:substr`, `dtcs:replace`, `dtcs:to_string`, `dtcs:to_integer`, `dtcs:to_decimal` | Done |
+| Starter rules | `dtcs:not_null`, `dtcs:min_length`, `dtcs:max_length`, `dtcs:regex_match`, `dtcs:range` | Done |
+| Registry-driven validation | Structured JSON `definition` blocks drive target type, nullability, rule phases, function arity, and return-type checks in `src/validation/semantics.rs` | Done |
+| Fixtures | Stdlib validation fixtures under `tests/fixtures/stdlib_*.yaml` | Done |
+
+### Remaining
 
 | Area | Work | SPEC |
 |------|------|------|
-| Semantic actions | Full catalog: projection, selection, transformation, aggregation, grouping, joining, sorting, union, partitioning, filtering; type and lineage semantics per action | [Ch 17 §5–10](SPEC.md#chapter-17----semantic-actions) |
-| Functions | Standard library with parameters, return types, null behavior, determinism | [Ch 18 §3–10](SPEC.md#chapter-18----function-model), [Ch 2 §10](SPEC.md#chapter-2----core-concepts) |
-| Rules | Standard library with evaluation phases, scope, outcomes | [Ch 19 §3–10](SPEC.md#chapter-19----rule-model), [Ch 2 §11](SPEC.md#chapter-2----core-concepts) |
-| Validation | Arity, type, composition, and extension checks using registry definitions | [Ch 17 §10](SPEC.md#chapter-17----semantic-actions), [Ch 18 §10](SPEC.md#chapter-18----function-model), [Ch 19 §10](SPEC.md#chapter-19----rule-model) |
+| Semantic actions | Full catalog: projection, selection, aggregation, grouping, joining, sorting, union, partitioning, filtering; type and lineage semantics per action | [Ch 17 §5–10](SPEC.md#chapter-17----semantic-actions) |
+| Functions | Remaining standard library entries; expression call-site validation against stdlib signatures | [Ch 18 §3–10](SPEC.md#chapter-18----function-model) |
+| Rules | Remaining standard library entries with scope and outcome metadata | [Ch 19 §3–10](SPEC.md#chapter-19----rule-model) |
 
 ### Modules
 
-`src/registry/builtin/` (actions, functions, rules), extend `src/validation/semantics.rs`
+`src/registry/builtin/` (actions, functions, rules), `src/validation/semantics.rs`
 
 ### Exit criteria
 
 - [Ch 17 §13](SPEC.md#chapter-17----semantic-actions), [Ch 18 §13](SPEC.md#chapter-18----function-model), [Ch 19 §13](SPEC.md#chapter-19----rule-model)
 - Each library entry has registry metadata, type rules, and at least one fixture
+- Full Ch 17–19 catalogs (not just the starter subset above)
 
 ---
 

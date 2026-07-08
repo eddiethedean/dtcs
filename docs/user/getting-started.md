@@ -74,12 +74,15 @@ dtcs lineage examples/analysis/lineage_multi.yaml --dependency order_enriched
 
 ## Look up registry identifiers
 
-Standard actions, rules, and diagnostic codes live in the embedded registry:
+Standard actions, functions, rules, and diagnostic codes live in the embedded registry. List everything or inspect a single entry:
 
 ```bash
 dtcs registry list
 dtcs registry resolve dtcs:lowercase
+dtcs registry resolve dtcs:concat --json
 ```
+
+The starter standard library (Phase 0.5) includes string actions like `dtcs:uppercase`, functions like `dtcs:length`, and rules like `dtcs:range`. See [writing-contracts.md](writing-contracts.md) for the full starter catalog.
 
 ## Use from Python
 

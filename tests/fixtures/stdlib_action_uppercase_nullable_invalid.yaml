@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.action.uppercase.nullable"
+name: "Stdlib Uppercase Nullable Invalid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "email"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "email_upper"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "make_upper"
+    action: "dtcs:uppercase"
+    target: "in.email"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

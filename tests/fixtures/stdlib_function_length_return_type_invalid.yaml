@@ -1,0 +1,34 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.function.length.return_invalid"
+name: "Stdlib Length Return Invalid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "s"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "n"
+          type: "integer"
+          nullable: false
+
+functions:
+  - id: "len1"
+    function: "dtcs:length"
+    type: "decimal"
+    parameters:
+      - name: "x"
+        type: "string"
+        optional: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

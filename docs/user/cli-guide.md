@@ -110,7 +110,7 @@ dtcs registry resolve dtcs:lowercase --json
 dtcs registry resolve acme:transform --registry vendor_catalog.yaml
 ```
 
-Inspects the embedded `dtcs:` identifier catalog. Optional `--registry` merges an additional YAML/JSON catalog (builtin `dtcs:` entries remain authoritative).
+Inspects the embedded `dtcs:` identifier catalog, including the starter standard libraries for semantic actions, functions, and rules (Phase 0.5). Optional `--registry` merges an additional YAML/JSON catalog (builtin `dtcs:` entries remain authoritative).
 
 | Exit code | Meaning |
 |-----------|---------|

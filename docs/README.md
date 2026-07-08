@@ -15,7 +15,7 @@ Choose your path:
 |----------|-------------|
 | [getting-started.md](user/getting-started.md) | Install and validate your first contract in 5 minutes |
 | [cli-guide.md](user/cli-guide.md) | All CLI commands, flags, and exit codes |
-| [writing-contracts.md](user/writing-contracts.md) | Contract structure and field reference |
+| [writing-contracts.md](user/writing-contracts.md) | Contract structure, standard library catalog, and field reference |
 | [compatibility.md](user/compatibility.md) | Compatibility levels and evolution analysis |
 | [json-output.md](user/json-output.md) | JSON output shapes for all commands |
 | [faq.md](user/faq.md) | Frequently asked questions |

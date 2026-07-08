@@ -1,0 +1,31 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.rule.range.type_mismatch"
+name: "Stdlib Range Type Mismatch"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "range_check"
+    rule: "dtcs:range"
+    target: "in.value"
+    phase: "postcondition"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

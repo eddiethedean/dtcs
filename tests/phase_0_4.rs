@@ -273,7 +273,9 @@ fn offline_uri_cache_roundtrip() {
 
 #[test]
 fn offline_uri_cache_roundtrip_json_content_with_yaml_uri() {
-    let uri = "https://example.invalid/dtcs/vendor_catalog.yaml";
+    // Use a distinct URI from `offline_uri_cache_roundtrip` to avoid cache-key races when the
+    // test harness runs tests in parallel.
+    let uri = "https://example.invalid/dtcs/vendor_catalog_json_bytes.yaml";
     let yaml_bytes = read(&registry_fixture("vendor_catalog.yaml"));
     let registry =
         dtcs::registry::load_bytes(&yaml_bytes, DocumentFormat::Yaml).expect("parse fixture");

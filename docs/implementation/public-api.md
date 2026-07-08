@@ -96,7 +96,11 @@ use dtcs::versioning;
 let report = versioning::validate(&contract);
 ```
 
-## Registry (Phase 0.4)
+## Registry (Phase 0.4–0.5)
+
+The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,
+and starter standard libraries for semantic actions, functions, and rules.
+Entries may carry a JSON `definition` field consumed by semantics validation.
 
 ```rust
 use dtcs::{

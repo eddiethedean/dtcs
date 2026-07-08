@@ -82,7 +82,49 @@ semanticActions:
     target: "customer_raw.email"
 ```
 
-The validator checks that action identifiers are well-formed and that field references resolve.
+The validator checks that action identifiers are well-formed, that `dtcs:` identifiers exist in the embedded standard library, and that targets satisfy registry definition constraints (for example `dtcs:lowercase` requires a non-nullable `string` field; `dtcs:capitalize` allows nullable strings).
+
+### Available semantic actions
+
+| Identifier | Target type | Nullable target |
+|------------|-------------|-----------------|
+| `dtcs:lowercase` | `string` | No |
+| `dtcs:uppercase` | `string` | No |
+| `dtcs:capitalize` | `string` | Yes |
+| `dtcs:trim` | `string` | Yes |
+| `dtcs:normalize_whitespace` | `string` | Yes |
+| `dtcs:hash_sha256` | `string` | Yes |
+
+## Functions
+
+Declare reusable functions in the contract `functions` block. Standard library function identifiers are validated against embedded registry definitions (parameter count, argument types, return type):
+
+```yaml
+functions:
+  - id: "full_name"
+    function: "dtcs:concat"
+    parameters:
+      - name: "first"
+        type: "string"
+      - name: "last"
+        type: "string"
+    returns:
+      type: "string"
+      nullable: false
+```
+
+### Available functions
+
+| Identifier | Arity | Notes |
+|------------|-------|-------|
+| `dtcs:lower`, `dtcs:upper` | 1 | `string` → `string` |
+| `dtcs:concat` | 2+ | all `string` arguments |
+| `dtcs:substr` | 2–3 | `string`, `integer` start, optional `integer` length |
+| `dtcs:replace` | 3 | `string` arguments |
+| `dtcs:coalesce` | 1+ | homogeneous argument types |
+| `dtcs:length` | 1 | `string` or `binary` → `integer` |
+| `dtcs:to_string` | 1 | primitive → `string` |
+| `dtcs:to_integer`, `dtcs:to_decimal` | 1 | numeric/string coercion |
 
 ## Rules
 
@@ -95,6 +137,23 @@ rules:
     target: "customer_raw.customer_id"
     phase: "postcondition"
 ```
+
+Standard library rules and actions are discoverable via:
+
+```bash
+dtcs registry list
+dtcs registry resolve dtcs:uppercase --json
+dtcs registry resolve dtcs:length --json
+dtcs registry resolve dtcs:range --json
+```
+
+### Available rules
+
+| Identifier | Target type | Phases |
+|------------|-------------|--------|
+| `dtcs:not_null` | any | precondition, execution, postcondition |
+| `dtcs:min_length`, `dtcs:max_length`, `dtcs:regex_match` | `string` | precondition, execution, postcondition |
+| `dtcs:range` | `integer` | precondition, execution, postcondition |
 
 ## Lineage
 
@@ -140,6 +199,8 @@ Common first-time errors:
 | `dtcs:unresolved-reference` | Check field paths match `interface.field` format |
 | `dtcs:unsupported-version` | Set `dtcsVersion` to a supported value (`1.0.0`) |
 | `dtcs:invalid-type` | Fix type syntax (e.g. `list<string>` not `list`) |
+| `dtcs:unknown-registry-entry` | Use a `dtcs:` identifier from `dtcs registry list`, or declare a vendor extension |
+| stdlib semantics errors | Match target field type/nullability and rule `phase` to the registry definition |
 
 See [faq.md](faq.md) for more troubleshooting.
 

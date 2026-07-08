@@ -1,0 +1,47 @@
+id: "dtcs:stdlib.semanticActions"
+version: "1.0.0"
+governingSpecification: "1.0.0-draft"
+publicationStatus: "standard"
+entries:
+  dtcs:lowercase:
+    name: "Lowercase"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":false}
+  dtcs:capitalize:
+    name: "Capitalize"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+  dtcs:uppercase:
+    name: "Uppercase"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":false}
+  dtcs:trim:
+    name: "Trim"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+  dtcs:hash_sha256:
+    name: "Hash SHA-256"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+  dtcs:normalize_whitespace:
+    name: "Normalize Whitespace"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}

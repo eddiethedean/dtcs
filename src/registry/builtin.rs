@@ -8,29 +8,14 @@ use crate::model::{
     RegistryPublicationStatus,
 };
 
+use super::load;
+use crate::parser::DocumentFormat;
+
 /// Builds the embedded standard registry for this implementation.
 #[must_use]
 pub fn builtin_registry() -> RegistryDocument {
     let mut entries = IndexMap::new();
 
-    insert_entry(
-        &mut entries,
-        entry(
-            "dtcs:lowercase",
-            "Lowercase",
-            RegistryCategory::SemanticAction,
-            "Lowercases a non-nullable string field",
-        ),
-    );
-    insert_entry(
-        &mut entries,
-        entry(
-            "dtcs:not_null",
-            "Not Null",
-            RegistryCategory::Rule,
-            "Requires a non-nullable schema field",
-        ),
-    );
     insert_entry(
         &mut entries,
         entry(
@@ -49,13 +34,23 @@ pub fn builtin_registry() -> RegistryDocument {
         );
     }
 
-    RegistryDocument {
+    let mut registry = RegistryDocument {
         id: "dtcs:builtin".into(),
         version: env!("CARGO_PKG_VERSION").into(),
         governing_specification: crate::SPEC_VERSION.into(),
         publication_status: RegistryPublicationStatus::Standard,
         entries,
-    }
+    };
+
+    // Merge the embedded standard libraries (Phase 0.5).
+    merge_builtin_doc(
+        &mut registry,
+        include_bytes!("builtin/semantic_actions.yaml"),
+    );
+    merge_builtin_doc(&mut registry, include_bytes!("builtin/functions.yaml"));
+    merge_builtin_doc(&mut registry, include_bytes!("builtin/rules.yaml"));
+
+    registry
 }
 
 fn entry(id: &str, name: &str, category: RegistryCategory, definition: &str) -> RegistryEntry {
@@ -76,6 +71,11 @@ fn entry(id: &str, name: &str, category: RegistryCategory, definition: &str) -> 
 
 fn insert_entry(entries: &mut IndexMap<String, RegistryEntry>, entry: RegistryEntry) {
     entries.insert(entry.id.clone(), entry);
+}
+
+fn merge_builtin_doc(registry: &mut RegistryDocument, bytes: &[u8]) {
+    let doc = load::load_bytes(bytes, DocumentFormat::Yaml).expect("valid builtin registry doc");
+    registry.merge(&doc);
 }
 
 fn title_case(value: &str) -> String {

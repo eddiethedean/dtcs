@@ -1,0 +1,34 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.function.concat.signature_invalid"
+name: "Stdlib Concat Signature Invalid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "a"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "b"
+          type: "string"
+          nullable: false
+
+functions:
+  - id: "concat1"
+    function: "dtcs:concat"
+    type: "string"
+    parameters:
+      - name: "x"
+        type: "string"
+        optional: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -15,11 +15,11 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.4.0` — validation, analysis, and registries |
+| **Reference implementation** | `0.4.0` released — validation, analysis, and registries; **0.5** (unreleased) adds embedded standard libraries with registry-driven semantics validation |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
-**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry, compare versions for compatibility, analyze evolution between revisions, and trace dataset lineage — all read-only, no execution engine required.
+**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, and trace dataset lineage — all read-only, no execution engine required.
 
 [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
@@ -73,7 +73,7 @@ Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full wal
 
 ## Pipeline
 
-The reference implementation through Phase 0.4:
+The reference implementation through Phase 0.5 (in development):
 
 ```text
 DTCS Document
@@ -83,12 +83,12 @@ Parser → Canonical Object Model
         │
         ├──────────────────────────────┐
         ▼                              ▼
-Validator (0.1–0.4)              Analyzer (0.3)
+Validator (0.1–0.5)              Analyzer (0.3)
         │                              │
         │  registry::resolve           ├─ compatibility::analyze
-        ▼                              ├─ analyze_evolution
-Diagnostics                            ├─ versioning::validate
-        │                              └─ lineage::analyze
+        │  stdlib definition checks    ├─ analyze_evolution
+        ▼                              ├─ versioning::validate
+Diagnostics                            └─ lineage::analyze
         │                              │
         │                              ▼
         │                         Analysis reports
@@ -96,7 +96,7 @@ Diagnostics                            ├─ versioning::validate
    (valid contracts only for analysis)
 ```
 
-Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation.
+Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation. Phase 0.5 embeds starter standard libraries for semantic actions, functions, and rules, and validates contract usage against structured registry definitions (target types, phases, arity, and return types).
 
 Execution, backend compilation, and runtime behavior remain out of scope. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 

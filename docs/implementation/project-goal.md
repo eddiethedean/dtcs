@@ -22,8 +22,14 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 - Registry-aware extension validation (mandatory/optional processing)
 - CLI and Python bindings
 
+## In development (Phase 0.5, `0.5.0` pending)
+
+- Embedded starter standard libraries under `src/registry/builtin/` (semantic actions, functions, rules)
+- Registry-driven semantics validation: target types, nullability, rule phases, function arity and return types
+- Fixtures for stdlib validation under `tests/fixtures/stdlib_*.yaml`
+
 ## Stubs / future milestones
 
-- Full standard libraries for actions, functions, and rules (Phase 0.5)
+- Remaining Ch 17–19 standard library catalog entries (full libraries beyond the starter subset)
 - Transformation Plan lowering (`src/plan/` — skeleton only)
 - Execution, runtime behavior, backend compilation, and optimization

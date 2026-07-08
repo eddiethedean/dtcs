@@ -1,0 +1,75 @@
+id: "dtcs:stdlib.functions"
+version: "1.0.0"
+governingSpecification: "1.0.0-draft"
+publicationStatus: "standard"
+entries:
+  dtcs:lower:
+    name: "Lower"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true}
+  dtcs:upper:
+    name: "Upper"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true}
+  dtcs:concat:
+    name: "Concat"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["string"],"returnType":"string","returnNullable":false,"deterministic":true}
+  dtcs:substr:
+    name: "Substring"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string","integer"],"returnType":"string","returnNullable":true,"deterministic":true}
+  dtcs:replace:
+    name: "Replace"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":3,"maxArgs":3,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true}
+  dtcs:coalesce:
+    name: "Coalesce"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true}
+  dtcs:length:
+    name: "Length"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","binary"],"returnType":"integer","returnNullable":false,"deterministic":true}
+  dtcs:to_string:
+    name: "To String"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"string","returnNullable":true,"deterministic":true}
+  dtcs:to_integer:
+    name: "To Integer"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","decimal","integer"],"returnType":"integer","returnNullable":true,"deterministic":true}
+  dtcs:to_decimal:
+    name: "To Decimal"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true}

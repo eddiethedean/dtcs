@@ -15,7 +15,7 @@ Do not implement these yet:
 
 The reference crate should remain a correct spec core based on [`SPEC.md`](../../SPEC.md).
 
-## In scope through 0.4.0
+## In scope through 0.5 (in development)
 
 - Parse YAML and JSON into the Canonical Object Model
 - Seven-phase validation with structured diagnostics
@@ -30,6 +30,7 @@ The reference crate should remain a correct spec core based on [`SPEC.md`](../..
 - Dataset-level lineage analysis: dependency graph, impact, governance (Phase 0.3)
 - Identifier registry with embedded `dtcs:` catalog, file/URI load, offline cache (Phase 0.4)
 - Registry-aware extension validation (mandatory/optional) (Phase 0.4)
+- Embedded starter standard libraries with registry-driven semantics validation (Phase 0.5)
 - CLI (`validate`, `inspect`, `diagnostics`, `version`, `compat`, `evolve`, `lineage`, `registry`)
 - Python bindings via maturin
 

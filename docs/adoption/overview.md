@@ -16,8 +16,8 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 ## Reference implementation maturity
 
-| Component | Status (0.4.0) |
-|-----------|----------------|
+| Component | Status |
+|-----------|--------|
 | Specification | Draft (`1.0.0-draft`, 26 chapters) |
 | Parser (YAML/JSON) | Complete |
 | Seven-phase validation | Complete |
@@ -27,11 +27,13 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Evolution analysis | Complete |
 | Versioning validation (Ch 25) | Complete |
 | Lineage analysis (dataset-level) | Complete |
-| Identifier registry & extensibility | Complete (Phase 0.4) |
-| Standard libraries (actions/functions/rules) | Not started (Phase 0.5) |
+| Identifier registry & extensibility | Complete (Phase 0.4, `0.4.0`) |
+| Standard libraries (actions/functions/rules) | In progress — starter catalog and registry-driven validation (Phase 0.5, `0.5.0` pending) |
 | Transformation plan lowering | Not started (Phase 0.7) |
 | Execution / runtime | Not started (Phase 0.9) |
 | Conformance certification (Ch 23) | Not started (Phase 0.10) |
+
+*Released reference implementation: `0.4.0`. Standard library work lands in the next `0.5.0` release.*
 
 See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 
@@ -39,9 +41,10 @@ See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 
 1. **Contract authoring** — write YAML/JSON contracts with IDE/CI validation
 2. **CI gates** — fail builds on invalid contracts (`dtcs validate --json`)
-3. **Version management** — compare contract revisions for breaking changes (`dtcs compat`, `dtcs evolve`)
-4. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
-5. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
+3. **Standard library usage** — reference `dtcs:` actions, functions, and rules; validate against embedded definitions (`dtcs registry list`)
+4. **Version management** — compare contract revisions for breaking changes (`dtcs compat`, `dtcs evolve`)
+5. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
+6. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased — 0.5.0
+
+Phase 0.5 — Standard Libraries (starter catalog).
+
+### Features
+
+- Embedded YAML standard library catalogs under `src/registry/builtin/` for semantic actions, functions, and rules
+- Starter semantic actions: `dtcs:lowercase`, `dtcs:uppercase`, `dtcs:capitalize`, `dtcs:trim`, `dtcs:normalize_whitespace`, `dtcs:hash_sha256`
+- Starter functions: `dtcs:concat`, `dtcs:coalesce`, `dtcs:length`, `dtcs:lower`, `dtcs:upper`, `dtcs:substr`, `dtcs:replace`, `dtcs:to_string`, `dtcs:to_integer`, `dtcs:to_decimal`
+- Starter rules: `dtcs:not_null`, `dtcs:min_length`, `dtcs:max_length`, `dtcs:regex_match`, `dtcs:range`
+- Registry-driven semantics validation: structured JSON `definition` blocks drive target type, nullability, rule phase, function arity, and return-type checks
+- Fixtures under `tests/fixtures/stdlib_*.yaml` with shared expectations in `tests/fixture_expectations.json`
+
+**Release:** bump `Cargo.toml` / `pyproject.toml` to `0.5.0` and push tag `v0.5.0` to publish (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
 ## 0.4.0
 
 Phase 0.4 — Registries & Extensibility.

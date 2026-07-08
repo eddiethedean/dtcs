@@ -74,5 +74,11 @@
     {"file": "duplicate_empty_field_name.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:duplicate-identifier"]},
     {"file": "expression_whitespace_body_invalid_type.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-type"]},
     {"file": "invalid_metadata_timestamp_offset.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-metadata"]}
+    ,
+    {"file": "stdlib_action_uppercase_valid.yaml", "parse_valid": true, "contract": true, "validate_valid": true},
+    {"file": "stdlib_action_uppercase_nullable_invalid.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-semantic-action"]},
+    {"file": "stdlib_rule_range_type_mismatch.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-rule"]},
+    {"file": "stdlib_function_concat_signature_invalid.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-function"]},
+    {"file": "stdlib_function_length_return_type_invalid.yaml", "parse_valid": true, "contract": true, "validate_valid": false, "codes": ["dtcs:invalid-function"]}
   ]
 }

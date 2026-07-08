@@ -1,0 +1,40 @@
+id: "dtcs:stdlib.rules"
+version: "1.0.0"
+governingSpecification: "1.0.0-draft"
+publicationStatus: "standard"
+entries:
+  dtcs:not_null:
+    name: "Not Null"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetNullableAllowed":false}
+  dtcs:min_length:
+    name: "Min Length"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetType":"string","targetNullableAllowed":true,"parameters":[{"name":"min","type":"integer","optional":false}]}
+  dtcs:max_length:
+    name: "Max Length"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetType":"string","targetNullableAllowed":true,"parameters":[{"name":"max","type":"integer","optional":false}]}
+  dtcs:regex_match:
+    name: "Regex Match"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetType":"string","targetNullableAllowed":true,"parameters":[{"name":"pattern","type":"string","optional":false}]}
+  dtcs:range:
+    name: "Range"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetType":"integer","targetNullableAllowed":true,"parameters":[{"name":"min","type":"integer","optional":true},{"name":"max","type":"integer","optional":true}]}

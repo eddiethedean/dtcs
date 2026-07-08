@@ -85,7 +85,14 @@ dtcs registry list
 dtcs registry resolve <id>
 ```
 
-## Phase 9 — Plan Stubs
+## Phase 9 — Standard Libraries (Phase 0.5)
+
+- Embedded YAML catalogs under `src/registry/builtin/` for semantic actions, functions, and rules
+- Structured JSON `definition` blocks on registry entries
+- Registry-driven semantics validation in `src/validation/semantics.rs` (target types, phases, arity, return types)
+- Starter catalog: string actions, common string/numeric functions, and constraint rules
+
+## Phase 10 — Plan Stubs
 
 - Add Transformation Plan skeleton (`src/plan/`).
 - Do not implement compilers yet.
