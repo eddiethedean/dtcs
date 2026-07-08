@@ -15,7 +15,7 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.5.0` — validation, analysis, registries, and embedded standard libraries with registry-driven semantics validation |
+| **Reference implementation** | `0.6.0` — validation, analysis (Ch 7–8), registries, and embedded standard libraries with registry-driven semantics validation |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
@@ -37,7 +37,7 @@ dtcs validate examples/customer_normalize.dtcs.yaml
 
 Both packages install the `dtcs` CLI on `PATH`:
 
-`validate` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
+`validate` · `analyze` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
 
 **Develop from source** (requires Rust + [maturin](https://www.maturin.rs/)): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -46,6 +46,9 @@ Both packages install the `dtcs` CLI on `PATH`:
 ```bash
 # Validate a contract (exit 0 = valid)
 dtcs validate examples/customer_normalize.dtcs.yaml
+
+# Analyze a contract (static semantics; no runtime evaluation)
+dtcs analyze examples/customer_normalize.dtcs.yaml
 
 # Human-readable summary
 dtcs inspect examples/customer_normalize.dtcs.yaml

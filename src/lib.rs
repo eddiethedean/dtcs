@@ -52,6 +52,7 @@ pub mod compatibility;
 pub mod diagnostics;
 pub mod lineage;
 pub mod metadata;
+pub mod analysis;
 pub mod model;
 pub mod parser;
 pub mod plan;
@@ -74,6 +75,7 @@ pub use diagnostics::{
     Severity, ValidationReport,
 };
 pub use lineage::{analyze as analyze_lineage, LineageAnalysisReport, LineageGovernance};
+pub use analysis::{check_contract, check_expression, AnalysisFinding, AnalysisReport};
 pub use model::{
     parse_logical_type, type_compatible, ExtensionCompatibility, LogicalType, RegistryCategory,
     RegistryDocument, RegistryEntry, RegistryEntryStatus, RegistryPublicationStatus, RegistryRef,

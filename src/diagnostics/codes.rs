@@ -54,6 +54,14 @@ pub const UNKNOWN_REGISTRY_ENTRY: &str = "dtcs:unknown-registry-entry";
 pub const INVALID_REGISTRY: &str = "dtcs:invalid-registry";
 /// Unsupported mandatory extension.
 pub const UNSUPPORTED_EXTENSION: &str = "dtcs:unsupported-extension";
+/// Invalid expression syntax or grammar.
+pub const INVALID_EXPRESSION: &str = "dtcs:invalid-expression";
+/// Invalid transformation semantics.
+pub const INVALID_SEMANTICS: &str = "dtcs:invalid-semantics";
+/// Declared determinism conflicts with non-deterministic semantics.
+pub const NON_DETERMINISTIC_SEMANTICS: &str = "dtcs:non-deterministic-semantics";
+/// Implicit or inconsistent null handling in expressions.
+pub const NULL_SEMANTICS_VIOLATION: &str = "dtcs:null-semantics-violation";
 
 /// All standardized diagnostic identifiers registered by this implementation.
 pub const ALL_CODES: &[&str] = &[
@@ -84,4 +92,8 @@ pub const ALL_CODES: &[&str] = &[
     UNKNOWN_REGISTRY_ENTRY,
     INVALID_REGISTRY,
     UNSUPPORTED_EXTENSION,
+    INVALID_EXPRESSION,
+    INVALID_SEMANTICS,
+    NON_DETERMINISTIC_SEMANTICS,
+    NULL_SEMANTICS_VIOLATION,
 ];

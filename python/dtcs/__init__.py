@@ -7,6 +7,7 @@ from importlib.metadata import PackageNotFoundError, version
 from dtcs._native import compat_analyze as _compat_analyze
 from dtcs._native import evolve_analyze as _evolve_analyze
 from dtcs._native import inspect as _inspect
+from dtcs._native import analyze_contract as _analyze_contract
 from dtcs._native import lineage_analyze as _lineage_analyze
 from dtcs._native import metadata_validate as _metadata_validate
 from dtcs._native import parse_document as _parse_document
@@ -45,6 +46,10 @@ def validate(contract: dict, registry_path: str | None = None) -> dict:
 def validate_with_registry(contract: dict, registry_path: str) -> dict:
     """Validate a contract using a merged vendor registry catalog."""
     return _validate_contract(contract, registry_path)
+
+def analyze(contract: dict, registry_path: str | None = None) -> dict:
+    """Analyze a parsed transformation contract (expressions + semantics)."""
+    return _analyze_contract(contract, registry_path)
 
 
 def metadata_validate(contract: dict) -> dict:

@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from dtcs import (
+    analyze,
     SPEC_VERSION,
     __version__,
     compat_analyze,
@@ -77,6 +78,11 @@ def _build_parser() -> argparse.ArgumentParser:
     validate_parser.add_argument("path", type=Path)
     validate_parser.add_argument("--registry", type=Path, default=None)
     validate_parser.add_argument("--json", action="store_true")
+
+    analyze_parser = subparsers.add_parser("analyze", help="Analyze semantics and expressions")
+    analyze_parser.add_argument("path", type=Path)
+    analyze_parser.add_argument("--registry", type=Path, default=None)
+    analyze_parser.add_argument("--json", action="store_true")
 
     inspect_parser = subparsers.add_parser("inspect", help="Print a contract summary")
     inspect_parser.add_argument("path", type=Path)
@@ -188,6 +194,30 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"compatibility: {compatibility}")
                 print(f"supported: {entry.get('supported')}")
             return 0
+
+    if args.command == "analyze":
+        contract = _load_valid_contract(args.path, json_output=args.json)
+        registry_path = str(args.registry) if args.registry else None
+        try:
+            result = analyze(contract, registry_path)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            validation = result.get("validation", {})
+            analysis_report = result.get("analysis", {})
+            if validation.get("diagnostics"):
+                print("validation diagnostics:")
+                _render_report(validation, json_output=False, mode="diagnostics")
+            if analysis_report.get("diagnostics"):
+                print("analysis diagnostics:")
+                _render_report(analysis_report, json_output=False, mode="diagnostics")
+            else:
+                print("no analysis diagnostics")
+        valid = is_valid(result.get("validation", {})) and is_valid(result.get("analysis", {}))
+        return 0 if valid else 1
 
     if args.command == "compat":
         source = _load_valid_contract(args.source, json_output=args.json)

@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.6.0
+
+Phase 0.6 — Semantic analysis of transformation semantics (Ch 7) and expressions (Ch 8).
+
+### Features
+
+- New `analysis` module with `check_contract` / `check_expression` for static semantic analysis (no runtime evaluation).
+- Expression parser and AST (operators, precedence, logical ops, and direct `dtcs:` call syntax).
+- Registry-aware expression typing for direct `dtcs:` function calls, including `sameAsArgs` and `returnNullable`.
+- Contract semantics analysis: action composition conflicts, explicit ordering validation, purity and determinism checks.
+- CLI and Python: `dtcs analyze` / `dtcs.analyze(...)` returning analysis diagnostics and findings.
+
+### Tests
+
+- New Phase 0.6 integration tests and fixtures exercising `dtcs:` expression calls, logical operators, constant expressions, and composition diagnostics.
+
 ## 0.5.0
 
 Phase 0.5 completion — stdlib validation fixes and rule parameters.

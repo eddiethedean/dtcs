@@ -31,7 +31,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
 | **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog) |
-| **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | Planned |
+| **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | **Complete** (`0.6.0`) |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | Planned |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | Planned |
 | **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | Planned |

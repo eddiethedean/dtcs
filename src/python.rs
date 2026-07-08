@@ -10,6 +10,7 @@ use crate::diagnostics::inspect_contract;
 use crate::lineage::analyze_with_options;
 use crate::model::TransformationContract;
 use crate::parser::{parse, parse_file, DocumentFormat, ParseResult};
+use crate::{analysis, AnalysisReport, ValidationReport};
 
 fn value_to_py(py: Python<'_>, value: &impl Serialize) -> PyResult<Py<PyAny>> {
     let json = serde_json::to_string(value)
@@ -143,6 +144,33 @@ fn validate_contract(
     value_to_py(py, &report)
 }
 
+/// Analyze a parsed transformation contract (expressions + semantics).
+#[pyfunction]
+#[pyo3(signature = (contract, registry_path=None))]
+fn analyze_contract(
+    py: Python<'_>,
+    contract: &Bound<'_, PyAny>,
+    registry_path: Option<String>,
+) -> PyResult<Py<PyAny>> {
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct AnalyzeResult {
+        validation: ValidationReport,
+        analysis: AnalysisReport,
+    }
+
+    let contract = contract_from_py(py, contract)?;
+    let registry_doc = if let Some(path) = registry_path.as_deref() {
+        crate::registry::load_merged(path).map_err(registry_error)?
+    } else {
+        crate::registry::default_registry().clone()
+    };
+
+    let validation = crate::validate_with_registry(&contract, &registry_doc);
+    let analysis = analysis::check_contract(&contract, Some(&registry_doc));
+    value_to_py(py, &AnalyzeResult { validation, analysis })
+}
+
 /// Parse and validate a DTCS document in one step.
 #[pyfunction]
 #[pyo3(signature = (content, format="yaml"))]
@@ -270,6 +298,7 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_document, m)?)?;
     m.add_function(wrap_pyfunction!(parse_path, m)?)?;
     m.add_function(wrap_pyfunction!(validate_contract, m)?)?;
+    m.add_function(wrap_pyfunction!(analyze_contract, m)?)?;
     m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;
     m.add_function(wrap_pyfunction!(inspect, m)?)?;

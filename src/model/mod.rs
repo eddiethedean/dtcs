@@ -32,7 +32,7 @@ pub use registry::{
     RegistryPublicationStatus, RegistryRef,
 };
 pub use rule::{Rule, RulePhase};
-pub use semantics::TransformationSemantics;
+pub use semantics::{ActionOrdering, SideEffectDeclaration, TransformationSemantics};
 pub use types::{
     infer_logical_type, is_extension_type_identifier, is_known_logical_type, parse_logical_type,
     type_compatible, Field, LogicalType, Schema, TypeCompatibility, TypeConversion, TypeParseError,

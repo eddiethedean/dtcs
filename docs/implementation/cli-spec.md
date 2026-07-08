@@ -10,6 +10,7 @@ Commands:
 
 ```bash
 dtcs validate <path>
+dtcs analyze <path> [--registry PATH] [--json]
 dtcs inspect <path>
 dtcs diagnostics <path>
 dtcs version

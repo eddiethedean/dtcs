@@ -5,7 +5,7 @@ pub(crate) mod context;
 mod document;
 mod expressions;
 mod extensions;
-mod field_index;
+pub(crate) mod field_index;
 mod interfaces;
 mod lineage;
 mod phases;
@@ -65,7 +65,7 @@ pub fn validate_with_registry(
             }
             ValidationPhase::Types => {
                 validate_types(&mut ctx, contract);
-                validate_expressions(&mut ctx, contract);
+                validate_expressions(&mut ctx, contract, registry);
             }
             ValidationPhase::References => {
                 validate_references(&mut ctx, contract);

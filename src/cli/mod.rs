@@ -10,6 +10,7 @@ use crate::diagnostics::{inspect_contract, DiagnosticReport};
 use crate::lineage::analyze_with_options;
 use crate::model::TransformationContract;
 use crate::parser::parse_file;
+use crate::{analysis, validate_with_registry};
 
 /// DTCS command-line tool.
 #[derive(Debug, Parser)]
@@ -32,6 +33,17 @@ pub enum Command {
         /// Path to a DTCS document.
         path: PathBuf,
         /// Optional additional registry file to merge for validation.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Analyze transformation semantics and expressions.
+    Analyze {
+        /// Path to a DTCS document.
+        path: PathBuf,
+        /// Optional additional registry file to merge for analysis.
         #[arg(long)]
         registry: Option<PathBuf>,
         /// Emit JSON output.
@@ -143,6 +155,73 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             render_report(&report, json, ReportMode::Validate)
                 .map_err(|e| miette::miette!("{e}"))?;
             Ok(if report.is_valid() { 0 } else { 1 })
+        }
+        Command::Analyze {
+            path,
+            registry,
+            json,
+        } => {
+            let result = parse_file(&path)?;
+            let contract = result
+                .contract
+                .clone()
+                .ok_or_else(|| miette::miette!("no contract in {}", path.display()))?;
+
+            let merged = match registry.as_ref() {
+                Some(registry_path) => Some(
+                    crate::registry::load_merged(registry_path)
+                        .map_err(|report| registry_report_error(&report))?,
+                ),
+                None => None,
+            };
+            let registry_doc = merged.as_ref().unwrap_or_else(|| crate::registry::default_registry());
+
+            let validation = validate_with_registry(&contract, registry_doc);
+            let analysis_report = analysis::check_contract(&contract, Some(registry_doc));
+
+            if json {
+                let payload = serde_json::json!({
+                    "validation": {
+                        "valid": validation.is_valid(),
+                        "diagnostics": validation.diagnostics,
+                    },
+                    "analysis": {
+                        "valid": analysis_report.is_valid(),
+                        "diagnostics": analysis_report.diagnostics,
+                        "findings": analysis_report.findings,
+                    }
+                });
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&payload).map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                if !validation.diagnostics.is_empty() {
+                    render_report(&validation, false, ReportMode::Diagnostics)
+                        .map_err(|e| miette::miette!("{e}"))?;
+                }
+                if analysis_report.diagnostics.is_empty() {
+                    println!("no analysis diagnostics");
+                } else {
+                    for diagnostic in &analysis_report.diagnostics {
+                        println!(
+                            "[{}] {} ({}) - {}",
+                            format!("{:?}", diagnostic.severity).to_lowercase(),
+                            diagnostic.id,
+                            format!("{:?}", diagnostic.category).to_lowercase(),
+                            diagnostic.message,
+                        );
+                        if let Some(object_ref) = &diagnostic.object_ref {
+                            println!("  at: {object_ref}");
+                        }
+                        if let Some(remediation) = &diagnostic.remediation {
+                            println!("  hint: {remediation}");
+                        }
+                    }
+                }
+            }
+
+            Ok(if validation.is_valid() && analysis_report.is_valid() { 0 } else { 1 })
         }
         Command::Inspect { path, json } => {
             let contract = load_valid_contract(&path, json)?;

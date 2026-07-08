@@ -1,0 +1,34 @@
+dtcsVersion: "1.0.0"
+id: "analysis.duplicate.action.target"
+name: "Analysis duplicate action target"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "a1"
+    action: "dtcs:lowercase"
+    target: "out.value"
+  - id: "a2"
+    action: "dtcs:trim"
+    target: "out.value"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]
+

@@ -96,6 +96,27 @@ use dtcs::versioning;
 let report = versioning::validate(&contract);
 ```
 
+## Semantic analysis (Phase 0.6)
+
+Static semantic analysis checks transformation semantics (Ch 7) and expression semantics (Ch 8) without runtime evaluation.
+
+```rust
+use dtcs::{analysis, parse_file};
+
+let contract = parse_file("contract.dtcs.yaml")?.into_contract()?;
+let report = analysis::check_contract(&contract, None);
+assert!(report.is_valid());
+```
+
+```python
+import dtcs
+
+contract = dtcs.parse_file("contract.dtcs.yaml")["contract"]
+result = dtcs.analyze(contract)
+assert dtcs.is_valid(result["validation"])
+assert dtcs.is_valid(result["analysis"])
+```
+
 ## Registry (Phase 0.4–0.5)
 
 The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,
