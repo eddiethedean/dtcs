@@ -28,12 +28,12 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Versioning validation (Ch 25) | Complete |
 | Lineage analysis (dataset-level) | Complete |
 | Identifier registry & extensibility | Complete (Phase 0.4, `0.4.0`) |
-| Standard libraries (actions/functions/rules) | Complete — starter catalog and registry-driven validation (Phase 0.5, `0.5.0`) |
+| Standard libraries (actions/functions/rules) | Complete — starter catalog and registry-driven validation (Phase 0.5, `0.5.1`) |
 | Transformation plan lowering | Not started (Phase 0.7) |
 | Execution / runtime | Not started (Phase 0.9) |
 | Conformance certification (Ch 23) | Not started (Phase 0.10) |
 
-*Released reference implementation: `0.5.0`.*
+*Released reference implementation: `0.5.1`.*
 
 See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 

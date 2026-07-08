@@ -1,0 +1,34 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.rule.range.valid"
+name: "Stdlib Range Valid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "score"
+          type: "integer"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "score"
+          type: "integer"
+          nullable: true
+
+rules:
+  - id: "score_range"
+    rule: "dtcs:range"
+    target: "in.score"
+    phase: "postcondition"
+    parameters:
+      min: 0
+      max: 100
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

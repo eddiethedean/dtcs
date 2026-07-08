@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.action.hash_sha256.valid"
+name: "Stdlib Hash SHA256 Valid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "secret"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "digest"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "hash"
+    action: "dtcs:hash_sha256"
+    target: "in.secret"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

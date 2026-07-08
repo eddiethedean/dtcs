@@ -51,14 +51,14 @@ def _render_report(report: dict, *, json_output: bool, mode: str) -> None:
         print("valid")
 
 
-def _load_valid_contract(path: Path) -> dict:
+def _load_valid_contract(path: Path, *, json_output: bool = False) -> dict:
     try:
         result = parse_file(str(path))
     except ValueError as error:
         raise SystemExit(str(error)) from error
     report = validate_result(result)
     if not is_valid(report):
-        _render_report(report, json_output=False, mode="validate")
+        _render_report(report, json_output=json_output, mode="validate")
         raise SystemExit(f"validation failed for {path}")
     contract = result.get("contract")
     if contract is None:
@@ -75,6 +75,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     validate_parser = subparsers.add_parser("validate", help="Parse and validate a contract")
     validate_parser.add_argument("path", type=Path)
+    validate_parser.add_argument("--registry", type=Path, default=None)
     validate_parser.add_argument("--json", action="store_true")
 
     inspect_parser = subparsers.add_parser("inspect", help="Print a contract summary")
@@ -189,8 +190,8 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
     if args.command == "compat":
-        source = _load_valid_contract(args.source)
-        target = _load_valid_contract(args.target)
+        source = _load_valid_contract(args.source, json_output=args.json)
+        target = _load_valid_contract(args.target, json_output=args.json)
         scope_tokens: list[str] = []
         for item in args.scope or []:
             scope_tokens.extend(part.strip() for part in str(item).split(","))
@@ -216,8 +217,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if level and level != "incompatible" else 1
 
     if args.command == "evolve":
-        older = _load_valid_contract(args.older)
-        newer = _load_valid_contract(args.newer)
+        older = _load_valid_contract(args.older, json_output=args.json)
+        newer = _load_valid_contract(args.newer, json_output=args.json)
         report = evolve_analyze(older, newer)
         if args.json:
             print(json.dumps(report, indent=2))
@@ -226,10 +227,14 @@ def main(argv: list[str] | None = None) -> int:
                 f"evolution: {report.get('compatibility')} "
                 f"(same identity: {report.get('sameIdentity')})"
             )
+            for change in report.get("changes", []) or []:
+                print(f"  [{change.get('category')}] {change.get('message')}")
+            for hint in report.get("migrationHints", []) or []:
+                print(f"  hint: {hint}")
         return 0 if report.get("sameIdentity") and report.get("compatibility") != "incompatible" else 1
 
     if args.command == "lineage":
-        contract = _load_valid_contract(args.path)
+        contract = _load_valid_contract(args.path, json_output=args.json)
         report = lineage_analyze(contract, args.impact, args.dependency)
         if args.json:
             print(json.dumps(report, indent=2))
@@ -237,9 +242,9 @@ def main(argv: list[str] | None = None) -> int:
             for edge in report.get("graph", []):
                 print(f"{edge['output']} <- {edge['inputs']}")
             if impact := report.get("impact"):
-                print(f"impact {impact['input']}: {impact['outputs']}")
+                print(f"impact {impact['input']} -> {impact['outputs']}")
             if dependency := report.get("dependency"):
-                print(f"dependency {dependency['output']}: {dependency['inputs']}")
+                print(f"dependency {dependency['output']} <- {dependency['inputs']}")
             governance = report.get("governance") or {}
             if owner := governance.get("owner"):
                 print(f"governance owner: {owner}")
@@ -253,7 +258,8 @@ def main(argv: list[str] | None = None) -> int:
     except ValueError as error:
         print(str(error), file=sys.stderr)
         return 1
-    report = validate_result(result)
+    registry_path = str(args.registry) if getattr(args, "registry", None) else None
+    report = validate_result(result, registry_path)
 
     if args.command == "validate":
         _render_report(report, json_output=args.json, mode="validate")

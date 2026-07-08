@@ -1,0 +1,34 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.function.coalesce.type_mismatch"
+name: "Stdlib Coalesce Type Mismatch"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "a"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: true
+
+functions:
+  - id: "pick"
+    function: "dtcs:coalesce"
+    type: "integer"
+    parameters:
+      - name: "a"
+        type: "string"
+        optional: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

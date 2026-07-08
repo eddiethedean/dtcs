@@ -1,0 +1,31 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.rule.min_length.missing_param"
+name: "Stdlib Min Length Missing Param"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "code"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "code"
+          type: "string"
+          nullable: true
+
+rules:
+  - id: "code_min"
+    rule: "dtcs:min_length"
+    target: "in.code"
+    phase: "postcondition"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

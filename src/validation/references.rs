@@ -36,7 +36,7 @@ pub(crate) fn validate_references(ctx: &mut ValidationContext, contract: &Transf
             ctx,
             &action.target,
             &format!("semanticActions.{}.target", action.id),
-            true,
+            false,
             &index,
         );
     }

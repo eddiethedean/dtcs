@@ -1,5 +1,6 @@
 //! Rule model.
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 use super::metadata::Metadata;
@@ -40,6 +41,9 @@ pub struct Rule {
     pub target: String,
     /// Evaluation phase.
     pub phase: RulePhase,
+    /// Rule parameters (for example `min` for `dtcs:min_length`).
+    #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
+    pub parameters: IndexMap<String, serde_json::Value>,
     /// Object metadata (SPEC Chapter 5 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,

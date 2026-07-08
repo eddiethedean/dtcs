@@ -30,7 +30,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
-| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog) |
+| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.1` starter catalog) |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | Planned |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | Planned |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | Planned |
@@ -249,7 +249,7 @@ Resolve `dtcs:` and vendor identifiers through authoritative registries; validat
 
 ## Phase 0.5 — Standard Libraries
 
-**Target:** `0.5.x` · **Tier:** III · **Prerequisite:** 0.4 · **Status:** **Complete** (`0.5.0` starter release)
+**Target:** `0.5.x` · **Tier:** III · **Prerequisite:** 0.4 · **Status:** **Complete** (`0.5.1` starter release)
 
 **Implements:** Validator (library-aware semantics) · **SPEC:** [Ch 17](SPEC.md#chapter-17----semantic-actions)–[19](SPEC.md#chapter-19----rule-model)
 
@@ -273,8 +273,10 @@ Publish the complete `dtcs:` standard libraries in the built-in registry ([Ch 2 
 | Area | Work | SPEC |
 |------|------|------|
 | Semantic actions | Full catalog: projection, selection, aggregation, grouping, joining, sorting, union, partitioning, filtering; type and lineage semantics per action | [Ch 17 §5–10](SPEC.md#chapter-17----semantic-actions) |
-| Functions | Remaining standard library entries; expression call-site validation against stdlib signatures | [Ch 18 §3–10](SPEC.md#chapter-18----function-model) |
+| Functions | Remaining standard library entries; direct `dtcs:` call syntax in expressions | [Ch 18 §3–10](SPEC.md#chapter-18----function-model) |
 | Rules | Remaining standard library entries with scope and outcome metadata | [Ch 19 §3–10](SPEC.md#chapter-19----rule-model) |
+
+Rule parameters, positional function signatures, expression return nullability, and per-entry fixtures shipped in `0.5.1`.
 
 ### Modules
 

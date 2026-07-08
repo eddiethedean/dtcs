@@ -1,5 +1,31 @@
 # Changelog
 
+## 0.5.1
+
+Phase 0.5 completion — stdlib validation fixes and rule parameters.
+
+### Bug fixes
+
+- Positional `argTypes` validation for multi-parameter stdlib functions (for example `dtcs:substr`)
+- `sameAsArgs` return-type and homogeneous parameter checks for `dtcs:coalesce`
+- Semantic action targets no longer accept bare interface IDs at reference phase
+- `resolve_field` emits `dtcs:unresolved-reference` for missing targets
+- `is_known_*` helpers only return true for resolved registry entries
+
+### Features
+
+- `Rule.parameters` on the COM model with registry-driven validation (required params, types, `dtcs:range` bounds)
+- `Function.nullable` return flag validated against registry `returnNullable`
+- Expression call typing honors registry `returnNullable` for `dtcs:` function declarations
+- `dtcs validate --registry PATH` and Python `validate_with_registry()` / `validate(..., registry_path=...)`
+- CLI/Python parity: `--json` on load failures, full `evolve` text output, lineage arrow formatting
+
+### Tests
+
+- Fixtures for all 21 starter stdlib catalog entries (valid and invalid variants)
+
+**Release:** push tag `v0.5.1` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
 ## 0.5.0
 
 Phase 0.5 — Standard Libraries (starter catalog).

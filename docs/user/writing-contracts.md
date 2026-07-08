@@ -136,6 +136,12 @@ rules:
     rule: "dtcs:not_null"
     target: "customer_raw.customer_id"
     phase: "postcondition"
+  - id: "email_min"
+    rule: "dtcs:min_length"
+    target: "customer_raw.email"
+    phase: "postcondition"
+    parameters:
+      min: 5
 ```
 
 Standard library rules and actions are discoverable via:

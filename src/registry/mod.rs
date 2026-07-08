@@ -11,9 +11,7 @@ use std::path::Path;
 use std::sync::OnceLock;
 
 use crate::diagnostics::DiagnosticReport;
-use crate::model::{
-    is_vendor_namespaced_identifier, RegistryCategory, RegistryDocument, RegistryEntry,
-};
+use crate::model::{RegistryCategory, RegistryDocument, RegistryEntry};
 use crate::parser::DocumentFormat;
 
 pub use cache::{
@@ -61,24 +59,19 @@ pub fn load_uri_merged(uri: &str) -> Result<RegistryDocument, DiagnosticReport> 
 /// Returns `true` when `action` is a recognized semantic action identifier.
 #[must_use]
 pub fn is_known_action(action: &str) -> bool {
-    is_vendor_namespaced_identifier(action)
-        || resolve_default(action)
-            .is_some_and(|entry| entry.category == RegistryCategory::SemanticAction)
+    resolve_default(action).is_some_and(|entry| entry.category == RegistryCategory::SemanticAction)
 }
 
 /// Returns `true` when `rule` is a recognized rule identifier.
 #[must_use]
 pub fn is_known_rule(rule: &str) -> bool {
-    is_vendor_namespaced_identifier(rule)
-        || resolve_default(rule).is_some_and(|entry| entry.category == RegistryCategory::Rule)
+    resolve_default(rule).is_some_and(|entry| entry.category == RegistryCategory::Rule)
 }
 
 /// Returns `true` when `function` is a recognized function identifier.
 #[must_use]
 pub fn is_known_function(function: &str) -> bool {
-    is_vendor_namespaced_identifier(function)
-        || resolve_default(function)
-            .is_some_and(|entry| entry.category == RegistryCategory::Function)
+    resolve_default(function).is_some_and(|entry| entry.category == RegistryCategory::Function)
 }
 
 /// List entries from the default registry, optionally merged with a file.

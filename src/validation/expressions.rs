@@ -7,6 +7,7 @@ use crate::model::{
     parse_logical_type, type_compatible, Function, LogicalType, TransformationContract,
     TypeCompatibility, TypeParseError,
 };
+use crate::registry;
 
 use super::context::ValidationContext;
 use super::field_index::{FieldIndex, TargetResolution};
@@ -279,11 +280,7 @@ fn infer_primary(
         return infer_comparison(inner, index, functions);
     }
     if let Some((name, args_source)) = split_call(expr) {
-        let logical = infer_call_type(name, args_source, index, functions)?;
-        return Ok(InferredExprType {
-            logical,
-            nullable: false,
-        });
+        return infer_call_type(name, args_source, index, functions);
     }
     infer_atom(expr, index)
 }
@@ -403,7 +400,7 @@ fn infer_call_type(
     args_source: &str,
     index: &FieldIndex,
     functions: &HashMap<&str, &Function>,
-) -> Result<LogicalType, String> {
+) -> Result<InferredExprType, String> {
     let Some(function) = functions.get(name) else {
         return Err(format!("unresolved function reference '{name}'"));
     };
@@ -459,7 +456,38 @@ fn infer_call_type(
         }
     }
 
-    Ok(return_type)
+    Ok(InferredExprType {
+        logical: return_type,
+        nullable: function_return_nullable(function),
+    })
+}
+
+fn function_return_nullable(function: &Function) -> bool {
+    if function.nullable {
+        return true;
+    }
+    if !function.function.starts_with("dtcs:") {
+        return false;
+    }
+    let Some(entry) = registry::resolve_default(&function.function) else {
+        return false;
+    };
+    let Some(definition) = entry.definition.as_deref() else {
+        return false;
+    };
+    let definition = definition.trim();
+    if !definition.starts_with('{') {
+        return false;
+    }
+    #[derive(serde::Deserialize)]
+    struct FunctionDef {
+        #[serde(rename = "returnNullable")]
+        return_nullable: Option<bool>,
+    }
+    serde_json::from_str::<FunctionDef>(definition)
+        .ok()
+        .and_then(|def| def.return_nullable)
+        .unwrap_or(false)
 }
 
 fn primitive_name(logical_type: &LogicalType) -> Result<&str, String> {

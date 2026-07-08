@@ -37,9 +37,14 @@ def parse_file(path: str) -> dict:
     return _parse_path(path)
 
 
-def validate(contract: dict) -> dict:
+def validate(contract: dict, registry_path: str | None = None) -> dict:
     """Validate a parsed transformation contract."""
-    return _validate_contract(contract)
+    return _validate_contract(contract, registry_path)
+
+
+def validate_with_registry(contract: dict, registry_path: str) -> dict:
+    """Validate a contract using a merged vendor registry catalog."""
+    return _validate_contract(contract, registry_path)
 
 
 def metadata_validate(contract: dict) -> dict:
@@ -47,12 +52,12 @@ def metadata_validate(contract: dict) -> dict:
     return _metadata_validate(contract)
 
 
-def validate_result(result: dict) -> dict:
+def validate_result(result: dict, registry_path: str | None = None) -> dict:
     """Merge parse-time and validation diagnostics from a parse result."""
     diagnostics = list(result.get("report", {}).get("diagnostics", []))
     contract = result.get("contract")
     if contract is not None:
-        validation = _validate_contract(contract)
+        validation = _validate_contract(contract, registry_path)
         diagnostics.extend(validation.get("diagnostics", []))
     return {"diagnostics": diagnostics}
 
@@ -131,5 +136,6 @@ __all__ = [
     "registry_resolve",
     "validate",
     "validate_result",
+    "validate_with_registry",
     "version_validate",
 ]

@@ -1,0 +1,40 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.function.concat.valid"
+name: "Stdlib Concat Valid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "a"
+          type: "string"
+          nullable: false
+        - name: "b"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "joined"
+          type: "string"
+          nullable: false
+
+functions:
+  - id: "join"
+    function: "dtcs:concat"
+    type: "string"
+    parameters:
+      - name: "a"
+        type: "string"
+        optional: false
+      - name: "b"
+        type: "string"
+        optional: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

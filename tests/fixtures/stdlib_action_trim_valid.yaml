@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.action.trim.valid"
+name: "Stdlib Trim Valid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "text"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "text_trim"
+          type: "string"
+          nullable: true
+
+semanticActions:
+  - id: "trim_text"
+    action: "dtcs:trim"
+    target: "in.text"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

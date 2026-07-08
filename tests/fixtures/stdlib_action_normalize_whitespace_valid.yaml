@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.action.normalize_whitespace.valid"
+name: "Stdlib Normalize Whitespace Valid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "text"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "text_norm"
+          type: "string"
+          nullable: true
+
+semanticActions:
+  - id: "norm"
+    action: "dtcs:normalize_whitespace"
+    target: "in.text"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

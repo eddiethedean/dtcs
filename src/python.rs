@@ -127,9 +127,20 @@ fn parse_path(py: Python<'_>, path: &str) -> PyResult<Py<PyAny>> {
 
 /// Validate a parsed transformation contract.
 #[pyfunction]
-fn validate_contract(py: Python<'_>, contract: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+#[pyo3(signature = (contract, registry_path=None))]
+fn validate_contract(
+    py: Python<'_>,
+    contract: &Bound<'_, PyAny>,
+    registry_path: Option<String>,
+) -> PyResult<Py<PyAny>> {
     let contract = contract_from_py(py, contract)?;
-    value_to_py(py, &crate::validate(&contract))
+    let report = if let Some(path) = registry_path.as_deref() {
+        let merged = crate::registry::load_merged(path).map_err(registry_error)?;
+        crate::validate_with_registry(&contract, &merged)
+    } else {
+        crate::validate(&contract)
+    };
+    value_to_py(py, &report)
 }
 
 /// Parse and validate a DTCS document in one step.

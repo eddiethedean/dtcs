@@ -375,6 +375,17 @@ def test_cli_registry_list_and_resolve() -> None:
     assert missing.returncode == 1
 
 
+def test_validate_with_registry_mandatory_extension() -> None:
+    path = _fixture_dir() / "registry" / "vendor_mandatory_extension.yaml"
+    catalog_path = _fixture_dir() / "registry" / "vendor_catalog.yaml"
+    result = dtcs.parse_file(str(path))
+    contract = result["contract"]
+    assert contract is not None
+    report = dtcs.validate_with_registry(contract, str(catalog_path))
+    codes = {item["id"] for item in report.get("diagnostics", [])}
+    assert "dtcs:unsupported-extension" in codes
+
+
 def test_compat_analyze_rejects_invalid_scope() -> None:
     source = dtcs.parse_file(str(_fixture_dir() / "compatibility/backward_old.yaml"))["contract"]
     target = dtcs.parse_file(str(_fixture_dir() / "compatibility/backward_new.yaml"))["contract"]

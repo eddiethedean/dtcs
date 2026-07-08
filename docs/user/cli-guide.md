@@ -22,6 +22,7 @@ All commands accept `--json` for structured output except where noted below.
 
 ```bash
 dtcs validate contract.yaml
+dtcs validate contract.yaml --registry vendor_catalog.yaml
 dtcs validate contract.yaml --json
 ```
 
@@ -29,6 +30,8 @@ dtcs validate contract.yaml --json
 |-----------|---------|
 | `0` | Contract is valid (no error-severity diagnostics) |
 | `1` | Contract is invalid |
+
+Optional `--registry` merges a vendor catalog for extension and stdlib validation (builtin `dtcs:` entries remain authoritative).
 
 Warnings and information-level diagnostics do not cause a non-zero exit.
 
@@ -68,6 +71,7 @@ Default scope is `all` when `--scope` is omitted.
 |-----------|---------|
 | `0` | Compatible (any level except Incompatible) |
 | `1` | Incompatible |
+| `2` | Invalid `--scope` token(s) |
 
 ## evolve
 

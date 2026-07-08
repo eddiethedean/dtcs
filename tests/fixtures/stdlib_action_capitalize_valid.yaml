@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "stdlib.action.capitalize.valid"
+name: "Stdlib Capitalize Valid"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "name"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "name_cap"
+          type: "string"
+          nullable: true
+
+semanticActions:
+  - id: "cap"
+    action: "dtcs:capitalize"
+    target: "in.name"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

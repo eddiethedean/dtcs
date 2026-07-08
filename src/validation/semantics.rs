@@ -13,6 +13,15 @@ use super::context::ValidationContext;
 use super::field_index::{FieldIndex, TargetResolution};
 
 #[derive(Debug, Deserialize)]
+struct StdlibParameter {
+    name: String,
+    #[serde(rename = "type")]
+    type_name: String,
+    #[serde(default)]
+    optional: bool,
+}
+
+#[derive(Debug, Deserialize)]
 #[serde(tag = "kind")]
 enum StdlibDefinition {
     #[serde(rename = "semanticAction")]
@@ -34,6 +43,8 @@ enum StdlibDefinition {
         #[serde(default)]
         #[serde(rename = "targetNullableAllowed")]
         target_nullable_allowed: Option<bool>,
+        #[serde(default)]
+        parameters: Option<Vec<StdlibParameter>>,
     },
     #[serde(rename = "function")]
     Function {
@@ -48,6 +59,9 @@ enum StdlibDefinition {
         arg_types: Vec<String>,
         #[serde(rename = "returnType")]
         return_type: String,
+        #[serde(default)]
+        #[serde(rename = "returnNullable")]
+        return_nullable: Option<bool>,
     },
 }
 
@@ -268,6 +282,7 @@ fn validate_stdlib_rule(
         phases,
         target_type,
         target_nullable_allowed,
+        parameters,
     }) = parse_stdlib_definition(definition)
     else {
         return;
@@ -316,6 +331,80 @@ fn validate_stdlib_rule(
             Some("Target a non-nullable schema field"),
         );
     }
+
+    validate_rule_parameters(ctx, rule, parameters.as_deref());
+}
+
+fn validate_rule_parameters(
+    ctx: &mut ValidationContext,
+    rule: &crate::model::Rule,
+    schema: Option<&[StdlibParameter]>,
+) {
+    let Some(schema) = schema else {
+        return;
+    };
+
+    let object_ref = format!("rules.{}.parameters", rule.id);
+
+    for param_schema in schema {
+        if !param_schema.optional && !rule.parameters.contains_key(&param_schema.name) {
+            ctx.error(
+                codes::INVALID_RULE,
+                DiagnosticCategory::Semantic,
+                format!("{} requires parameter '{}'", rule.rule, param_schema.name),
+                Some(&object_ref),
+                Some("Provide all required rule parameters"),
+            );
+        }
+    }
+
+    for (name, value) in &rule.parameters {
+        let Some(param_schema) = schema.iter().find(|p| p.name == *name) else {
+            ctx.error(
+                codes::INVALID_RULE,
+                DiagnosticCategory::Semantic,
+                format!("{} does not accept parameter '{name}'", rule.rule),
+                Some(&format!("{object_ref}.{name}")),
+                Some("Remove unknown parameters or use a supported rule identifier"),
+            );
+            continue;
+        };
+        if !parameter_value_matches_type(value, &param_schema.type_name) {
+            ctx.error(
+                codes::INVALID_RULE,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "parameter '{name}' for {} must be of type '{}'",
+                    rule.rule, param_schema.type_name
+                ),
+                Some(&format!("{object_ref}.{name}")),
+                Some("Use a value compatible with the parameter type"),
+            );
+        }
+    }
+
+    if rule.rule == "dtcs:range"
+        && !rule.parameters.contains_key("min")
+        && !rule.parameters.contains_key("max")
+    {
+        ctx.error(
+            codes::INVALID_RULE,
+            DiagnosticCategory::Semantic,
+            "dtcs:range requires at least one of 'min' or 'max' parameters".to_string(),
+            Some(&object_ref),
+            Some("Provide min and/or max bounds"),
+        );
+    }
+}
+
+fn parameter_value_matches_type(value: &serde_json::Value, expected: &str) -> bool {
+    match expected {
+        "integer" => value.as_i64().is_some(),
+        "string" => value.as_str().is_some(),
+        "decimal" => value.as_f64().is_some() || value.as_i64().is_some(),
+        "boolean" => value.as_bool().is_some(),
+        _ => false,
+    }
 }
 
 fn validate_stdlib_function(
@@ -328,6 +417,7 @@ fn validate_stdlib_function(
         max_args,
         arg_types,
         return_type,
+        return_nullable,
     }) = parse_stdlib_definition(definition)
     else {
         return;
@@ -382,7 +472,52 @@ fn validate_stdlib_function(
                 );
                 continue;
             };
-            if !arg_types.iter().any(|allowed| allowed == name) {
+            if return_type == "sameAsArgs" {
+                if !arg_types.iter().any(|allowed| allowed == name) {
+                    ctx.error(
+                        codes::INVALID_FUNCTION,
+                        DiagnosticCategory::Semantic,
+                        format!(
+                            "function '{}' parameter '{}' has type '{}', expected one of {}",
+                            function.function,
+                            param.name,
+                            name,
+                            arg_types.join(", ")
+                        ),
+                        Some(&format!("{object_ref}.parameters[{idx}].type")),
+                        Some("Use homogeneous parameter types allowed by the standard function"),
+                    );
+                }
+            } else if uses_positional_arg_types(min_args, &arg_types) {
+                let Some(expected) = expected_arg_type(&arg_types, idx, max_args) else {
+                    ctx.error(
+                        codes::INVALID_FUNCTION,
+                        DiagnosticCategory::Semantic,
+                        format!(
+                            "function '{}' has too many parameters for its signature",
+                            function.function
+                        ),
+                        Some(&format!("{object_ref}.parameters[{idx}]")),
+                        Some("Remove extra parameters"),
+                    );
+                    continue;
+                };
+                if name != expected {
+                    ctx.error(
+                        codes::INVALID_FUNCTION,
+                        DiagnosticCategory::Semantic,
+                        format!(
+                            "function '{}' parameter {} '{}' has type '{}', expected '{expected}'",
+                            function.function,
+                            idx + 1,
+                            param.name,
+                            name,
+                        ),
+                        Some(&format!("{object_ref}.parameters[{idx}].type")),
+                        Some("Align parameter types with the standard function signature"),
+                    );
+                }
+            } else if !arg_types.iter().any(|allowed| allowed == name) {
                 ctx.error(
                     codes::INVALID_FUNCTION,
                     DiagnosticCategory::Semantic,
@@ -400,26 +535,136 @@ fn validate_stdlib_function(
         }
     }
 
+    if return_type == "sameAsArgs" {
+        validate_same_as_args_return(ctx, function, &object_ref, &arg_types);
+    } else if let Some(declared_return) = function.type_name.as_deref() {
+        let Ok(declared) = parse_logical_type(declared_return) else {
+            return;
+        };
+        let Ok(expected) = parse_logical_type(&return_type) else {
+            return;
+        };
+        if declared != expected {
+            ctx.error(
+                codes::INVALID_FUNCTION,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "function '{}' declares return type '{declared_return}', expected '{return_type}'",
+                    function.function
+                ),
+                Some(&format!("{object_ref}.type")),
+                Some("Align the declared return type with the standard function signature"),
+            );
+        }
+    }
+
+    if return_nullable == Some(false) && function.nullable {
+        ctx.error(
+            codes::INVALID_FUNCTION,
+            DiagnosticCategory::Semantic,
+            format!(
+                "function '{}' declares a nullable return type but the standard signature is non-nullable",
+                function.function
+            ),
+            Some(&format!("{object_ref}.nullable")),
+            Some("Set nullable: false on the function return type"),
+        );
+    }
+}
+
+fn uses_positional_arg_types(min_args: Option<usize>, arg_types: &[String]) -> bool {
+    matches!(min_args, Some(min) if min >= 2 && arg_types.len() >= 2)
+}
+
+fn expected_arg_type(arg_types: &[String], idx: usize, max_args: Option<usize>) -> Option<&str> {
+    if arg_types.is_empty() {
+        return None;
+    }
+    if idx < arg_types.len() {
+        return Some(arg_types[idx].as_str());
+    }
+    if max_args.is_none() {
+        return Some(arg_types.last()?.as_str());
+    }
+    if let Some(max) = max_args {
+        if idx < max {
+            return Some(arg_types.last()?.as_str());
+        }
+    }
+    None
+}
+
+fn validate_same_as_args_return(
+    ctx: &mut ValidationContext,
+    function: &crate::model::Function,
+    object_ref: &str,
+    allowed_types: &[String],
+) {
+    if function.parameters.is_empty() {
+        ctx.error(
+            codes::INVALID_FUNCTION,
+            DiagnosticCategory::Semantic,
+            format!(
+                "function '{}' requires at least one parameter",
+                function.function
+            ),
+            Some(&format!("{object_ref}.parameters")),
+            Some("Declare at least one parameter"),
+        );
+        return;
+    }
+
+    let mut param_types = Vec::new();
+    for param in &function.parameters {
+        let Ok(param_type) = parse_logical_type(&param.type_name) else {
+            continue;
+        };
+        let Some(name) = matches_primitive(&param_type) else {
+            continue;
+        };
+        if !allowed_types.iter().any(|allowed| allowed == name) {
+            return;
+        }
+        param_types.push(name.clone());
+    }
+
+    if param_types.is_empty() {
+        return;
+    }
+
+    let first = &param_types[0];
+    if !param_types.iter().all(|t| t == first) {
+        ctx.error(
+            codes::INVALID_FUNCTION,
+            DiagnosticCategory::Semantic,
+            format!(
+                "function '{}' parameters must share the same primitive type",
+                function.function
+            ),
+            Some(&format!("{object_ref}.parameters")),
+            Some("Use homogeneous parameter types for coalesce"),
+        );
+        return;
+    }
+
     if let Some(declared_return) = function.type_name.as_deref() {
         let Ok(declared) = parse_logical_type(declared_return) else {
             return;
         };
-        if return_type != "sameAsArgs" {
-            let Ok(expected) = parse_logical_type(&return_type) else {
-                return;
-            };
-            if declared != expected {
-                ctx.error(
-                    codes::INVALID_FUNCTION,
-                    DiagnosticCategory::Semantic,
-                    format!(
-                        "function '{}' declares return type '{declared_return}', expected '{return_type}'",
-                        function.function
-                    ),
-                    Some(&format!("{object_ref}.type")),
-                    Some("Align the declared return type with the standard function signature"),
-                );
-            }
+        let Ok(expected) = parse_logical_type(first) else {
+            return;
+        };
+        if declared != expected {
+            ctx.error(
+                codes::INVALID_FUNCTION,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "function '{}' declares return type '{declared_return}', expected '{first}'",
+                    function.function
+                ),
+                Some(&format!("{object_ref}.type")),
+                Some("Align the declared return type with parameter types"),
+            );
         }
     }
 }
@@ -461,7 +706,16 @@ fn resolve_field<'a>(
             );
             None
         }
-        TargetResolution::NotFound => None,
+        TargetResolution::NotFound => {
+            ctx.error(
+                codes::UNRESOLVED_REFERENCE,
+                category,
+                format!("target '{target}' is not declared"),
+                Some(object_ref),
+                Some("Target a declared schema field"),
+            );
+            None
+        }
     }
 }
 
@@ -484,5 +738,21 @@ mod tests {
             }
             other => panic!("unexpected: {other:?}"),
         }
+    }
+
+    #[test]
+    fn expected_arg_type_uses_positional_and_variadic_tail() {
+        let types = vec!["string".into(), "integer".into()];
+        assert_eq!(expected_arg_type(&types, 0, Some(3)), Some("string"));
+        assert_eq!(expected_arg_type(&types, 1, Some(3)), Some("integer"));
+        assert_eq!(expected_arg_type(&types, 2, Some(3)), Some("integer"));
+        assert_eq!(
+            expected_arg_type(&["string".into()], 2, None),
+            Some("string")
+        );
+        assert_eq!(
+            expected_arg_type(&["string".into()], 2, Some(3)),
+            Some("string")
+        );
     }
 }

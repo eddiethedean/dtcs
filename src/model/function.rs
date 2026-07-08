@@ -29,6 +29,9 @@ pub struct Function {
     /// Declared return logical type (SPEC Chapter 4 §11).
     #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
     pub type_name: Option<String>,
+    /// Whether the declared return type is nullable.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub nullable: bool,
     /// Declared parameters.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub parameters: Vec<FunctionParameter>,
