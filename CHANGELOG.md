@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — 0.5.0
+## 0.5.0
 
 Phase 0.5 — Standard Libraries (starter catalog).
 
@@ -13,7 +13,7 @@ Phase 0.5 — Standard Libraries (starter catalog).
 - Registry-driven semantics validation: structured JSON `definition` blocks drive target type, nullability, rule phase, function arity, and return-type checks
 - Fixtures under `tests/fixtures/stdlib_*.yaml` with shared expectations in `tests/fixture_expectations.json`
 
-**Release:** bump `Cargo.toml` / `pyproject.toml` to `0.5.0` and push tag `v0.5.0` to publish (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+**Release:** push tag `v0.5.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.4.0
 

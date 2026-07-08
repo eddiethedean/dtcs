@@ -15,7 +15,7 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.4.0` released — validation, analysis, and registries; **0.5** (unreleased) adds embedded standard libraries with registry-driven semantics validation |
+| **Reference implementation** | `0.5.0` — validation, analysis, registries, and embedded standard libraries with registry-driven semantics validation |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
@@ -73,7 +73,7 @@ Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full wal
 
 ## Pipeline
 
-The reference implementation through Phase 0.5 (in development):
+The reference implementation through Phase 0.5:
 
 ```text
 DTCS Document

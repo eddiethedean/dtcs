@@ -30,7 +30,7 @@ The Rust reference crate lives in [src/](src/). Before implementing a module:
 
 ### Scope
 
-The reference crate through **0.4.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), and identifier registries with extension validation. Do not add execution, compilation, or runtime features without an agreed milestone. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
+The reference crate through **0.5.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, and starter standard libraries with registry-driven semantics validation. Do not add execution, compilation, or runtime features without an agreed milestone. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 
 ### Code style
 
@@ -43,9 +43,9 @@ The reference crate through **0.4.0** implements parsing, the canonical object m
 Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a semver tag is pushed:
 
 ```bash
-# Ensure Cargo.toml and pyproject.toml are both 0.4.0 and CI is green
-git tag v0.4.0
-git push origin v0.4.0
+# Ensure Cargo.toml and pyproject.toml are both 0.5.0 and CI is green
+git tag v0.5.0
+git push origin v0.5.0
 ```
 
 The workflow verifies the tag matches `Cargo.toml` and `pyproject.toml`, runs checks, publishes to crates.io, builds multi-platform Python wheels, and uploads to PyPI.

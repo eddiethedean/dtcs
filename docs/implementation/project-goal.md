@@ -4,7 +4,7 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 
 `SPEC.md` is the source of truth.
 
-## Implemented through 0.4.0
+## Implemented through 0.5.0
 
 - Canonical Object Model
 - YAML and JSON parsing
@@ -22,11 +22,8 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 - Registry-aware extension validation (mandatory/optional processing)
 - CLI and Python bindings
 
-## In development (Phase 0.5, `0.5.0` pending)
-
 - Embedded starter standard libraries under `src/registry/builtin/` (semantic actions, functions, rules)
 - Registry-driven semantics validation: target types, nullability, rule phases, function arity and return types
-- Fixtures for stdlib validation under `tests/fixtures/stdlib_*.yaml`
 
 ## Stubs / future milestones
 

@@ -50,4 +50,4 @@ Execution Plan
 Runtime
 ```
 
-For this crate through Phase 0.5 (in development), implement through Diagnostics, Contract Analysis, Registries, and starter Standard Libraries.
+For this crate through Phase 0.5 (`0.5.0`), implement through Diagnostics, Contract Analysis, Registries, and starter Standard Libraries.

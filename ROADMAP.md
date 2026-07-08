@@ -30,7 +30,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
-| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **In progress** (starter catalog; `0.5.0` pending release) |
+| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog) |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | Planned |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | Planned |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | Planned |
@@ -249,7 +249,7 @@ Resolve `dtcs:` and vendor identifiers through authoritative registries; validat
 
 ## Phase 0.5 — Standard Libraries
 
-**Target:** `0.5.x` · **Tier:** III · **Prerequisite:** 0.4 · **Status:** In progress (starter catalog in tree; `0.5.0` release pending)
+**Target:** `0.5.x` · **Tier:** III · **Prerequisite:** 0.4 · **Status:** **Complete** (`0.5.0` starter release)
 
 **Implements:** Validator (library-aware semantics) · **SPEC:** [Ch 17](SPEC.md#chapter-17----semantic-actions)–[19](SPEC.md#chapter-19----rule-model)
 

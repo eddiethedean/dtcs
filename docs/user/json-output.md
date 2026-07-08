@@ -117,7 +117,7 @@ Same shape as `validate` — always includes the diagnostics array.
 
 ```json
 {
-  "crateVersion": "0.4.0",
+  "crateVersion": "0.5.0",
   "specVersion": "1.0.0-draft"
 }
 ```
