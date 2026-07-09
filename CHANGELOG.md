@@ -10,12 +10,25 @@ Phase 0.7 — Transformation Plan lowering (Ch 13 §4–8, §11–12, §14).
 - `TransformationPlan` IR: inputs, outputs, functions, semantic step nodes, dependency graph, lineage, and contractual guarantees.
 - Dependency graph construction from lineage, field references, explicit action ordering, rule phases, and interface conditions.
 - Planning-stage diagnostics: `dtcs:invalid-plan`, `dtcs:incomplete-plan`, `dtcs:cyclic-dependency`, `dtcs:plan-type-mismatch`, `dtcs:unresolved-plan-reference`.
-- CLI and Python: `dtcs plan` / `plan_lower` / `plan_validate`; Rust `parse_validate_and_plan` / `parse_validate_and_plan_with_registry`.
-- Analysis findings automatically attached during lowering.
+- CLI and Python: `dtcs plan` / `plan_lower` / `plan_validate` / `plan_topological_order`; Rust `parse_validate_and_plan` / `parse_validate_and_plan_with_registry`.
+- Analysis findings and diagnostics attached during lowering.
+
+### Bug fixes
+
+- Output-targeting semantic actions now receive lineage prerequisites from all contributing inputs.
+- `FieldWrite` edges between consecutive writers on the same field; last-writer resolution respects explicit ordering.
+- Multi-input lineage emits edges for every input, not only the first.
+- Unified acyclic dependency check in graph construction and plan validation.
+- Explicit ordering validation rejects unknown, duplicate, and incomplete `semantics.ordering` lists.
+- Rule-phase edges scoped to rules sharing the same target.
+- `--registry` threaded through CLI pre-validation (`plan`, `compat`, `evolve`, `lineage`) and `parse_validate_and_plan_with_registry`.
+- Python: `analyze` exported in `__all__`; `plan_from_py` rejects NaN; plan CLI prints topological order.
 
 ### Tests
 
 - Phase 0.7 integration tests, `tests/plan_expectations.json`, and golden plan files under `tests/fixtures/plans/`.
+
+**Release:** push tag `v0.7.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.6.0
 

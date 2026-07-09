@@ -328,7 +328,7 @@ Static analysis of transformation semantics and expressions — no runtime evalu
 
 ## Phase 0.7 — Transformation Plan
 
-**Target:** `0.7.x` · **Tier:** IV · **Prerequisite:** 0.6
+**Target:** `0.7.x` · **Tier:** IV · **Prerequisite:** 0.6 · **Status:** Complete (`0.7.0`)
 
 **Implements:** Planner · **SPEC:** [Ch 13](SPEC.md#chapter-13----transformation-plan) (excluding §9)
 
@@ -354,13 +354,19 @@ Lower validated COM into canonical semantic IR ([Ch 2 §5](SPEC.md#chapter-2----
 
 | Surface | Entry point |
 |---------|-------------|
-| Rust | `plan::lower`, `plan::validate` |
+| Rust | `plan::lower`, `plan::validate`, `parse_validate_and_plan` |
 | CLI | `dtcs plan <contract>` |
+| Python | `plan_lower`, `plan_validate`, `plan_topological_order` |
 
 ### Exit criteria
 
+- [x] `plan::lower` and `plan::validate` exported and documented
+- [x] `dtcs plan <contract>` CLI with `--json` and `--registry`
+- [x] Python `plan_lower` / `plan_validate` / `plan_topological_order`
 - [x] [Ch 13 §14](SPEC.md#chapter-13----transformation-plan) (excluding optimization)
 - [x] Golden files lock plan shape for fixture corpus
+- [x] Planning-stage diagnostics with standardized codes
+- [ ] Publish to crates.io and PyPI at `0.7.0` (tag `v0.7.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 
