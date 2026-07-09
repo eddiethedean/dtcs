@@ -1,0 +1,107 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "plan.explicit.ordering",
+    "name": "Plan explicit ordering",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "lower_value",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "lower_value",
+        "action": "dtcs:lowercase",
+        "target": "out.value"
+      },
+      "objectRef": "semanticActions.lower_value"
+    },
+    {
+      "id": "trim_value",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "trim_value",
+        "action": "dtcs:trim",
+        "target": "out.value"
+      },
+      "objectRef": "semanticActions.trim_value"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "lower_value",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "trim_value",
+      "reason": "lineage"
+    },
+    {
+      "from": "trim_value",
+      "to": "lower_value",
+      "reason": "fieldWrite"
+    },
+    {
+      "from": "trim_value",
+      "to": "lower_value",
+      "reason": "explicitOrder"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {
+    "semantics": {
+      "ordering": {
+        "mode": "explicit",
+        "order": [
+          "trim_value",
+          "lower_value"
+        ]
+      }
+    }
+  }
+}

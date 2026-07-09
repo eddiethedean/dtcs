@@ -99,7 +99,28 @@ fn plan_from_py(py: Python<'_>, plan_obj: &Bound<'_, PyAny>) -> PyResult<plan::T
         return Err(PyTypeError::new_err("plan must be a dict, not None"));
     }
     let json_mod = py.import("json")?;
-    let json_str: String = json_mod.call_method1("dumps", (plan_obj,))?.extract()?;
+    let json_str: String = json_mod
+        .call_method(
+            "dumps",
+            (plan_obj,),
+            Some(&{
+                let kwargs = PyDict::new(py);
+                kwargs.set_item("allow_nan", false)?;
+                kwargs
+            }),
+        )
+        .map_err(|err| {
+            let message = err.to_string();
+            if message.contains("Out of range float values are not JSON compliant")
+                || message.contains("NaN")
+                || message.contains("Infinity")
+            {
+                PyValueError::new_err("plan contains non-finite float values (NaN or Infinity)")
+            } else {
+                err
+            }
+        })?
+        .extract()?;
     serde_json::from_str(&json_str).map_err(|e| PyValueError::new_err(format!("invalid plan: {e}")))
 }
 
@@ -184,6 +205,19 @@ fn analyze_contract(
             analysis,
         },
     )
+}
+
+/// Compute topological execution order for a lowered plan.
+#[pyfunction]
+fn plan_topological_order(
+    py: Python<'_>,
+    contract: &Bound<'_, PyAny>,
+    plan_obj: &Bound<'_, PyAny>,
+) -> PyResult<Py<PyAny>> {
+    let contract = contract_from_py(py, contract)?;
+    let plan = plan_from_py(py, plan_obj)?;
+    let order = plan::topological_order(&contract, &plan.nodes, &plan.dependencies);
+    value_to_py(py, &order)
 }
 
 /// Lower a parsed transformation contract to a plan.
@@ -351,6 +385,7 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(validate_contract, m)?)?;
     m.add_function(wrap_pyfunction!(analyze_contract, m)?)?;
     m.add_function(wrap_pyfunction!(plan_lower, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_topological_order, m)?)?;
     m.add_function(wrap_pyfunction!(plan_validate, m)?)?;
     m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;

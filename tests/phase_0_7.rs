@@ -104,6 +104,87 @@ fn explicit_action_ordering_edges() {
             && e.from == "trim_value"
             && e.to == "lower_value"
     }));
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::Lineage
+            && e.from == "in"
+            && (e.to == "trim_value" || e.to == "lower_value")
+    }));
+}
+
+#[test]
+fn multi_input_lineage_edges() {
+    let contract = load_valid_contract("lineage_multi.yaml");
+    let result = plan::lower(&contract, None, None);
+    let plan = result.plan.expect("plan");
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::Lineage
+            && e.from == "customers"
+            && e.to == "order_enriched"
+    }));
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::Lineage
+            && e.from == "orders"
+            && e.to == "order_enriched"
+    }));
+}
+
+#[test]
+fn field_write_chain_edges() {
+    let contract = load_valid_contract("plan_field_write_chain.yaml");
+    let result = plan::lower(&contract, None, None);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let plan = result.plan.expect("plan");
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::FieldWrite
+            && e.from == "trim_value"
+            && e.to == "lower_value"
+    }));
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::FieldRead
+            && e.from == "lower_value"
+            && e.to == "read_value"
+    }));
+}
+
+#[test]
+fn rule_phase_edges_scoped_by_target() {
+    let contract = load_valid_contract("plan_rule_phase_scoped.yaml");
+    let result = plan::lower(&contract, None, None);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let plan = result.plan.expect("plan");
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::RulePhase && e.from == "pre_a" && e.to == "exec_a"
+    }));
+    assert!(plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::RulePhase && e.from == "exec_a" && e.to == "post_a"
+    }));
+    assert!(!plan.dependencies.iter().any(|e| {
+        e.reason == plan::DependencyReason::RulePhase
+            && ((e.from == "pre_a" && e.to == "post_b") || (e.from == "pre_b" && e.to == "post_a"))
+    }));
+}
+
+#[test]
+fn partial_cycle_rejected_by_validate_and_is_acyclic() {
+    let contract = load_valid_contract("valid_customer.yaml");
+    let mut result = plan::lower(&contract, None, None);
+    let plan = result.plan.as_mut().expect("plan");
+    plan.dependencies.push(plan::PlanDependency {
+        from: "normalize_email".into(),
+        to: "customer_raw".into(),
+        reason: plan::DependencyReason::FieldWrite,
+    });
+    assert!(!plan::is_acyclic(
+        &contract,
+        &plan.nodes,
+        &plan.dependencies
+    ));
+    let report = plan::validate(plan);
+    assert!(!report.is_valid());
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == dtcs::codes::CYCLIC_DEPENDENCY));
 }
 
 #[test]

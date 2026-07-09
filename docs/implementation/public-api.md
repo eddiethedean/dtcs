@@ -208,6 +208,7 @@ summary = dtcs.inspect(contract)
 | `validate` / `metadata_validate` | Validate a parsed contract dict |
 | `validate_result` | Merge parse-time and validation diagnostics |
 | `parse_and_validate` | Parse and validate in one step |
+| `analyze` | Static semantic and expression analysis |
 | `inspect` | Human-readable contract summary |
 | `is_valid` | True when a diagnostic report has no error-severity items |
 | `compat_analyze` | Compare two contracts; returns level, aspects, diagnostics |

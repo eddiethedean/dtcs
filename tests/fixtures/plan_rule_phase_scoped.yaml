@@ -1,0 +1,61 @@
+dtcsVersion: "1.0.0"
+id: "plan.rule.phase.scoped"
+name: "Plan rule phase scoped"
+version: "0.1.0"
+
+inputs:
+  - id: "source_a"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+  - id: "source_b"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result_a"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+  - id: "result_b"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "pre_a"
+    rule: "dtcs:not_null"
+    target: "result_a.id"
+    phase: precondition
+  - id: "exec_a"
+    rule: "dtcs:not_null"
+    target: "result_a.id"
+    phase: execution
+  - id: "post_a"
+    rule: "dtcs:not_null"
+    target: "result_a.id"
+    phase: postcondition
+  - id: "pre_b"
+    rule: "dtcs:not_null"
+    target: "result_b.id"
+    phase: precondition
+  - id: "post_b"
+    rule: "dtcs:not_null"
+    target: "result_b.id"
+    phase: postcondition
+
+lineage:
+  mappings:
+    - output: "result_a"
+      inputs: ["source_a"]
+    - output: "result_b"
+      inputs: ["source_b"]

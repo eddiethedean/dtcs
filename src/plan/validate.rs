@@ -145,8 +145,7 @@ fn check_dependency_integrity(plan: &TransformationPlan, report: &mut Diagnostic
 
 fn check_acyclic(plan: &TransformationPlan, report: &mut DiagnosticReport) {
     let contract = plan_as_contract(plan);
-    let order = graph::topological_order(&contract, &plan.nodes, &plan.dependencies);
-    if !plan.dependencies.is_empty() && order.is_empty() {
+    if !graph::is_acyclic(&contract, &plan.nodes, &plan.dependencies) {
         report.push(
             planning_error(
                 codes::CYCLIC_DEPENDENCY,

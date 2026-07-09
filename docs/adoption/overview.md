@@ -43,10 +43,11 @@ See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 1. **Contract authoring** — write YAML/JSON contracts with IDE/CI validation
 2. **CI gates** — fail builds on invalid contracts (`dtcs validate --json`)
 3. **Standard library usage** — reference `dtcs:` actions, functions, and rules; validate against embedded definitions (`dtcs registry list`)
-4. **Version management** — compare contract revisions for breaking changes (`dtcs compat`, `dtcs evolve`)
-5. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
-6. **Plan lowering** — produce canonical transformation plans from validated contracts (`dtcs plan`)
-7. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
+4. **Static semantic analysis** — check transformation semantics and expressions without runtime evaluation (`dtcs analyze`)
+5. **Version management** — compare contract revisions for breaking changes (`dtcs compat`, `dtcs evolve`)
+6. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
+7. **Plan lowering** — produce canonical transformation plans from validated contracts (`dtcs plan`)
+8. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
 

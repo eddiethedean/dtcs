@@ -71,6 +71,19 @@ Defined in [`src/diagnostics/codes.rs`](../../src/diagnostics/codes.rs):
 - `dtcs:deprecated-object` (Phase 0.3)
 - `dtcs:invalid-version` (Phase 0.3)
 - `dtcs:version-conflict` (Phase 0.3)
+- `dtcs:unknown-registry-entry` (Phase 0.4)
+- `dtcs:invalid-registry` (Phase 0.4)
+- `dtcs:unsupported-extension` (Phase 0.4)
+- `dtcs:invalid-function` (Phase 0.5)
+- `dtcs:invalid-expression` (Phase 0.6)
+- `dtcs:invalid-semantics` (Phase 0.6)
+- `dtcs:non-deterministic-semantics` (Phase 0.6)
+- `dtcs:null-semantics-violation` (Phase 0.6)
+- `dtcs:invalid-plan` (Phase 0.7)
+- `dtcs:incomplete-plan` (Phase 0.7)
+- `dtcs:cyclic-dependency` (Phase 0.7)
+- `dtcs:plan-type-mismatch` (Phase 0.7)
+- `dtcs:unresolved-plan-reference` (Phase 0.7)
 
 ## Validation semantics
 

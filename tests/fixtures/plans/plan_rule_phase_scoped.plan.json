@@ -1,0 +1,193 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "plan.rule.phase.scoped",
+    "name": "Plan rule phase scoped",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "source_a",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    },
+    {
+      "id": "source_b",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "result_a",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "result_b",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "exec_a",
+      "kind": {
+        "kind": "rule",
+        "id": "exec_a",
+        "rule": "dtcs:not_null",
+        "target": "result_a.id",
+        "phase": "execution"
+      },
+      "objectRef": "rules.exec_a"
+    },
+    {
+      "id": "post_a",
+      "kind": {
+        "kind": "rule",
+        "id": "post_a",
+        "rule": "dtcs:not_null",
+        "target": "result_a.id",
+        "phase": "postcondition"
+      },
+      "objectRef": "rules.post_a"
+    },
+    {
+      "id": "post_b",
+      "kind": {
+        "kind": "rule",
+        "id": "post_b",
+        "rule": "dtcs:not_null",
+        "target": "result_b.id",
+        "phase": "postcondition"
+      },
+      "objectRef": "rules.post_b"
+    },
+    {
+      "id": "pre_a",
+      "kind": {
+        "kind": "rule",
+        "id": "pre_a",
+        "rule": "dtcs:not_null",
+        "target": "result_a.id",
+        "phase": "precondition"
+      },
+      "objectRef": "rules.pre_a"
+    },
+    {
+      "id": "pre_b",
+      "kind": {
+        "kind": "rule",
+        "id": "pre_b",
+        "rule": "dtcs:not_null",
+        "target": "result_b.id",
+        "phase": "precondition"
+      },
+      "objectRef": "rules.pre_b"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "exec_a",
+      "to": "post_a",
+      "reason": "rulePhase"
+    },
+    {
+      "from": "pre_a",
+      "to": "exec_a",
+      "reason": "rulePhase"
+    },
+    {
+      "from": "pre_a",
+      "to": "post_a",
+      "reason": "rulePhase"
+    },
+    {
+      "from": "pre_b",
+      "to": "post_b",
+      "reason": "rulePhase"
+    },
+    {
+      "from": "source_a",
+      "to": "exec_a",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source_a",
+      "to": "post_a",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source_a",
+      "to": "pre_a",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source_a",
+      "to": "result_a",
+      "reason": "lineage"
+    },
+    {
+      "from": "source_b",
+      "to": "post_b",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source_b",
+      "to": "pre_b",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source_b",
+      "to": "result_b",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "result_a",
+        "inputs": [
+          "source_a"
+        ]
+      },
+      {
+        "output": "result_b",
+        "inputs": [
+          "source_b"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

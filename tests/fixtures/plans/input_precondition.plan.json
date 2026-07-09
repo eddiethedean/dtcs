@@ -93,11 +93,6 @@
       "from": "source",
       "to": "source_not_empty",
       "reason": "interfaceCondition"
-    },
-    {
-      "from": "source_not_empty",
-      "to": "result_not_empty",
-      "reason": "rulePhase"
     }
   ],
   "lineage": {

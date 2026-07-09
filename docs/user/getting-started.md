@@ -38,6 +38,28 @@ dtcs diagnostics examples/customer_normalize.dtcs.yaml
 
 Add `--json` for machine-readable output (see [json-output.md](json-output.md)).
 
+## Analyze semantics and expressions
+
+Static analysis checks transformation semantics (Ch 7) and expression semantics (Ch 8) without runtime evaluation:
+
+```bash
+dtcs analyze examples/customer_normalize.dtcs.yaml
+dtcs analyze examples/customer_normalize.dtcs.yaml --json
+```
+
+Requires a valid contract. Exit code `0` means no error-severity validation or analysis diagnostics.
+
+## Lower a transformation plan
+
+Produce the canonical semantic IR (Ch 13) from a validated contract:
+
+```bash
+dtcs plan examples/customer_normalize.dtcs.yaml
+dtcs plan examples/customer_normalize.dtcs.yaml --json
+```
+
+Human-readable output includes node count, dependency count, and topological execution order. With `--json`, the full plan document is printed on success.
+
 ## Inspect a contract
 
 ```bash

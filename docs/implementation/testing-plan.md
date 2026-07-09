@@ -4,7 +4,26 @@ Tests should be written against `SPEC.md`.
 
 ## Shared fixture manifest
 
-[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs), [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs), [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+
+## Phase 0.4 fixture groups
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Registry loading | `tests/fixtures/registry/vendor_catalog.yaml`, `vendor_mandatory_extension.yaml` |
+| Namespace safety | `invalid_http_rule.yaml`, `invalid_http_action.yaml`, `invalid_http_type.yaml` |
+
+Integration tests: [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs).
+
+## Phase 0.6 fixture groups
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Expression analysis | `expression_with_type.yaml`, `expression_precedence_*.yaml`, `analysis_constant_expr.yaml` |
+| Semantic analysis | `analysis_dtcs_call_valid.yaml`, `analysis_logical_ops.yaml` |
+| Invalid semantics | `analysis_duplicate_action_target.yaml`, expression/semantics error fixtures |
+
+Integration tests: [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs).
 
 ## Phase 0.3 fixture groups
 

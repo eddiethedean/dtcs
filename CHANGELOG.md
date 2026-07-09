@@ -10,7 +10,7 @@ Phase 0.7 — Transformation Plan lowering (Ch 13 §4–8, §11–12, §14).
 - `TransformationPlan` IR: inputs, outputs, functions, semantic step nodes, dependency graph, lineage, and contractual guarantees.
 - Dependency graph construction from lineage, field references, explicit action ordering, rule phases, and interface conditions.
 - Planning-stage diagnostics: `dtcs:invalid-plan`, `dtcs:incomplete-plan`, `dtcs:cyclic-dependency`, `dtcs:plan-type-mismatch`, `dtcs:unresolved-plan-reference`.
-- CLI and Python: `dtcs plan` / `plan_lower` / `plan_validate`; `parse_validate_and_plan` convenience API.
+- CLI and Python: `dtcs plan` / `plan_lower` / `plan_validate`; Rust `parse_validate_and_plan` / `parse_validate_and_plan_with_registry`.
 - Analysis findings automatically attached during lowering.
 
 ### Tests

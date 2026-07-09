@@ -12,12 +12,30 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | `diagnostics <path>` | Print validation diagnostics |
 | `compat <source> <target>` | Compare compatibility between two contracts |
 | `evolve <older> <newer>` | Analyze evolution between two revisions |
+| `plan <path>` | Lower a validated contract to a transformation plan |
 | `lineage <path>` | Analyze dataset-level lineage |
 | `registry list` | List identifier registry entries |
 | `registry resolve <id>` | Resolve a registry identifier |
 | `version` | Print tool and specification versions |
 
 All commands accept `--json` for structured output except where noted below.
+
+### `--registry`
+
+Optional `--registry <path>` merges a vendor catalog (YAML/JSON) with the embedded `dtcs:` catalog. Builtin `dtcs:` entries remain authoritative.
+
+| Command | Rust CLI | Python CLI |
+|---------|----------|------------|
+| `validate` | yes | yes |
+| `analyze` | yes | yes |
+| `plan` | yes | yes |
+| `compat` | yes | yes |
+| `evolve` | yes | yes |
+| `lineage` | yes | yes |
+| `registry list` / `resolve` | yes | yes |
+| `inspect`, `diagnostics`, `version` | no | no |
+
+The Python package also accepts an optional registry path on `validate()`, `analyze()`, `plan_lower()`, `plan_validate()`, and `validate_with_registry()` in the API.
 
 ## validate
 
@@ -50,6 +68,23 @@ Runs validation and static analysis (SPEC Chapters 7–8). Requires a **valid** 
 |-----------|---------|
 | `0` | Valid and no error-severity analysis diagnostics |
 | `1` | Validation failed or analysis reported errors |
+
+## plan
+
+```bash
+dtcs plan contract.yaml
+dtcs plan contract.yaml --registry vendor_catalog.yaml
+dtcs plan contract.yaml --json
+```
+
+Runs validation and semantic analysis, then lowers the contract to a canonical transformation plan (SPEC Chapter 13). Requires a **valid** contract with no error-severity analysis diagnostics.
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Plan lowering succeeded |
+| `1` | Validation, analysis, or lowering failed |
+
+With `--json`, success emits the plan document; failure emits a diagnostics array (same shape as `diagnostics --json`).
 
 ## inspect
 

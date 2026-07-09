@@ -191,6 +191,35 @@
       "file": "stdlib_function_to_decimal_valid.yaml",
       "plan_valid": true,
       "golden": "plans/stdlib_function_to_decimal_valid.plan.json"
+    },
+    {
+      "file": "plan_explicit_ordering.yaml",
+      "plan_valid": true,
+      "golden": "plans/plan_explicit_ordering.plan.json"
+    },
+    {
+      "file": "plan_field_write_chain.yaml",
+      "plan_valid": true,
+      "golden": "plans/plan_field_write_chain.plan.json"
+    },
+    {
+      "file": "plan_rule_phase_scoped.yaml",
+      "plan_valid": true,
+      "golden": "plans/plan_rule_phase_scoped.plan.json"
+    },
+    {
+      "file": "plan_incomplete_explicit_order.yaml",
+      "plan_valid": false,
+      "codes": [
+        "dtcs:invalid-plan"
+      ]
+    },
+    {
+      "file": "plan_unknown_order_id.yaml",
+      "plan_valid": false,
+      "codes": [
+        "dtcs:unresolved-plan-reference"
+      ]
     }
   ]
 }

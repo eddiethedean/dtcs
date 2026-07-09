@@ -1,0 +1,38 @@
+dtcsVersion: "1.0.0"
+id: "plan.incomplete.explicit.order"
+name: "Plan incomplete explicit order"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "trim_value"
+    action: "dtcs:trim"
+    target: "out.value"
+  - id: "lower_value"
+    action: "dtcs:lowercase"
+    target: "out.value"
+
+semantics:
+  ordering:
+    mode: explicit
+    order: ["trim_value"]
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

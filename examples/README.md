@@ -11,6 +11,9 @@ Sample DTCS transformation contracts for learning and testing.
 ```bash
 dtcs validate customer_normalize.dtcs.yaml
 dtcs inspect customer_normalize.dtcs.yaml
+dtcs analyze customer_normalize.dtcs.yaml
+dtcs plan customer_normalize.dtcs.yaml
+dtcs plan customer_normalize.dtcs.yaml --json
 ```
 
 ## Analysis examples
@@ -52,6 +55,21 @@ dtcs evolve analysis/evolution/rev1.yaml analysis/evolution/rev2.yaml
 dtcs lineage analysis/lineage_multi.yaml
 dtcs lineage analysis/lineage_multi.yaml --impact customers
 dtcs lineage analysis/lineage_multi.yaml --dependency order_enriched
+```
+
+### Semantic analysis and planning
+
+The primary example contract exercises semantic actions, rules, and lineage suitable for analysis and plan lowering:
+
+```bash
+dtcs analyze customer_normalize.dtcs.yaml
+dtcs plan customer_normalize.dtcs.yaml
+```
+
+Golden plan fixtures for the test corpus live under `tests/fixtures/plans/`. Compare with:
+
+```bash
+dtcs plan tests/fixtures/valid_minimal.json --json
 ```
 
 ## Invalid contracts (for learning diagnostics)

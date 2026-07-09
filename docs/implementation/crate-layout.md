@@ -67,6 +67,16 @@ dtcs/
     lineage/
       mod.rs
       analysis.rs
+    analysis/
+      mod.rs
+      contract.rs
+      semantics.rs
+      expr/
+        mod.rs
+        ast.rs
+        parse.rs
+        types.rs
+        constants.rs
     registry/
       mod.rs
       builtin.rs
@@ -74,6 +84,10 @@ dtcs/
       cache.rs
     plan/
       mod.rs
+      model.rs
+      lowering.rs
+      graph.rs
+      validate.rs
     cli/
       mod.rs
     bin/
@@ -84,11 +98,15 @@ dtcs/
     fixtures/
       compatibility/
       registry/
+      plans/
     fixture_expectations.json
+    plan_expectations.json
     mvp.rs
     phase_0_2.rs
     phase_0_3.rs
     phase_0_4.rs
+    phase_0_6.rs
+    phase_0_7.rs
     manifest.rs
 ```
 

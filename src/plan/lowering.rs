@@ -35,7 +35,7 @@ impl PlanResult {
 pub fn lower(
     contract: &TransformationContract,
     registry_doc: Option<&RegistryDocument>,
-    analysis: Option<&AnalysisReport>,
+    _analysis: Option<&AnalysisReport>,
 ) -> PlanResult {
     let registry_doc = registry_doc.unwrap_or(registry::default_registry());
     let mut result = PlanResult::default();
@@ -45,14 +45,10 @@ pub fn lower(
         return result;
     }
 
-    let owned_analysis;
-    let analysis_ref = match analysis {
-        Some(report) => report,
-        None => {
-            owned_analysis = analysis::check_contract(contract, Some(registry_doc));
-            &owned_analysis
-        }
-    };
+    let owned_analysis = analysis::check_contract(contract, Some(registry_doc));
+    result
+        .diagnostics
+        .extend(owned_analysis.diagnostics.clone());
 
     let mut nodes = build_nodes(contract);
     nodes.sort_by(|a, b| a.id.cmp(&b.id));
@@ -65,7 +61,7 @@ pub fn lower(
     }
 
     let guarantees = build_guarantees(contract);
-    let findings = analysis_ref.findings.clone();
+    let findings = owned_analysis.findings.clone();
 
     let plan = TransformationPlan {
         identity: PlanIdentity {

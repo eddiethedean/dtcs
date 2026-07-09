@@ -92,7 +92,37 @@ dtcs registry resolve <id>
 - Registry-driven semantics validation in `src/validation/semantics.rs` (target types, phases, arity, return types)
 - Starter catalog: string actions, common string/numeric functions, and constraint rules
 
-## Phase 10 — Plan Stubs
+Additional CLI commands (unchanged from Phase 8):
 
-- Add Transformation Plan skeleton (`src/plan/`).
-- Do not implement compilers yet.
+```bash
+dtcs registry list
+dtcs registry resolve <id>
+```
+
+## Phase 10 — Semantic Analysis (Phase 0.6)
+
+- Static analysis of transformation semantics (Ch 7) and expression semantics (Ch 8)
+- Expression AST parsing, type checking, constant folding, null semantics
+- `analysis::check_contract` integrates with validation and plan lowering
+
+Additional CLI command:
+
+```bash
+dtcs analyze <contract>
+```
+
+## Phase 11 — Transformation Plan (Phase 0.7)
+
+- Canonical plan IR (`src/plan/model.rs`)
+- Deterministic COM → plan lowering (`src/plan/lowering.rs`)
+- Acyclic dependency graph (`src/plan/graph.rs`)
+- Plan validation (`src/plan/validate.rs`)
+- Golden plan fixtures under `tests/fixtures/plans/`
+
+Additional CLI command:
+
+```bash
+dtcs plan <contract>
+```
+
+Do not implement compilers or runtime execution yet.

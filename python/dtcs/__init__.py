@@ -13,6 +13,7 @@ from dtcs._native import metadata_validate as _metadata_validate
 from dtcs._native import parse_document as _parse_document
 from dtcs._native import parse_path as _parse_path
 from dtcs._native import plan_lower as _plan_lower
+from dtcs._native import plan_topological_order as _plan_topological_order
 from dtcs._native import plan_validate as _plan_validate
 from dtcs._native import registry_list as _registry_list
 from dtcs._native import registry_load as _registry_load
@@ -62,6 +63,11 @@ def plan_lower(contract: dict, registry_path: str | None = None) -> dict:
 def plan_validate(plan: dict, registry_path: str | None = None) -> dict:
     """Validate a transformation plan."""
     return _plan_validate(plan, registry_path)
+
+
+def plan_topological_order(contract: dict, plan: dict) -> list[str]:
+    """Return topological execution order for a lowered plan."""
+    return _plan_topological_order(contract, plan)
 
 
 def metadata_validate(contract: dict) -> dict:
@@ -139,6 +145,7 @@ def is_valid(report: dict) -> bool:
 __all__ = [
     "SPEC_VERSION",
     "__version__",
+    "analyze",
     "compat_analyze",
     "evolve_analyze",
     "inspect",
@@ -149,6 +156,7 @@ __all__ = [
     "parse_and_validate",
     "parse_file",
     "plan_lower",
+    "plan_topological_order",
     "plan_validate",
     "registry_list",
     "registry_load",

@@ -4,7 +4,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::analysis::expr::{self, check_expression};
 use crate::diagnostics::{codes, planning_error, Diagnostic, DiagnosticCategory};
-use crate::model::{ActionOrdering, RegistryDocument, Rule, RulePhase, TransformationContract};
+use crate::model::{ActionOrdering, RegistryDocument, RulePhase, TransformationContract};
 use crate::validation::field_index::FieldIndex;
 
 use super::model::{DependencyReason, PlanDependency, PlanNode, PlanNodeKind};
@@ -35,6 +35,7 @@ pub fn build(
         &mut result.dependencies,
         &mut result.diagnostics,
     );
+    add_field_write_edges(contract, nodes, &mut result.dependencies);
     add_expression_edges(
         contract,
         nodes,
@@ -59,6 +60,36 @@ pub fn build(
 
     sort_dependencies(&mut result.dependencies);
     result
+}
+
+/// Count unique vertices in the dependency graph.
+#[must_use]
+pub fn vertex_count(contract: &TransformationContract, nodes: &[PlanNode]) -> usize {
+    let mut vertices = HashSet::new();
+    for input in &contract.inputs {
+        vertices.insert(input.id.as_str());
+    }
+    for output in &contract.outputs {
+        vertices.insert(output.id.as_str());
+    }
+    for node in nodes {
+        vertices.insert(node.id.as_str());
+    }
+    vertices.len()
+}
+
+/// Returns `true` when the dependency graph is acyclic.
+#[must_use]
+pub fn is_acyclic(
+    contract: &TransformationContract,
+    nodes: &[PlanNode],
+    dependencies: &[PlanDependency],
+) -> bool {
+    if dependencies.is_empty() {
+        return true;
+    }
+    let order = topological_order(contract, nodes, dependencies);
+    order.len() == vertex_count(contract, nodes)
 }
 
 /// Topological order of node and interface ids (returns empty on cycle).
@@ -129,15 +160,10 @@ fn detect_cycle(
     contract: &TransformationContract,
     dependencies: &[PlanDependency],
 ) -> Option<String> {
-    let order = topological_order(contract, nodes, dependencies);
-    if order.is_empty() && !dependencies.is_empty() {
-        dependencies.first().map(|e| e.from.clone())
-    } else if order.len() < contract.inputs.len() + contract.outputs.len() + nodes.len()
-        && !dependencies.is_empty()
-    {
-        dependencies.first().map(|e| e.from.clone())
-    } else {
+    if is_acyclic(contract, nodes, dependencies) {
         None
+    } else {
+        dependencies.first().map(|e| e.from.clone())
     }
 }
 
@@ -168,43 +194,56 @@ fn add_action_edges(
         .filter(|n| matches!(n.kind, PlanNodeKind::SemanticAction(_)))
         .collect();
 
-    // Detect overlapping targets without explicit ordering.
-    let has_explicit = contract
+    let action_ids: HashSet<_> = action_nodes.iter().map(|n| n.id.as_str()).collect();
+
+    let explicit_order = contract
         .semantics
         .as_ref()
         .and_then(|s| s.ordering.as_ref())
-        .is_some_and(|o| matches!(o, ActionOrdering::Explicit { .. }));
+        .and_then(|o| match o {
+            ActionOrdering::Explicit { order } => Some(order.as_slice()),
+            ActionOrdering::Unordered => None,
+        });
 
-    let mut target_counts: HashMap<&str, usize> = HashMap::new();
-    for node in &action_nodes {
-        if let PlanNodeKind::SemanticAction(action) = &node.kind {
-            *target_counts.entry(action.target.as_str()).or_default() += 1;
-        }
-    }
-    for (target, count) in target_counts {
-        if count > 1 && !has_explicit {
-            diagnostics.push(
-                planning_error(
-                    codes::INVALID_PLAN,
-                    DiagnosticCategory::Semantic,
-                    format!(
-                        "multiple semantic actions target '{target}' without an explicit ordering declaration"
+    if let Some(order) = explicit_order {
+        let mut seen = HashSet::new();
+        for (index, id) in order.iter().enumerate() {
+            if !action_ids.contains(id.as_str()) {
+                diagnostics.push(
+                    planning_error(
+                        codes::UNRESOLVED_PLAN_REFERENCE,
+                        DiagnosticCategory::Reference,
+                        format!("semantics.ordering references unknown semantic action '{id}'"),
+                    )
+                    .with_object_ref(format!("semantics.ordering.order[{index}]"))
+                    .with_remediation(
+                        "Reference only declared semantic action identifiers in semantics.ordering",
                     ),
-                )
-                .with_object_ref("semantics.ordering")
-                .with_remediation(
-                    "Declare semantics.ordering or avoid overlapping semantic action targets",
-                ),
-            );
+                );
+            } else if !seen.insert(id.as_str()) {
+                diagnostics.push(
+                    planning_error(
+                        codes::INVALID_PLAN,
+                        DiagnosticCategory::Semantic,
+                        format!("semantics.ordering contains duplicate action id '{id}'"),
+                    )
+                    .with_object_ref(format!("semantics.ordering.order[{index}]")),
+                );
+            }
         }
-    }
-
-    // Explicit ordering edges.
-    if let Some(ActionOrdering::Explicit { order }) = contract
-        .semantics
-        .as_ref()
-        .and_then(|s| s.ordering.as_ref())
-    {
+        for id in &action_ids {
+            if !seen.contains(id) {
+                diagnostics.push(
+                    planning_error(
+                        codes::INVALID_PLAN,
+                        DiagnosticCategory::Semantic,
+                        format!("semantics.ordering is missing semantic action '{id}'"),
+                    )
+                    .with_object_ref("semantics.ordering")
+                    .with_remediation("Include all semantic actions in the explicit order list"),
+                );
+            }
+        }
         for pair in order.windows(2) {
             push_edge(
                 edges,
@@ -213,23 +252,110 @@ fn add_action_edges(
                 DependencyReason::ExplicitOrder,
             );
         }
-    }
-
-    // Actions depend on their target's input interface.
-    for node in &action_nodes {
-        if let PlanNodeKind::SemanticAction(action) = &node.kind {
-            if let Some((iface, _)) = action.target.split_once('.') {
-                if contract.inputs.iter().any(|i| i.id == iface) {
-                    push_edge(
-                        edges,
-                        iface.to_string(),
-                        node.id.clone(),
-                        DependencyReason::FieldRead,
-                    );
-                }
+    } else {
+        let mut target_counts: HashMap<&str, usize> = HashMap::new();
+        for node in &action_nodes {
+            if let PlanNodeKind::SemanticAction(action) = &node.kind {
+                *target_counts.entry(action.target.as_str()).or_default() += 1;
+            }
+        }
+        for (target, count) in target_counts {
+            if count > 1 {
+                diagnostics.push(
+                    planning_error(
+                        codes::INVALID_PLAN,
+                        DiagnosticCategory::Semantic,
+                        format!(
+                            "multiple semantic actions target '{target}' without an explicit ordering declaration"
+                        ),
+                    )
+                    .with_object_ref("semantics.ordering")
+                    .with_remediation(
+                        "Declare semantics.ordering or avoid overlapping semantic action targets",
+                    ),
+                );
             }
         }
     }
+
+    let output_ids: HashSet<_> = contract.outputs.iter().map(|o| o.id.as_str()).collect();
+
+    for node in &action_nodes {
+        let PlanNodeKind::SemanticAction(action) = &node.kind else {
+            continue;
+        };
+        let Some((iface, _)) = action.target.split_once('.') else {
+            continue;
+        };
+
+        if contract.inputs.iter().any(|i| i.id == iface) {
+            push_edge(
+                edges,
+                iface.to_string(),
+                node.id.clone(),
+                DependencyReason::FieldRead,
+            );
+        } else if output_ids.contains(iface) {
+            for input in lineage_inputs_for_output(contract, iface) {
+                push_edge(edges, input, node.id.clone(), DependencyReason::Lineage);
+            }
+        }
+    }
+}
+
+fn add_field_write_edges(
+    contract: &TransformationContract,
+    nodes: &[PlanNode],
+    edges: &mut Vec<PlanDependency>,
+) {
+    let writers_by_target = writers_per_target(nodes);
+    let explicit_order = contract
+        .semantics
+        .as_ref()
+        .and_then(|s| s.ordering.as_ref())
+        .and_then(|o| match o {
+            ActionOrdering::Explicit { order } => Some(order.as_slice()),
+            ActionOrdering::Unordered => None,
+        });
+
+    for (target, writers) in writers_by_target {
+        if writers.len() < 2 {
+            continue;
+        }
+        let ordered: Vec<_> = if let Some(order) = explicit_order {
+            order
+                .iter()
+                .filter(|id| writers.contains(id))
+                .cloned()
+                .collect()
+        } else {
+            writers
+        };
+        for pair in ordered.windows(2) {
+            push_edge(
+                edges,
+                pair[0].clone(),
+                pair[1].clone(),
+                DependencyReason::FieldWrite,
+            );
+        }
+        let _ = target;
+    }
+}
+
+fn writers_per_target(nodes: &[PlanNode]) -> HashMap<String, Vec<String>> {
+    let mut map: HashMap<String, Vec<String>> = HashMap::new();
+    for node in nodes {
+        if let PlanNodeKind::SemanticAction(action) = &node.kind {
+            map.entry(action.target.clone())
+                .or_default()
+                .push(node.id.clone());
+        }
+    }
+    for ids in map.values_mut() {
+        ids.sort();
+    }
+    map
 }
 
 fn add_expression_edges(
@@ -248,8 +374,7 @@ fn add_expression_edges(
             continue;
         };
         for target in expr::collect_field_refs(&ast) {
-            let source = dependency_source_for_target(contract, nodes, field_index, &target);
-            if let Some(from) = source {
+            for from in dependency_sources_for_target(contract, nodes, field_index, &target) {
                 push_edge(edges, from, node.id.clone(), DependencyReason::FieldRead);
             }
         }
@@ -266,127 +391,126 @@ fn add_rule_field_edges(
         let PlanNodeKind::Rule(rule) = &node.kind else {
             continue;
         };
-        let source = dependency_source_for_target(contract, nodes, field_index, &rule.target);
-        if let Some(from) = source {
+        for from in dependency_sources_for_target(contract, nodes, field_index, &rule.target) {
             push_edge(edges, from, node.id.clone(), DependencyReason::FieldRead);
         }
     }
 }
 
-fn dependency_source_for_target(
+fn dependency_sources_for_target(
     contract: &TransformationContract,
     nodes: &[PlanNode],
     field_index: &FieldIndex,
     target: &str,
-) -> Option<String> {
+) -> Vec<String> {
     match field_index.resolve(target) {
         crate::validation::field_index::TargetResolution::Field(loc) => {
             if loc.is_input {
-                return Some(loc.interface_id.clone());
+                return vec![loc.interface_id.clone()];
             }
-            // Output field: depend on lineage inputs or writing actions.
-            find_writer_for_target(nodes, target)
-                .or_else(|| lineage_input_for_output(contract, &loc.interface_id))
+            if let Some(writer) = last_writer_for_target(contract, nodes, target) {
+                return vec![writer];
+            }
+            lineage_inputs_for_output(contract, &loc.interface_id)
         }
         crate::validation::field_index::TargetResolution::Interface { id, is_input } => {
             if is_input {
-                Some(id)
+                vec![id]
             } else {
-                lineage_input_for_output(contract, &id)
+                lineage_inputs_for_output(contract, &id)
             }
         }
-        _ => None,
+        _ => Vec::new(),
     }
 }
 
-fn lineage_input_for_output(contract: &TransformationContract, output_id: &str) -> Option<String> {
+fn lineage_inputs_for_output(contract: &TransformationContract, output_id: &str) -> Vec<String> {
     contract
         .lineage
-        .as_ref()?
-        .mappings
-        .iter()
-        .find(|m| m.output == output_id)
-        .and_then(|m| m.inputs.first().cloned())
+        .as_ref()
+        .map(|lineage| {
+            lineage
+                .mappings
+                .iter()
+                .find(|m| m.output == output_id)
+                .map(|m| m.inputs.clone())
+                .unwrap_or_default()
+        })
+        .unwrap_or_default()
 }
 
-fn find_writer_for_target(nodes: &[PlanNode], target: &str) -> Option<String> {
-    nodes.iter().find_map(|node| {
-        if let PlanNodeKind::SemanticAction(action) = &node.kind {
-            if action.target == target {
-                return Some(node.id.clone());
+fn last_writer_for_target(
+    contract: &TransformationContract,
+    nodes: &[PlanNode],
+    target: &str,
+) -> Option<String> {
+    let writers: HashSet<_> = nodes
+        .iter()
+        .filter_map(|node| {
+            if let PlanNodeKind::SemanticAction(action) = &node.kind {
+                if action.target == target {
+                    return Some(node.id.as_str());
+                }
+            }
+            None
+        })
+        .collect();
+
+    if writers.is_empty() {
+        return None;
+    }
+
+    if let Some(ActionOrdering::Explicit { order }) = contract
+        .semantics
+        .as_ref()
+        .and_then(|s| s.ordering.as_ref())
+    {
+        for id in order.iter().rev() {
+            if writers.contains(id.as_str()) {
+                return Some(id.clone());
             }
         }
+        return None;
+    }
+
+    if writers.len() == 1 {
+        writers.into_iter().next().map(str::to_string)
+    } else {
         None
-    })
+    }
 }
 
 fn add_rule_phase_edges(nodes: &[PlanNode], edges: &mut Vec<PlanDependency>) {
-    let pre: Vec<_> = nodes
+    let rules: Vec<_> = nodes
         .iter()
-        .filter(|n| {
-            matches!(
-                n.kind,
-                PlanNodeKind::Rule(Rule {
-                    phase: RulePhase::Precondition,
-                    ..
-                })
-            )
+        .filter_map(|n| {
+            if let PlanNodeKind::Rule(rule) = &n.kind {
+                Some((n.id.as_str(), rule.phase, rule.target.as_str()))
+            } else {
+                None
+            }
         })
-        .map(|n| n.id.as_str())
-        .collect();
-    let exec: Vec<_> = nodes
-        .iter()
-        .filter(|n| {
-            matches!(
-                n.kind,
-                PlanNodeKind::Rule(Rule {
-                    phase: RulePhase::Execution,
-                    ..
-                })
-            )
-        })
-        .map(|n| n.id.as_str())
-        .collect();
-    let post: Vec<_> = nodes
-        .iter()
-        .filter(|n| {
-            matches!(
-                n.kind,
-                PlanNodeKind::Rule(Rule {
-                    phase: RulePhase::Postcondition,
-                    ..
-                })
-            )
-        })
-        .map(|n| n.id.as_str())
         .collect();
 
-    for p in &pre {
-        for e in &exec {
-            push_edge(
-                edges,
-                (*p).to_string(),
-                (*e).to_string(),
-                DependencyReason::RulePhase,
+    for (id_a, phase_a, target_a) in &rules {
+        for (id_b, phase_b, target_b) in &rules {
+            if id_a == id_b || target_a != target_b {
+                continue;
+            }
+            let ordered = matches!(
+                (phase_a, phase_b),
+                (RulePhase::Precondition, RulePhase::Execution)
+                    | (RulePhase::Precondition, RulePhase::Postcondition)
+                    | (RulePhase::Execution, RulePhase::Postcondition)
             );
-        }
-        for po in &post {
-            push_edge(
-                edges,
-                (*p).to_string(),
-                (*po).to_string(),
-                DependencyReason::RulePhase,
-            );
-        }
-    }
-    for e in &exec {
-        for po in &post {
-            push_edge(
-                edges,
-                (*e).to_string(),
-                (*po).to_string(),
-                DependencyReason::RulePhase,
-            );
+            if ordered {
+                push_edge(
+                    edges,
+                    (*id_a).to_string(),
+                    (*id_b).to_string(),
+                    DependencyReason::RulePhase,
+                );
+            }
         }
     }
 }
@@ -417,7 +541,6 @@ fn add_interface_condition_edges(
     for output in &contract.outputs {
         for cond in &output.postconditions {
             if rule_ids.contains(cond.rule.as_str()) {
-                // Postcondition rules depend on output being produced via lineage.
                 if let Some(lineage) = contract.lineage.as_ref() {
                     if let Some(mapping) = lineage.mappings.iter().find(|m| m.output == output.id) {
                         for input in &mapping.inputs {

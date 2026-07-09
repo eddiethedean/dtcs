@@ -99,6 +99,16 @@ pub fn parse_and_validate(content: &[u8], format: DocumentFormat) -> ValidationR
 /// Parse, validate, and lower a DTCS document to a transformation plan.
 #[must_use]
 pub fn parse_validate_and_plan(content: &[u8], format: DocumentFormat) -> plan::PlanResult {
+    parse_validate_and_plan_with_registry(content, format, None)
+}
+
+/// Parse, validate, and lower a DTCS document using an optional vendor registry.
+#[must_use]
+pub fn parse_validate_and_plan_with_registry(
+    content: &[u8],
+    format: DocumentFormat,
+    registry_path: Option<&std::path::Path>,
+) -> plan::PlanResult {
     let parse_result = parse(content, format);
     let Some(contract) = parse_result.contract else {
         return plan::PlanResult {
@@ -106,15 +116,30 @@ pub fn parse_validate_and_plan(content: &[u8], format: DocumentFormat) -> plan::
             ..plan::PlanResult::default()
         };
     };
-    let validation = validate(&contract);
+
+    let registry_doc = match registry_path {
+        Some(path) => match load_merged(path) {
+            Ok(merged) => merged,
+            Err(report) => {
+                return plan::PlanResult {
+                    diagnostics: report.diagnostics,
+                    ..plan::PlanResult::default()
+                };
+            }
+        },
+        None => default_registry().clone(),
+    };
+
+    let validation = validate_with_registry(&contract, &registry_doc);
     if !validation.is_valid() {
         return plan::PlanResult {
             diagnostics: validation.diagnostics,
             ..plan::PlanResult::default()
         };
     }
-    let analysis = analysis::check_contract(&contract, None);
-    plan::lower(&contract, None, Some(&analysis))
+
+    let analysis = analysis::check_contract(&contract, Some(&registry_doc));
+    plan::lower(&contract, Some(&registry_doc), Some(&analysis))
 }
 
 impl TransformationContract {

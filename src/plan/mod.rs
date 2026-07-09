@@ -5,7 +5,7 @@ mod lowering;
 mod model;
 mod validate;
 
-pub use graph::topological_order;
+pub use graph::{is_acyclic, topological_order, vertex_count};
 pub use lowering::{lower, lower_report, PlanResult};
 pub use model::{
     DependencyReason, InterfaceConditionRef, PlanDependency, PlanGuarantees, PlanIdentity,

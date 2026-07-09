@@ -146,11 +146,38 @@ dtcs analyze contract.yaml --json
 
 `impact` and `dependency` are populated when `--impact` or `--dependency` flags are used.
 
+## plan
+
+```bash
+dtcs plan contract.yaml --json
+```
+
+On success, emits the transformation plan document directly (not wrapped in a result envelope):
+
+```json
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "customer.normalize",
+    "name": "Normalize Customer",
+    "version": "0.2.0"
+  },
+  "inputs": [],
+  "outputs": [],
+  "nodes": [],
+  "dependencies": [],
+  "lineage": { "mappings": [] },
+  "guarantees": {}
+}
+```
+
+On failure, emits a diagnostics array (same shape as `diagnostics --json`).
+
 ## version
 
 ```json
 {
-  "crateVersion": "0.6.0",
+  "crateVersion": "0.7.0",
   "specVersion": "1.0.0-draft"
 }
 ```

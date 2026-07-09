@@ -83,6 +83,9 @@ pub enum Command {
         source: PathBuf,
         /// Target (newer) contract path.
         target: PathBuf,
+        /// Optional additional registry file to merge for validation.
+        #[arg(long)]
+        registry: Option<PathBuf>,
         /// Comparison scope (comma-separated: interfaces,types,semantics,lineage,metadata,extensions,all).
         #[arg(long, value_delimiter = ',')]
         scope: Vec<String>,
@@ -96,6 +99,9 @@ pub enum Command {
         older: PathBuf,
         /// Newer revision path.
         newer: PathBuf,
+        /// Optional additional registry file to merge for validation.
+        #[arg(long)]
+        registry: Option<PathBuf>,
         /// Emit JSON output.
         #[arg(long)]
         json: bool,
@@ -104,6 +110,9 @@ pub enum Command {
     Lineage {
         /// Path to a DTCS document.
         path: PathBuf,
+        /// Optional additional registry file to merge for validation.
+        #[arg(long)]
+        registry: Option<PathBuf>,
         /// List outputs affected by this input id.
         #[arg(long)]
         impact: Option<String>,
@@ -245,7 +254,7 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             registry,
             json,
         } => {
-            let contract = load_valid_contract(&path, json)?;
+            let contract = load_valid_contract_with_registry(&path, registry.as_ref(), json)?;
             let merged = match registry.as_ref() {
                 Some(registry_path) => Some(
                     crate::registry::load_merged(registry_path)
@@ -288,7 +297,7 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             Ok(0)
         }
         Command::Inspect { path, json } => {
-            let contract = load_valid_contract(&path, json)?;
+            let contract = load_valid_contract_with_registry(&path, None, json)?;
             if json {
                 let summary = InspectSummary::from_contract(&contract);
                 println!(
@@ -311,10 +320,13 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             source,
             target,
             scope,
+            registry,
             json,
         } => {
-            let source_contract = load_valid_contract(&source, json)?;
-            let target_contract = load_valid_contract(&target, json)?;
+            let source_contract =
+                load_valid_contract_with_registry(&source, registry.as_ref(), json)?;
+            let target_contract =
+                load_valid_contract_with_registry(&target, registry.as_ref(), json)?;
             let scope = match ComparisonScope::from_tokens(&scope) {
                 Ok(scope) => scope,
                 Err(invalid) => {
@@ -342,9 +354,16 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             }
             Ok(if report.is_compatible() { 0 } else { 1 })
         }
-        Command::Evolve { older, newer, json } => {
-            let older_contract = load_valid_contract(&older, json)?;
-            let newer_contract = load_valid_contract(&newer, json)?;
+        Command::Evolve {
+            older,
+            newer,
+            registry,
+            json,
+        } => {
+            let older_contract =
+                load_valid_contract_with_registry(&older, registry.as_ref(), json)?;
+            let newer_contract =
+                load_valid_contract_with_registry(&newer, registry.as_ref(), json)?;
             let report = analyze_evolution(&older_contract, &newer_contract);
             if json {
                 println!(
@@ -377,9 +396,10 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             path,
             impact,
             dependency,
+            registry,
             json,
         } => {
-            let contract = load_valid_contract(&path, json)?;
+            let contract = load_valid_contract_with_registry(&path, registry.as_ref(), json)?;
             let report = analyze_with_options(&contract, impact.as_deref(), dependency.as_deref());
             if json {
                 println!(
@@ -505,15 +525,22 @@ fn validation_report(
     }
 }
 
-fn load_valid_contract(path: &PathBuf, json: bool) -> miette::Result<TransformationContract> {
+fn load_valid_contract_with_registry(
+    path: &PathBuf,
+    registry: Option<&PathBuf>,
+    json: bool,
+) -> miette::Result<TransformationContract> {
     let result = parse_file(path)?;
-    let contract = result.contract.clone();
-    let report = result.validate();
+    let contract = result
+        .contract
+        .clone()
+        .ok_or_else(|| miette::miette!("no contract in {}", path.display()))?;
+    let report = validation_report(result, registry)?;
     if !report.is_valid() {
         render_report(&report, json, ReportMode::Validate).map_err(|e| miette::miette!("{e}"))?;
         return Err(miette::miette!("validation failed for {}", path.display()));
     }
-    contract.ok_or_else(|| miette::miette!("no contract in {}", path.display()))
+    Ok(contract)
 }
 
 #[derive(Debug)]

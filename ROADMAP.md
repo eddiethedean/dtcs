@@ -192,7 +192,7 @@ Analyze contracts for interoperability, safe evolution, versioning, and lineage 
 
 ### Modules
 
-`src/compatibility/` (expand stub), new `src/lineage/analysis.rs`, `tests/fixtures/compatibility/`
+`src/compatibility/`, new `src/lineage/analysis.rs`, `tests/fixtures/compatibility/`
 
 ### APIs
 
@@ -205,7 +205,7 @@ Analyze contracts for interoperability, safe evolution, versioning, and lineage 
 
 - [x] [Ch 11 §14](SPEC.md#chapter-11----compatibility), [Ch 12 §13](SPEC.md#chapter-12----evolution), [Ch 25 §13](SPEC.md#chapter-25----versioning), [Ch 10 §13](SPEC.md#chapter-10----lineage)
 - [x] Paired contract fixtures for each compatibility classification
-- [ ] Publish to crates.io and PyPI at `0.3.0` (tag `v0.3.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [x] Publish to crates.io and PyPI at `0.3.0` (tag `v0.3.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 
@@ -243,7 +243,7 @@ Resolve `dtcs:` and vendor identifiers through authoritative registries; validat
 
 - [x] [Ch 21 §12](SPEC.md#chapter-21----extensibility), [Ch 22 §12](SPEC.md#chapter-22----registries)
 - [x] Every `dtcs:` identifier in valid contracts resolves to a registry entry
-- [ ] Publish to crates.io and PyPI at `0.4.0` (tag `v0.4.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [x] Publish to crates.io and PyPI at `0.4.0` (tag `v0.4.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 
@@ -292,7 +292,7 @@ Rule parameters, positional function signatures, expression return nullability, 
 
 ## Phase 0.6 — Semantic Analysis
 
-**Target:** `0.6.x` · **Tier:** III · **Prerequisite:** 0.5
+**Target:** `0.6.x` · **Tier:** III · **Prerequisite:** 0.5 · **Status:** Complete (`0.6.0`)
 
 **Implements:** Analyzer · **SPEC:** [Ch 7](SPEC.md#chapter-7----transformation-semantics)–[8](SPEC.md#chapter-8----expression-language)
 
@@ -321,8 +321,8 @@ Static analysis of transformation semantics and expressions — no runtime evalu
 
 ### Exit criteria
 
-- [Ch 7 §15](SPEC.md#chapter-7----transformation-semantics), [Ch 8 §15](SPEC.md#chapter-8----expression-language)
-- Invalid expression/semantics fixtures rejected with specific diagnostic codes
+- [x] [Ch 7 §15](SPEC.md#chapter-7----transformation-semantics), [Ch 8 §15](SPEC.md#chapter-8----expression-language)
+- [x] Invalid expression/semantics fixtures rejected with specific diagnostic codes
 
 ---
 
@@ -348,7 +348,7 @@ Lower validated COM into canonical semantic IR ([Ch 2 §5](SPEC.md#chapter-2----
 
 ### Modules
 
-`src/plan/` (expand stub): `lowering.rs`, `graph.rs`, `validate.rs`
+`src/plan/`: `model.rs`, `lowering.rs`, `graph.rs`, `validate.rs`
 
 ### APIs
 

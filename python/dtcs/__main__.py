@@ -18,6 +18,7 @@ from dtcs import (
     lineage_analyze,
     parse_file,
     plan_lower,
+    plan_topological_order,
     registry_list,
     registry_resolve,
     validate_result,
@@ -263,6 +264,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"plan: {plan.get('identity', {}).get('id', '')}")
             print(f"nodes: {len(plan.get('nodes', []))}")
             print(f"dependencies: {len(plan.get('dependencies', []))}")
+            order = plan_topological_order(contract, plan)
+            if order:
+                print(f"order: {' -> '.join(order)}")
         return 0
 
     if args.command == "compat":
