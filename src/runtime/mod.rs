@@ -1,6 +1,7 @@
 //! Runtime execution (SPEC Chapter 16).
 
 pub mod actions;
+mod conversion;
 mod expr;
 pub mod functions;
 mod lineage;
@@ -11,8 +12,8 @@ mod runtime_trait;
 mod validate;
 
 pub use model::{
-    parse_qualified_field, Dataset, QualifiedField, Row, RuntimeInputs, RuntimeOutputs,
-    RuntimeValue,
+    parse_qualified_field, parse_qualified_field_with_interfaces, Dataset, QualifiedField, Row,
+    RuntimeInputs, RuntimeOutputs, RuntimeValue,
 };
 pub use reference::ReferenceRuntime;
 pub use runtime_trait::Runtime;

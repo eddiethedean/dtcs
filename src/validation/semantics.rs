@@ -243,6 +243,19 @@ fn validate_stdlib_action(
             return;
         }
     };
+    if action.action.starts_with("dtcs:") && parsed.is_none() {
+        ctx.error(
+            codes::INVALID_SEMANTIC_ACTION,
+            DiagnosticCategory::Semantic,
+            format!(
+                "registry entry '{}' requires a JSON definition",
+                action.action
+            ),
+            Some(&format!("registry.{}", action.action)),
+            Some("Provide a JSON stdlib definition for standard semantic actions"),
+        );
+        return;
+    }
     let Some(StdlibDefinition::SemanticAction {
         target_type,
         target_nullable_allowed,
@@ -315,6 +328,16 @@ fn validate_stdlib_rule(
             return;
         }
     };
+    if rule.rule.starts_with("dtcs:") && parsed.is_none() {
+        ctx.error(
+            codes::INVALID_RULE,
+            DiagnosticCategory::Semantic,
+            format!("registry entry '{}' requires a JSON definition", rule.rule),
+            Some(&format!("registry.{}", rule.rule)),
+            Some("Provide a JSON stdlib definition for standard rules"),
+        );
+        return;
+    }
     let Some(StdlibDefinition::Rule {
         phases,
         target_type,
@@ -436,12 +459,18 @@ fn validate_rule_parameters(
 
 fn parameter_value_matches_type(value: &serde_json::Value, expected: &str) -> bool {
     match expected {
-        "integer" => value.as_i64().is_some(),
+        "integer" => value_as_integer(value).is_some(),
         "string" => value.as_str().is_some(),
-        "decimal" => value.as_f64().is_some() || value.as_i64().is_some(),
+        "decimal" => value.as_f64().is_some() || value_as_integer(value).is_some(),
         "boolean" => value.as_bool().is_some(),
         _ => false,
     }
+}
+
+fn value_as_integer(value: &serde_json::Value) -> Option<i64> {
+    value
+        .as_i64()
+        .or_else(|| value.as_u64().and_then(|v| v.try_into().ok()))
 }
 
 fn validate_stdlib_function(
@@ -465,6 +494,19 @@ fn validate_stdlib_function(
             return;
         }
     };
+    if function.function.starts_with("dtcs:") && parsed.is_none() {
+        ctx.error(
+            codes::INVALID_FUNCTION,
+            DiagnosticCategory::Semantic,
+            format!(
+                "registry entry '{}' requires a JSON definition",
+                function.function
+            ),
+            Some(&format!("registry.{}", function.function)),
+            Some("Provide a JSON stdlib definition for standard functions"),
+        );
+        return;
+    }
     let Some(StdlibDefinition::Function {
         min_args,
         max_args,

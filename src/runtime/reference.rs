@@ -71,10 +71,10 @@ impl Runtime for ReferenceRuntime {
             workspaces.entry(output.id.clone()).or_default();
         }
 
-        let row_count = workspaces
-            .values()
-            .map(|dataset| dataset.len())
-            .max()
+        let row_count = plan
+            .inputs
+            .iter()
+            .find_map(|input| workspaces.get(&input.id).map(|dataset| dataset.len()))
             .unwrap_or(0);
 
         for step in &plan.steps {
@@ -148,8 +148,10 @@ fn execute_step(
         ExecutionStepKind::ApplyAction {
             action_id, target, ..
         } => {
-            let qualified = super::model::parse_qualified_field(target)
-                .ok_or_else(|| format!("invalid action target '{target}'"))?;
+            let interface_ids: Vec<String> = workspaces.keys().cloned().collect();
+            let qualified =
+                super::model::parse_qualified_field_with_interfaces(target, &interface_ids)
+                    .ok_or_else(|| format!("invalid action target '{target}'"))?;
             let rows = workspaces
                 .get_mut(&qualified.interface_id)
                 .ok_or_else(|| format!("unknown interface '{}'", qualified.interface_id))?;
@@ -181,7 +183,7 @@ fn execute_step(
                 .iter()
                 .find(|o| &o.id == output_id)
                 .ok_or_else(|| format!("unknown output '{output_id}'"))?;
-            let dataset = materialize_output(output, input_ids, workspaces)?;
+            let dataset = materialize_output(output, input_ids, &plan.inputs, workspaces)?;
             workspaces.insert(output_id.clone(), dataset);
             Ok(())
         }

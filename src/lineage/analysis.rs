@@ -97,11 +97,23 @@ pub fn analyze_with_options(
         .collect();
 
     if let Some(input) = impact_input {
-        if !input_ids.contains(input)
-            && !graph
-                .iter()
-                .any(|edge| edge.inputs.iter().any(|id| id == input))
-        {
+        let in_graph = graph
+            .iter()
+            .any(|edge| edge.inputs.iter().any(|id| id == input));
+        if input_ids.contains(input) && !in_graph {
+            diagnostics.push(
+                Diagnostic::new(
+                    codes::UNRESOLVED_REFERENCE,
+                    Severity::Warning,
+                    DiagnosticStage::Analysis,
+                    DiagnosticCategory::Reference,
+                    format!(
+                        "declared input '{input}' has no lineage graph edge; impact analysis may be incomplete"
+                    ),
+                )
+                .with_object_ref(format!("inputs.{input}")),
+            );
+        } else if !input_ids.contains(input) && !in_graph {
             diagnostics.push(
                 Diagnostic::new(
                     codes::UNRESOLVED_REFERENCE,
@@ -116,7 +128,21 @@ pub fn analyze_with_options(
     }
 
     if let Some(output) = dependency_output {
-        if !output_ids.contains(output) && !graph.iter().any(|edge| edge.output == output) {
+        let in_graph = graph.iter().any(|edge| edge.output == output);
+        if output_ids.contains(output) && !in_graph {
+            diagnostics.push(
+                Diagnostic::new(
+                    codes::UNRESOLVED_REFERENCE,
+                    Severity::Warning,
+                    DiagnosticStage::Analysis,
+                    DiagnosticCategory::Reference,
+                    format!(
+                        "declared output '{output}' has no lineage graph edge; dependency analysis may be incomplete"
+                    ),
+                )
+                .with_object_ref(format!("outputs.{output}")),
+            );
+        } else if !output_ids.contains(output) && !in_graph {
             diagnostics.push(
                 Diagnostic::new(
                     codes::UNRESOLVED_REFERENCE,

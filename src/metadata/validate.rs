@@ -112,6 +112,19 @@ fn validate_metadata_block(
         validate_provenance(ctx, provenance, object_ref);
     }
 
+    for (index, tag) in metadata.tags.iter().enumerate() {
+        if tag.trim().is_empty() {
+            ctx.error_with_stage(
+                codes::INVALID_METADATA,
+                DiagnosticCategory::Structure,
+                "metadata tag must not be empty",
+                Some(&format!("{object_ref}.tags[{index}]")),
+                Some("Remove empty tags or provide non-whitespace tag values"),
+                DiagnosticStage::CanonicalObjectModel,
+            );
+        }
+    }
+
     if metadata.classification == Some(ClassificationLevel::Restricted)
         && !has_restricted_governance(metadata.governance.as_ref())
     {
@@ -127,16 +140,14 @@ fn validate_metadata_block(
 
     for key in metadata.extensions.keys() {
         if key == "extensions" {
-            if metadata.extensions.get(key).is_some_and(|v| v.is_object()) {
-                ctx.error_with_stage(
-                    codes::INVALID_EXTENSION,
-                    DiagnosticCategory::Structure,
-                    "vendor metadata keys must be flattened, not nested under 'extensions'",
-                    Some(&format!("{object_ref}.extensions")),
-                    Some("Use vendor:fieldName directly in the metadata block"),
-                    DiagnosticStage::CanonicalObjectModel,
-                );
-            }
+            ctx.error_with_stage(
+                codes::INVALID_EXTENSION,
+                DiagnosticCategory::Structure,
+                "vendor metadata keys must be flattened, not nested under 'extensions'",
+                Some(&format!("{object_ref}.extensions")),
+                Some("Use vendor:fieldName directly in the metadata block"),
+                DiagnosticStage::CanonicalObjectModel,
+            );
             continue;
         }
         if !is_vendor_namespaced_identifier(key) {

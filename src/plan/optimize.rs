@@ -9,7 +9,7 @@ use crate::analysis::expr::{eval, format, parse, rewrite};
 use crate::diagnostics::{
     codes, optimization_error, Diagnostic, DiagnosticCategory, DiagnosticStage, Severity,
 };
-use crate::model::{ActionOrdering, RegistryCategory, RegistryDocument};
+use crate::model::{types_assignable, ActionOrdering, RegistryCategory, RegistryDocument};
 use crate::registry;
 
 use super::graph;
@@ -373,7 +373,7 @@ fn expression_rewrite_accepted(
     registry_doc: &RegistryDocument,
 ) -> bool {
     let Some(type_name) = expression.type_name.as_deref() else {
-        return true;
+        return false;
     };
     let Ok(declared) = crate::model::parse_logical_type(type_name) else {
         return false;
@@ -383,7 +383,7 @@ fn expression_rewrite_accepted(
     else {
         return false;
     };
-    declared == inferred.logical
+    types_assignable(&inferred.logical, &declared)
 }
 
 fn optimization_skipped(message: impl Into<String>, object_ref: &str) -> Diagnostic {

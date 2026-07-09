@@ -1,6 +1,6 @@
 //! Shared expression rewrite helpers for optimization and equivalence.
 
-use crate::analysis::expr::ast::{BinaryOp, Expr, Span, UnaryOp};
+use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, Span, UnaryOp};
 use crate::analysis::expr::{eval, format, parse};
 
 /// Algebraically simplify an expression AST.
@@ -102,37 +102,59 @@ fn simplify_binary(op: BinaryOp, left: &Expr, right: &Expr, span: &Span) -> Opti
             }
         }
         BinaryOp::And => {
-            if let Expr::Literal { value, .. } = left {
-                if eval::is_false(value) {
+            if let (
+                Expr::Literal {
+                    value: left_val, ..
+                },
+                Expr::Literal {
+                    value: right_val, ..
+                },
+            ) = (&left, &right)
+            {
+                if !matches!(left_val, LiteralValue::Boolean(_))
+                    || !matches!(right_val, LiteralValue::Boolean(_))
+                {
+                    return None;
+                }
+                if eval::is_false(left_val) {
                     return Some(left.clone());
                 }
-                if eval::is_true(value) {
+                if eval::is_true(left_val) {
                     return Some(right.clone());
                 }
-            }
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_false(value) {
+                if eval::is_false(right_val) {
                     return Some(right.clone());
                 }
-                if eval::is_true(value) {
+                if eval::is_true(right_val) {
                     return Some(left.clone());
                 }
             }
         }
         BinaryOp::Or => {
-            if let Expr::Literal { value, .. } = left {
-                if eval::is_true(value) {
+            if let (
+                Expr::Literal {
+                    value: left_val, ..
+                },
+                Expr::Literal {
+                    value: right_val, ..
+                },
+            ) = (&left, &right)
+            {
+                if !matches!(left_val, LiteralValue::Boolean(_))
+                    || !matches!(right_val, LiteralValue::Boolean(_))
+                {
+                    return None;
+                }
+                if eval::is_true(left_val) {
                     return Some(left.clone());
                 }
-                if eval::is_false(value) {
+                if eval::is_false(left_val) {
                     return Some(right.clone());
                 }
-            }
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_true(value) {
+                if eval::is_true(right_val) {
                     return Some(right.clone());
                 }
-                if eval::is_false(value) {
+                if eval::is_false(right_val) {
                     return Some(left.clone());
                 }
             }

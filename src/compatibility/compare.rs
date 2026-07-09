@@ -4,8 +4,8 @@ use std::collections::{HashMap, HashSet};
 
 use crate::diagnostics::{codes, Diagnostic, DiagnosticCategory, DiagnosticStage, Severity};
 use crate::model::{
-    parse_logical_type, type_compatible, Expression, Field, Function, Input, Lineage, Output, Rule,
-    SemanticAction, TransformationContract, TypeCompatibility,
+    parse_logical_type, type_compatible, ClassificationLevel, Expression, Field, Function, Input,
+    Output, Rule, SemanticAction, TransformationContract, TypeCompatibility,
 };
 
 use super::report::ContractChange;
@@ -143,11 +143,9 @@ fn compare_input_set(
             let Some(tgt) = target_map.get(id) else {
                 if src.optional {
                     outcome.push(InternalDiff {
-                        kind: DiffKind::Breaking,
+                        kind: DiffKind::Additive,
                         category: ChangeCategory::Interface,
-                        message: format!(
-                            "optional input '{id}' removed in target (backward-incompatible for source consumers)"
-                        ),
+                        message: format!("optional input '{id}' removed in target"),
                         object_ref: Some(format!("inputs.{id}")),
                     });
                     continue;
@@ -484,6 +482,15 @@ fn compare_field_types(
         }
     }
 
+    if source.conversions != target.conversions {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Breaking,
+            category: ChangeCategory::Type,
+            message: format!("field '{name}' conversions changed"),
+            object_ref: Some(format!("{object_ref}.fields.{name}.conversions")),
+        });
+    }
+
     if source.nullable && !target.nullable {
         outcome.push(InternalDiff {
             kind: DiffKind::Breaking,
@@ -598,7 +605,12 @@ fn compare_rules(source: &[Rule], target: &[Rule], outcome: &mut ComparisonOutco
         "rules",
         source,
         target,
-        |s, t| s.rule == t.rule && s.target == t.target && s.phase == t.phase,
+        |s, t| {
+            s.rule == t.rule
+                && s.target == t.target
+                && s.phase == t.phase
+                && s.parameters == t.parameters
+        },
         ChangeCategory::Rule,
         outcome,
     );
@@ -687,16 +699,24 @@ fn compare_lineage(
     target: &TransformationContract,
     outcome: &mut ComparisonOutcome,
 ) {
-    compare_lineage_maps(source.lineage.as_ref(), target.lineage.as_ref(), outcome);
+    compare_lineage_maps(source, target, outcome);
 }
 
 fn compare_lineage_maps(
-    source: Option<&Lineage>,
-    target: Option<&Lineage>,
+    source_contract: &TransformationContract,
+    target_contract: &TransformationContract,
     outcome: &mut ComparisonOutcome,
 ) {
-    let src_mappings = source.map(|l| &l.mappings).cloned().unwrap_or_default();
-    let tgt_mappings = target.map(|l| &l.mappings).cloned().unwrap_or_default();
+    let source_lineage = source_contract.lineage.as_ref();
+    let target_lineage = target_contract.lineage.as_ref();
+    let src_mappings = source_lineage
+        .map(|l| &l.mappings)
+        .cloned()
+        .unwrap_or_default();
+    let tgt_mappings = target_lineage
+        .map(|l| &l.mappings)
+        .cloned()
+        .unwrap_or_default();
     let src_map: HashMap<_, _> = src_mappings
         .iter()
         .map(|m| (m.output.as_str(), m))
@@ -716,15 +736,37 @@ fn compare_lineage_maps(
             });
             continue;
         };
-        let src_inputs: HashSet<_> = src.inputs.iter().map(String::as_str).collect();
-        let tgt_inputs: HashSet<_> = tgt.inputs.iter().map(String::as_str).collect();
-        if src_inputs != tgt_inputs {
-            outcome.push(InternalDiff {
-                kind: DiffKind::Breaking,
-                category: ChangeCategory::Lineage,
-                message: format!("lineage inputs changed for output '{output}'"),
-                object_ref: Some(format!("lineage.mappings.{output}.inputs")),
-            });
+        if src.inputs != tgt.inputs {
+            let src_set: HashSet<_> = src.inputs.iter().collect();
+            let tgt_set: HashSet<_> = tgt.inputs.iter().collect();
+            if src_set == tgt_set {
+                let overlap = lineage_inputs_have_overlapping_fields(source_contract, &src.inputs)
+                    || lineage_inputs_have_overlapping_fields(target_contract, &tgt.inputs);
+                if overlap {
+                    outcome.push(InternalDiff {
+                        kind: DiffKind::Breaking,
+                        category: ChangeCategory::Lineage,
+                        message: format!(
+                            "lineage inputs reordered for output '{output}' with overlapping field names across interfaces"
+                        ),
+                        object_ref: Some(format!("lineage.mappings.{output}.inputs")),
+                    });
+                } else {
+                    outcome.push(InternalDiff {
+                        kind: DiffKind::Neutral,
+                        category: ChangeCategory::Lineage,
+                        message: format!("lineage inputs reordered for output '{output}'"),
+                        object_ref: Some(format!("lineage.mappings.{output}.inputs")),
+                    });
+                }
+            } else {
+                outcome.push(InternalDiff {
+                    kind: DiffKind::Breaking,
+                    category: ChangeCategory::Lineage,
+                    message: format!("lineage inputs changed for output '{output}'"),
+                    object_ref: Some(format!("lineage.mappings.{output}.inputs")),
+                });
+            }
         }
     }
 
@@ -770,6 +812,111 @@ fn compare_metadata(
             object_ref: Some("metadata.documentation.description".into()),
         });
     }
+
+    if src.and_then(|m| m.classification) != tgt.and_then(|m| m.classification) {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Neutral,
+            category: ChangeCategory::Metadata,
+            message: format!(
+                "classification differs ('{}' vs '{}')",
+                classification_label(src.and_then(|m| m.classification)),
+                classification_label(tgt.and_then(|m| m.classification))
+            ),
+            object_ref: Some("metadata.classification".into()),
+        });
+    }
+
+    if src.and_then(|m| m.deprecated) != tgt.and_then(|m| m.deprecated) {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Neutral,
+            category: ChangeCategory::Metadata,
+            message: "deprecated flag differs".into(),
+            object_ref: Some("metadata.deprecated".into()),
+        });
+    }
+
+    if src.and_then(|m| m.replacement.as_deref()) != tgt.and_then(|m| m.replacement.as_deref()) {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Neutral,
+            category: ChangeCategory::Metadata,
+            message: "replacement contract differs".into(),
+            object_ref: Some("metadata.replacement".into()),
+        });
+    }
+
+    compare_identity_metadata(src, tgt, outcome);
+}
+
+fn classification_label(level: Option<ClassificationLevel>) -> &'static str {
+    match level {
+        Some(ClassificationLevel::Public) => "public",
+        Some(ClassificationLevel::Internal) => "internal",
+        Some(ClassificationLevel::Confidential) => "confidential",
+        Some(ClassificationLevel::Restricted) => "restricted",
+        None => "<none>",
+    }
+}
+
+fn compare_identity_metadata(
+    source: Option<&crate::model::Metadata>,
+    target: Option<&crate::model::Metadata>,
+    outcome: &mut ComparisonOutcome,
+) {
+    let src = source.and_then(|m| m.identity.as_ref());
+    let tgt = target.and_then(|m| m.identity.as_ref());
+
+    if src.and_then(|i| i.identifier.as_deref()) != tgt.and_then(|i| i.identifier.as_deref()) {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Neutral,
+            category: ChangeCategory::Metadata,
+            message: "identity identifier differs".into(),
+            object_ref: Some("metadata.identity.identifier".into()),
+        });
+    }
+    if src.and_then(|i| i.name.as_deref()) != tgt.and_then(|i| i.name.as_deref()) {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Neutral,
+            category: ChangeCategory::Metadata,
+            message: "identity name differs".into(),
+            object_ref: Some("metadata.identity.name".into()),
+        });
+    }
+    if src.and_then(|i| i.version.as_deref()) != tgt.and_then(|i| i.version.as_deref()) {
+        outcome.push(InternalDiff {
+            kind: DiffKind::Neutral,
+            category: ChangeCategory::Metadata,
+            message: "identity version differs".into(),
+            object_ref: Some("metadata.identity.version".into()),
+        });
+    }
+}
+
+fn lineage_inputs_have_overlapping_fields(
+    contract: &TransformationContract,
+    input_ids: &[String],
+) -> bool {
+    if input_ids.len() < 2 {
+        return false;
+    }
+    let id_set: HashSet<_> = input_ids.iter().collect();
+    let mut field_to_interfaces: HashMap<&str, HashSet<&str>> = HashMap::new();
+    for input in &contract.inputs {
+        if !id_set.contains(&input.id) {
+            continue;
+        }
+        let Some(schema) = &input.schema else {
+            continue;
+        };
+        for field in &schema.fields {
+            field_to_interfaces
+                .entry(field.name.as_str())
+                .or_default()
+                .insert(input.id.as_str());
+        }
+    }
+    field_to_interfaces
+        .values()
+        .any(|interfaces| interfaces.len() > 1)
 }
 
 fn compare_extensions(
@@ -796,6 +943,19 @@ fn compare_extensions(
             message: format!("extension key '{key}' added in target"),
             object_ref: Some(key.to_string()),
         });
+    }
+
+    for key in src_keys.intersection(&tgt_keys) {
+        let src_value = source.extensions.get(*key);
+        let tgt_value = target.extensions.get(*key);
+        if src_value != tgt_value {
+            outcome.push(InternalDiff {
+                kind: DiffKind::Conditional,
+                category: ChangeCategory::Extension,
+                message: format!("extension key '{key}' value changed in target"),
+                object_ref: Some(key.to_string()),
+            });
+        }
     }
 }
 

@@ -4,11 +4,13 @@ use std::collections::HashSet;
 
 use crate::diagnostics::{codes, DiagnosticCategory};
 use crate::model::{
-    parse_logical_type, type_compatible, Function, LogicalType, RegistryDocument,
-    TransformationContract, TypeCompatibility, TypeParseError,
+    parse_logical_type, types_assignable, Function, LogicalType, RegistryDocument,
+    TransformationContract, TypeParseError,
 };
 
 use super::context::ValidationContext;
+
+const MAX_TYPE_DEPTH: usize = 32;
 
 pub(crate) fn validate_expressions(
     ctx: &mut ValidationContext,
@@ -164,17 +166,6 @@ fn validate_function_declaration(ctx: &mut ValidationContext, function: &Functio
     }
 }
 
-fn types_assignable(inferred: &LogicalType, declared: &LogicalType) -> bool {
-    match type_compatible(inferred, declared) {
-        TypeCompatibility::Identical => true,
-        TypeCompatibility::Compatible => matches!(
-            (inferred, declared),
-            (LogicalType::Primitive(a), LogicalType::Primitive(b)) if a == "integer" && b == "decimal"
-        ),
-        TypeCompatibility::Incompatible => false,
-    }
-}
-
 fn format_logical_type(logical_type: &LogicalType) -> String {
     match logical_type {
         LogicalType::Primitive(name) => name.clone(),
@@ -208,6 +199,9 @@ fn emit_type_error(
             actual,
         } => {
             format!("composite type '{kind}' expects {expected}, found {actual}")
+        }
+        TypeParseError::TooDeep => {
+            format!("logical type '{type_name}' exceeds maximum nesting depth of {MAX_TYPE_DEPTH}")
         }
     };
 

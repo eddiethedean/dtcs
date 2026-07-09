@@ -1,0 +1,54 @@
+{
+  "dtcsVersion": "1.0.0",
+  "id": "invalid.rule.duplicate.params",
+  "name": "Invalid Rule Duplicate Params",
+  "version": "0.1.0",
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "code_min",
+      "rule": "dtcs:min_length",
+      "target": "in.code",
+      "phase": "postcondition",
+      "parameters": {
+        "min": 3,
+        "min": 10
+      }
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": ["in"]
+      }
+    ]
+  }
+}

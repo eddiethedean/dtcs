@@ -35,7 +35,7 @@ pub use rule::{Rule, RulePhase};
 pub use semantics::{ActionOrdering, SideEffectDeclaration, TransformationSemantics};
 pub use types::{
     infer_logical_type, is_extension_type_identifier, is_known_logical_type, parse_logical_type,
-    type_compatible, Field, LogicalType, Schema, TypeCompatibility, TypeConversion, TypeParseError,
-    COMPOSITE_TYPES, PRIMITIVE_TYPES,
+    type_compatible, types_assignable, Field, LogicalType, Schema, TypeCompatibility,
+    TypeConversion, TypeParseError, COMPOSITE_TYPES, PRIMITIVE_TYPES,
 };
 pub use versioning::Versioning;

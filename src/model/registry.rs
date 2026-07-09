@@ -200,8 +200,44 @@ impl RegistryDocument {
     /// Merges `other` into this document.
     ///
     /// Non-`dtcs:` entries from `other` override existing entries. `dtcs:` entries
-    /// already present in this document are preserved (builtin authority).
-    pub fn merge(&mut self, other: &RegistryDocument) {
+    /// already present in this document are preserved (builtin authority). Novel
+    /// `dtcs:` keys from `other` are rejected.
+    pub fn merge(
+        &mut self,
+        other: &RegistryDocument,
+    ) -> Result<(), crate::diagnostics::DiagnosticReport> {
+        for (id, entry) in &other.entries {
+            if id.starts_with("dtcs:") {
+                if self.entries.contains_key(id) {
+                    continue;
+                }
+                let mut report = crate::diagnostics::DiagnosticReport::new();
+                report.push(
+                    crate::diagnostics::Diagnostic::new(
+                        crate::diagnostics::codes::INVALID_REGISTRY,
+                        crate::diagnostics::Severity::Error,
+                        crate::diagnostics::DiagnosticStage::Validation,
+                        crate::diagnostics::DiagnosticCategory::Structure,
+                        format!(
+                            "registry merge rejected novel standard entry '{id}'; vendor catalogs cannot extend the dtcs: namespace"
+                        ),
+                    )
+                    .with_object_ref(format!("entries.{id}"))
+                    .with_remediation(
+                        "Use vendor namespaces for custom identifiers; only builtin dtcs: entries are authoritative",
+                    ),
+                );
+                return Err(report);
+            }
+            self.entries.insert(id.clone(), entry.clone());
+        }
+        Ok(())
+    }
+
+    /// Merges `other` into this document without rejecting novel `dtcs:` keys.
+    ///
+    /// Reserved for trusted builtin catalog assembly.
+    pub(crate) fn merge_trusted(&mut self, other: &RegistryDocument) {
         for (id, entry) in &other.entries {
             if id.starts_with("dtcs:") && self.entries.contains_key(id) {
                 continue;

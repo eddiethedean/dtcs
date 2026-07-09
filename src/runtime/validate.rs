@@ -14,17 +14,49 @@ pub fn validate_execution_plan(plan: &ExecutionPlan) -> DiagnosticReport {
 /// Validate runtime inputs against declared schemas.
 pub fn validate_inputs(inputs: &[Input], provided: &RuntimeInputs) -> Result<(), String> {
     for input in inputs {
-        if input.optional {
+        if input.optional && !provided.contains_key(&input.id) {
             continue;
         }
-        let dataset = provided
-            .get(&input.id)
-            .ok_or_else(|| format!("missing required input '{}'", input.id))?;
-        if dataset.is_empty() {
+        let dataset = if input.optional {
+            match provided.get(&input.id) {
+                Some(dataset) => dataset,
+                None => continue,
+            }
+        } else {
+            provided
+                .get(&input.id)
+                .ok_or_else(|| format!("missing required input '{}'", input.id))?
+        };
+        if !input.optional && dataset.is_empty() {
             return Err(format!("required input '{}' has no rows", input.id));
         }
         if let Some(schema) = &input.schema {
             validate_dataset_schema(&input.id, dataset, schema)?;
+        }
+    }
+
+    validate_equal_row_counts(inputs, provided)
+}
+
+fn validate_equal_row_counts(inputs: &[Input], provided: &RuntimeInputs) -> Result<(), String> {
+    let mut lengths = Vec::new();
+    for input in inputs {
+        if let Some(dataset) = provided.get(&input.id) {
+            if !dataset.is_empty() {
+                lengths.push((input.id.clone(), dataset.len()));
+            }
+        }
+    }
+    if lengths.len() < 2 {
+        return Ok(());
+    }
+    let expected = lengths[0].1;
+    for (id, len) in &lengths[1..] {
+        if *len != expected {
+            return Err(format!(
+                "input '{}' has {len} rows but '{}' has {expected} rows; all provided inputs must have equal row counts",
+                id, lengths[0].0
+            ));
         }
     }
     Ok(())

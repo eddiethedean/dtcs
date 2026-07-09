@@ -200,7 +200,7 @@ fn merge_preserves_builtin_dtcs_entries() {
     });
 
     let mut merged = default_registry().clone();
-    merged.merge(&catalog);
+    merged.merge(&catalog).expect("vendor merge");
     let entry = resolve_registry(&merged, "dtcs:lowercase").expect("builtin");
     assert_eq!(entry.name, "Lowercase");
     assert_eq!(entry.version, "1.0.0");
@@ -228,7 +228,7 @@ fn optional_vendor_extension_is_preserved() {
 
     let catalog = load_registry(registry_fixture("vendor_catalog.yaml")).expect("catalog");
     let mut registry = default_registry().clone();
-    registry.merge(&catalog);
+    registry.merge(&catalog).expect("vendor merge");
     let report = validate_with_registry(&contract, &registry);
     assert!(report.is_valid(), "{:?}", report.diagnostics);
 }
@@ -241,7 +241,7 @@ fn mandatory_unsupported_extension_fails_validation() {
 
     let catalog = load_registry(registry_fixture("vendor_catalog.yaml")).expect("catalog");
     let mut registry = default_registry().clone();
-    registry.merge(&catalog);
+    registry.merge(&catalog).expect("vendor merge");
     let report = validate_with_registry(&contract, &registry);
     assert!(!report.is_valid());
     assert!(report
@@ -357,4 +357,75 @@ fn extension_compatibility_roundtrips() {
         Some(ExtensionCompatibility::Mandatory)
     );
     assert!(!blocked.supported);
+}
+
+#[test]
+fn rejects_novel_dtcs_registry_entries_on_merge() {
+    let evil = load_registry(registry_fixture("evil_dtcs_injection.yaml")).expect("load evil");
+    let mut merged = default_registry().clone();
+    let err = merged.merge(&evil).expect_err("novel dtcs: rejected");
+    assert!(!err.is_valid());
+    assert!(err
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_REGISTRY && d.message.contains("novel standard entry")));
+}
+
+#[test]
+fn rejects_duplicate_rule_parameter_keys_in_json() {
+    let report = parse_and_validate(
+        &read(&fixture("invalid_rule_duplicate_params.json")),
+        DocumentFormat::Json,
+    );
+    assert!(!report.is_valid());
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("duplicate key 'min'")));
+}
+
+#[test]
+fn rejects_oversized_registry_bytes() {
+    use dtcs::registry::MAX_REGISTRY_BYTES;
+    let oversized = vec![b' '; MAX_REGISTRY_BYTES + 1];
+    let err = dtcs::registry::load_bytes(&oversized, DocumentFormat::Yaml).expect_err("oversize");
+    assert!(!err.is_valid());
+    assert!(err
+        .diagnostics
+        .iter()
+        .any(|d| d.message.contains("exceeds maximum size")));
+}
+
+#[test]
+fn integer_parameter_accepts_in_range_u64() {
+    let mut contract = parse(
+        &read(&fixture("stdlib_rule_min_length_valid.yaml")),
+        DocumentFormat::Yaml,
+    )
+    .contract
+    .expect("contract");
+    contract.rules[0]
+        .parameters
+        .insert("min".into(), serde_json::json!(u64::MAX));
+    let report = validate(&contract);
+    assert!(!report.is_valid());
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|d| d.id == codes::INVALID_RULE));
+}
+
+#[test]
+fn integer_parameter_accepts_valid_u64() {
+    let mut contract = parse(
+        &read(&fixture("stdlib_rule_min_length_valid.yaml")),
+        DocumentFormat::Yaml,
+    )
+    .contract
+    .expect("contract");
+    contract.rules[0]
+        .parameters
+        .insert("min".into(), serde_json::json!(42u64));
+    let report = validate(&contract);
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
 }

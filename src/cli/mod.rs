@@ -1,12 +1,15 @@
 //! Command-line interface.
 
-use std::io::{self, Write};
-use std::path::PathBuf;
+use std::io::{self, Read, Write};
+use std::path::{Path, PathBuf};
 
 use clap::{Parser, Subcommand};
 
 use crate::compatibility::{analyze as analyze_compatibility, analyze_evolution, ComparisonScope};
-use crate::diagnostics::{inspect_contract, DiagnosticReport};
+use crate::diagnostics::{
+    codes, inspect_contract, Diagnostic, DiagnosticCategory, DiagnosticReport, DiagnosticStage,
+    Severity,
+};
 use crate::lineage::analyze_with_options;
 use crate::model::TransformationContract;
 use crate::parser::parse_file;
@@ -147,6 +150,9 @@ pub enum Command {
     Diagnostics {
         /// Path to a DTCS document.
         path: PathBuf,
+        /// Optional additional registry file to merge for validation.
+        #[arg(long)]
+        registry: Option<PathBuf>,
         /// Emit JSON output.
         #[arg(long)]
         json: bool,
@@ -389,8 +395,7 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 .unwrap_or_else(|| crate::registry::default_registry());
 
             let input_plan = if from_plan {
-                let content = std::fs::read_to_string(&path)
-                    .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+                let content = read_bounded_utf8(&path)?;
                 serde_json::from_str(&content)
                     .map_err(|e| miette::miette!("invalid plan JSON in {}: {e}", path.display()))?
             } else {
@@ -413,8 +418,21 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 validate: !no_validate,
                 ..crate::plan::OptimizeOptions::default()
             };
-            let optimize_result =
+            let mut optimize_result =
                 crate::plan::optimize_with_registry(&input_plan, registry_doc, &options);
+
+            if no_validate && from_plan {
+                optimize_result.diagnostics.push(
+                    Diagnostic::new(
+                        codes::OPTIMIZATION_SKIPPED,
+                        Severity::Warning,
+                        DiagnosticStage::Optimization,
+                        DiagnosticCategory::Semantic,
+                        "optimized plan was not validated; results may be unsound",
+                    )
+                    .with_object_ref("plan"),
+                );
+            }
 
             if !optimize_result.is_valid() {
                 let report = DiagnosticReport {
@@ -463,10 +481,24 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             profile,
             json,
         } => {
+            let merged = match registry.as_ref() {
+                Some(registry_path) => Some(
+                    crate::registry::load_merged(registry_path)
+                        .map_err(|report| registry_report_error(&report))?,
+                ),
+                None => None,
+            };
+            let registry_doc = merged
+                .as_ref()
+                .unwrap_or_else(|| crate::registry::default_registry());
             let transformation_plan =
                 load_transformation_plan(&path, from_plan, optimize, registry.as_ref(), json)?;
             let capability = load_capability_profile(&profile)?;
-            let match_report = crate::capability::match_plan(&transformation_plan, &capability);
+            let match_report = crate::capability::match_plan_with_registry(
+                &transformation_plan,
+                &capability,
+                registry_doc,
+            );
             if json {
                 println!(
                     "{}",
@@ -576,9 +608,13 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             }
             Ok(0)
         }
-        Command::Diagnostics { path, json } => {
+        Command::Diagnostics {
+            path,
+            registry,
+            json,
+        } => {
             let result = parse_file(&path)?;
-            let report = result.validate();
+            let report = validation_report(result, registry.as_ref())?;
             render_report(&report, json, ReportMode::Diagnostics)
                 .map_err(|e| miette::miette!("{e}"))?;
             Ok(if report.is_valid() { 0 } else { 1 })
@@ -840,8 +876,7 @@ fn load_transformation_plan(
         .unwrap_or_else(|| crate::registry::default_registry());
 
     let mut plan = if from_plan {
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+        let content = read_bounded_utf8(path)?;
         serde_json::from_str(&content)
             .map_err(|e| miette::miette!("invalid plan JSON in {}: {e}", path.display()))?
     } else {
@@ -885,11 +920,40 @@ fn load_transformation_plan(
     Ok(plan)
 }
 
-fn load_runtime_inputs(path: &PathBuf) -> miette::Result<crate::runtime::RuntimeInputs> {
-    let content = std::fs::read_to_string(path)
-        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+fn load_runtime_inputs(path: &Path) -> miette::Result<crate::runtime::RuntimeInputs> {
+    let content = read_bounded_utf8(path)?;
     serde_json::from_str(&content)
         .map_err(|e| miette::miette!("invalid runtime input JSON in {}: {e}", path.display()))
+}
+
+/// Maximum runtime input / serialized plan JSON size accepted by the CLI (64 MiB).
+const MAX_RUNTIME_INPUT_BYTES: usize = 64 * 1024 * 1024;
+
+fn read_bounded_utf8(path: &Path) -> miette::Result<String> {
+    let metadata = std::fs::metadata(path)
+        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    if metadata.len() as usize > MAX_RUNTIME_INPUT_BYTES {
+        return Err(miette::miette!(
+            "file exceeds maximum size of {} bytes: {}",
+            MAX_RUNTIME_INPUT_BYTES,
+            path.display()
+        ));
+    }
+    let file = std::fs::File::open(path)
+        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    let mut content = Vec::new();
+    file.take((MAX_RUNTIME_INPUT_BYTES as u64).saturating_add(1))
+        .read_to_end(&mut content)
+        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    if content.len() > MAX_RUNTIME_INPUT_BYTES {
+        return Err(miette::miette!(
+            "file exceeds maximum size of {} bytes: {}",
+            MAX_RUNTIME_INPUT_BYTES,
+            path.display()
+        ));
+    }
+    String::from_utf8(content)
+        .map_err(|e| miette::miette!("invalid UTF-8 in {}: {e}", path.display()))
 }
 
 #[derive(Debug)]

@@ -2,7 +2,7 @@
 
 use crate::analysis::expr::check_expression;
 use crate::diagnostics::{codes, planning_error, DiagnosticCategory, DiagnosticReport};
-use crate::model::{RegistryDocument, RulePhase};
+use crate::model::{types_assignable, RegistryDocument, RulePhase};
 use crate::registry;
 use crate::validation::field_index::FieldIndex;
 
@@ -238,7 +238,7 @@ fn check_types(
                     analysis.inferred_type.as_ref(),
                 ) {
                     if let Ok(declared_type) = crate::model::parse_logical_type(declared) {
-                        if declared_type != *inferred {
+                        if !types_assignable(inferred, &declared_type) {
                             report.push(
                                 planning_error(
                                     codes::PLAN_TYPE_MISMATCH,

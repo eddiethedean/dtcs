@@ -296,7 +296,7 @@ fn runtime_builtin_functions_and_rules() {
             vec![
                 RuntimeValue::String("hello".into()),
                 RuntimeValue::Integer(1),
-                RuntimeValue::Integer(4),
+                RuntimeValue::Integer(3),
             ],
             RuntimeValue::String("ell".into()),
         ),

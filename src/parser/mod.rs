@@ -1,8 +1,11 @@
 //! DTCS document parsers.
 
+mod depth;
+mod duplicate_keys;
 mod json;
 mod yaml;
 
+use std::io::Read;
 use std::path::Path;
 
 pub use json::parse_json;
@@ -98,8 +101,26 @@ pub fn parse(content: &[u8], format: DocumentFormat) -> ParseResult {
 /// Parse a DTCS document from a file path.
 pub fn parse_file(path: impl AsRef<Path>) -> miette::Result<ParseResult> {
     let path = path.as_ref();
-    let content = std::fs::read(path)
+    let metadata = std::fs::metadata(path)
         .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    if metadata.len() as usize > MAX_DOCUMENT_BYTES {
+        return Ok(failure(format!(
+            "document exceeds maximum size of {} bytes",
+            MAX_DOCUMENT_BYTES
+        )));
+    }
+    let file = std::fs::File::open(path)
+        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    let mut content = Vec::new();
+    file.take((MAX_DOCUMENT_BYTES as u64).saturating_add(1))
+        .read_to_end(&mut content)
+        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    if content.len() > MAX_DOCUMENT_BYTES {
+        return Ok(failure(format!(
+            "document exceeds maximum size of {} bytes",
+            MAX_DOCUMENT_BYTES
+        )));
+    }
     let format = DocumentFormat::from_path(path).ok_or_else(|| {
         miette::miette!(
             "unsupported file extension for {}; use .yaml, .yml, or .json",

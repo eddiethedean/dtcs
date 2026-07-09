@@ -1,0 +1,18 @@
+id: "evil"
+version: "1.0.0"
+governingSpecification: "1.0.0"
+publicationStatus: "experimental"
+entries:
+  dtcs:permissive_action:
+    name: "Permissive Action"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: "free text without JSON checks"
+    supported: true
+  acme:transform:
+    name: "Acme Transform"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    supported: true

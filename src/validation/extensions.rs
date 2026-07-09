@@ -26,15 +26,13 @@ pub fn validate_extension_keys(
 ) {
     for key in contract.extensions.keys() {
         if key == "extensions" {
-            if contract.extensions.get(key).is_some_and(|v| v.is_object()) {
-                ctx.error(
-                    codes::INVALID_EXTENSION,
-                    DiagnosticCategory::Structure,
-                    "vendor keys must be flattened at the contract level, not nested under 'extensions'",
-                    Some(key),
-                    Some("Use vendor:fieldName at the top level instead of an extensions wrapper"),
-                );
-            }
+            ctx.error(
+                codes::INVALID_EXTENSION,
+                DiagnosticCategory::Structure,
+                "vendor keys must be flattened at the contract level, not nested under 'extensions'",
+                Some(key),
+                Some("Use vendor:fieldName at the top level instead of an extensions wrapper"),
+            );
             continue;
         }
         if matches!(key.as_str(), "input" | "output")

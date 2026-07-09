@@ -162,9 +162,7 @@ fn compare_ordered(op: BinaryOp, left: &LiteralValue, right: &LiteralValue) -> O
     use BinaryOp::{Gt, Gte, Lt, Lte};
     let ordering = match (left, right) {
         (LiteralValue::Integer(a), LiteralValue::Integer(b)) => a.cmp(b),
-        (LiteralValue::Decimal(a), LiteralValue::Decimal(b)) => {
-            a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
-        }
+        (LiteralValue::Decimal(a), LiteralValue::Decimal(b)) => a.partial_cmp(b)?,
         (LiteralValue::String(a), LiteralValue::String(b)) => a.cmp(b),
         (LiteralValue::Boolean(a), LiteralValue::Boolean(b)) => a.cmp(b),
         _ => return None,

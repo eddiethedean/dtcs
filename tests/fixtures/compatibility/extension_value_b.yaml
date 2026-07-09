@@ -1,0 +1,26 @@
+dtcsVersion: "1.0.0"
+id: "compat.extension_value"
+name: "Extension Value B"
+version: "1.1.0"
+acme:featureFlag: false
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

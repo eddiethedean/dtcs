@@ -95,7 +95,12 @@ pub enum TypeParseError {
         /// Actual parameter count.
         actual: usize,
     },
+    /// Composite type nesting exceeds the supported depth.
+    TooDeep,
 }
+
+/// Maximum composite nesting depth for logical type expressions.
+const MAX_TYPE_NESTING_DEPTH: usize = 32;
 
 /// Returns `true` when `identifier` is a namespaced extension type.
 #[must_use]
@@ -110,6 +115,16 @@ pub fn is_extension_type_identifier(identifier: &str) -> bool {
 
 /// Parse and validate a logical type expression.
 pub fn parse_logical_type(type_name: &str) -> Result<LogicalType, TypeParseError> {
+    parse_logical_type_with_depth(type_name, 0)
+}
+
+fn parse_logical_type_with_depth(
+    type_name: &str,
+    depth: usize,
+) -> Result<LogicalType, TypeParseError> {
+    if depth > MAX_TYPE_NESTING_DEPTH {
+        return Err(TypeParseError::TooDeep);
+    }
     let type_name = type_name.trim();
     if type_name.is_empty() {
         return Err(TypeParseError::Malformed("type is empty".into()));
@@ -146,8 +161,11 @@ pub fn parse_logical_type(type_name: &str) -> Result<LogicalType, TypeParseError
         }
         let params = split_type_parameters(inner)?;
         for param in &params {
-            if parse_logical_type(param).is_err() {
-                return Err(TypeParseError::UnknownParameter(param.clone()));
+            if let Err(error) = parse_logical_type_with_depth(param, depth + 1) {
+                return match error {
+                    TypeParseError::TooDeep => Err(TypeParseError::TooDeep),
+                    _ => Err(TypeParseError::UnknownParameter(param.clone())),
+                };
             }
         }
         validate_composite_arity(kind, params.len())?;
@@ -226,6 +244,19 @@ fn validate_composite_arity(kind: &str, actual: usize) -> Result<(), TypeParseEr
         });
     }
     Ok(())
+}
+
+/// Returns `true` when an inferred expression type may be assigned to a declared type.
+#[must_use]
+pub fn types_assignable(inferred: &LogicalType, declared: &LogicalType) -> bool {
+    match type_compatible(inferred, declared) {
+        TypeCompatibility::Identical => true,
+        TypeCompatibility::Compatible => matches!(
+            (inferred, declared),
+            (LogicalType::Primitive(a), LogicalType::Primitive(b)) if a == "integer" && b == "decimal"
+        ),
+        TypeCompatibility::Incompatible => false,
+    }
 }
 
 /// Evaluate logical type compatibility (SPEC Chapter 4 §8).

@@ -1,6 +1,7 @@
 //! Runtime expression evaluation.
 
 use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, UnaryOp};
+use crate::runtime::conversion::integer_to_decimal;
 use crate::runtime::functions::call_function;
 use crate::runtime::model::{parse_qualified_field_with_interfaces, Row, RuntimeValue};
 
@@ -10,10 +11,20 @@ pub fn evaluate_expr(
     workspaces: &std::collections::BTreeMap<String, Vec<Row>>,
     row_index: usize,
 ) -> Result<RuntimeValue, String> {
+    let interface_ids: Vec<String> = workspaces.keys().cloned().collect();
+    evaluate_expr_with_interfaces(expr, workspaces, row_index, &interface_ids)
+}
+
+fn evaluate_expr_with_interfaces(
+    expr: &Expr,
+    workspaces: &std::collections::BTreeMap<String, Vec<Row>>,
+    row_index: usize,
+    interface_ids: &[String],
+) -> Result<RuntimeValue, String> {
     match expr {
         Expr::Literal { value, .. } => Ok(literal_to_runtime(value)),
         Expr::FieldRef { target, .. } => {
-            let qualified = parse_qualified_field(target)
+            let qualified = parse_qualified_field_with_interfaces(target, interface_ids)
                 .ok_or_else(|| format!("invalid field reference '{target}'"))?;
             let rows = workspaces
                 .get(&qualified.interface_id)
@@ -21,13 +32,15 @@ pub fn evaluate_expr(
             let row = rows
                 .get(row_index)
                 .ok_or_else(|| format!("row index {row_index} out of range"))?;
-            Ok(row
-                .get(&qualified.field_name)
-                .cloned()
-                .unwrap_or(RuntimeValue::Null))
+            row.get(&qualified.field_name).cloned().ok_or_else(|| {
+                format!(
+                    "missing field '{}' on interface '{}'",
+                    qualified.field_name, qualified.interface_id
+                )
+            })
         }
         Expr::Unary { op, expr, .. } => {
-            let inner = evaluate_expr(expr, workspaces, row_index)?;
+            let inner = evaluate_expr_with_interfaces(expr, workspaces, row_index, interface_ids)?;
             match op {
                 UnaryOp::Negate => match inner {
                     RuntimeValue::Integer(v) => Ok(RuntimeValue::Integer(-v)),
@@ -42,15 +55,51 @@ pub fn evaluate_expr(
         }
         Expr::Binary {
             op, left, right, ..
-        } => {
-            let left_val = evaluate_expr(left, workspaces, row_index)?;
-            let right_val = evaluate_expr(right, workspaces, row_index)?;
-            evaluate_binary(*op, &left_val, &right_val)
-        }
+        } => match op {
+            BinaryOp::And => {
+                let left_val =
+                    evaluate_expr_with_interfaces(left, workspaces, row_index, interface_ids)?;
+                let left_bool = left_val
+                    .as_bool()
+                    .ok_or_else(|| "and requires boolean operands".to_string())?;
+                if !left_bool {
+                    return Ok(RuntimeValue::Boolean(false));
+                }
+                let right_val =
+                    evaluate_expr_with_interfaces(right, workspaces, row_index, interface_ids)?;
+                let right_bool = right_val
+                    .as_bool()
+                    .ok_or_else(|| "and requires boolean operands".to_string())?;
+                Ok(RuntimeValue::Boolean(right_bool))
+            }
+            BinaryOp::Or => {
+                let left_val =
+                    evaluate_expr_with_interfaces(left, workspaces, row_index, interface_ids)?;
+                let left_bool = left_val
+                    .as_bool()
+                    .ok_or_else(|| "or requires boolean operands".to_string())?;
+                if left_bool {
+                    return Ok(RuntimeValue::Boolean(true));
+                }
+                let right_val =
+                    evaluate_expr_with_interfaces(right, workspaces, row_index, interface_ids)?;
+                let right_bool = right_val
+                    .as_bool()
+                    .ok_or_else(|| "or requires boolean operands".to_string())?;
+                Ok(RuntimeValue::Boolean(right_bool))
+            }
+            _ => {
+                let left_val =
+                    evaluate_expr_with_interfaces(left, workspaces, row_index, interface_ids)?;
+                let right_val =
+                    evaluate_expr_with_interfaces(right, workspaces, row_index, interface_ids)?;
+                evaluate_binary(*op, &left_val, &right_val)
+            }
+        },
         Expr::Call { callee, args, .. } => {
             let evaluated_args: Result<Vec<_>, _> = args
                 .iter()
-                .map(|arg| evaluate_expr(arg, workspaces, row_index))
+                .map(|arg| evaluate_expr_with_interfaces(arg, workspaces, row_index, interface_ids))
                 .collect();
             call_function(callee, &evaluated_args?)
         }
@@ -63,6 +112,21 @@ fn literal_to_runtime(value: &LiteralValue) -> RuntimeValue {
         LiteralValue::String(v) => RuntimeValue::String(v.clone()),
         LiteralValue::Integer(v) => RuntimeValue::Integer(*v),
         LiteralValue::Decimal(v) => RuntimeValue::Decimal(*v),
+    }
+}
+
+fn values_equal(left: &RuntimeValue, right: &RuntimeValue) -> bool {
+    if left == right {
+        return true;
+    }
+    match (left, right) {
+        (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) => {
+            integer_to_decimal(*a).is_ok_and(|promoted| promoted == *b)
+        }
+        (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) => {
+            integer_to_decimal(*b).is_ok_and(|promoted| *a == promoted)
+        }
+        _ => false,
     }
 }
 
@@ -84,10 +148,10 @@ fn evaluate_binary(
                 Ok(RuntimeValue::String(format!("{a}{b}")))
             }
             (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) => {
-                Ok(RuntimeValue::Decimal(*a as f64 + b))
+                Ok(RuntimeValue::Decimal(integer_to_decimal(*a)? + b))
             }
             (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) => {
-                Ok(RuntimeValue::Decimal(a + *b as f64))
+                Ok(RuntimeValue::Decimal(a + integer_to_decimal(*b)?))
             }
             _ => Err("add type mismatch".into()),
         },
@@ -100,10 +164,10 @@ fn evaluate_binary(
                 Ok(RuntimeValue::Decimal(a - b))
             }
             (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) => {
-                Ok(RuntimeValue::Decimal(*a as f64 - b))
+                Ok(RuntimeValue::Decimal(integer_to_decimal(*a)? - b))
             }
             (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) => {
-                Ok(RuntimeValue::Decimal(a - *b as f64))
+                Ok(RuntimeValue::Decimal(a - integer_to_decimal(*b)?))
             }
             _ => Err("sub type mismatch".into()),
         },
@@ -116,51 +180,35 @@ fn evaluate_binary(
                 Ok(RuntimeValue::Decimal(a * b))
             }
             (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) => {
-                Ok(RuntimeValue::Decimal(*a as f64 * b))
+                Ok(RuntimeValue::Decimal(integer_to_decimal(*a)? * b))
             }
             (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) => {
-                Ok(RuntimeValue::Decimal(a * *b as f64))
+                Ok(RuntimeValue::Decimal(a * integer_to_decimal(*b)?))
             }
             _ => Err("mul type mismatch".into()),
         },
         BinaryOp::Div => match (left, right) {
-            (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) if *b != 0 => {
-                Ok(RuntimeValue::Integer(a / b))
-            }
+            (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) if *b != 0 => a
+                .checked_div(*b)
+                .map(RuntimeValue::Integer)
+                .ok_or_else(|| "integer division overflow".into()),
             (RuntimeValue::Decimal(a), RuntimeValue::Decimal(b)) if *b != 0.0 => {
                 Ok(RuntimeValue::Decimal(a / b))
             }
             (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) if *b != 0.0 => {
-                Ok(RuntimeValue::Decimal(*a as f64 / b))
+                Ok(RuntimeValue::Decimal(integer_to_decimal(*a)? / b))
             }
             (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) if *b != 0 => {
-                Ok(RuntimeValue::Decimal(a / *b as f64))
+                Ok(RuntimeValue::Decimal(a / integer_to_decimal(*b)?))
             }
             _ => Err("div type mismatch or division by zero".into()),
         },
-        BinaryOp::Eq => Ok(RuntimeValue::Boolean(left == right)),
-        BinaryOp::Neq => Ok(RuntimeValue::Boolean(left != right)),
+        BinaryOp::Eq => Ok(RuntimeValue::Boolean(values_equal(left, right))),
+        BinaryOp::Neq => Ok(RuntimeValue::Boolean(!values_equal(left, right))),
         BinaryOp::Lt | BinaryOp::Lte | BinaryOp::Gt | BinaryOp::Gte => {
             compare_ordered(op, left, right).map(RuntimeValue::Boolean)
         }
-        BinaryOp::And => {
-            let left_bool = left
-                .as_bool()
-                .ok_or_else(|| "and requires boolean operands".to_string())?;
-            let right_bool = right
-                .as_bool()
-                .ok_or_else(|| "and requires boolean operands".to_string())?;
-            Ok(RuntimeValue::Boolean(left_bool && right_bool))
-        }
-        BinaryOp::Or => {
-            let left_bool = left
-                .as_bool()
-                .ok_or_else(|| "or requires boolean operands".to_string())?;
-            let right_bool = right
-                .as_bool()
-                .ok_or_else(|| "or requires boolean operands".to_string())?;
-            Ok(RuntimeValue::Boolean(left_bool || right_bool))
-        }
+        BinaryOp::And | BinaryOp::Or => unreachable!("handled by short-circuit evaluation"),
     }
 }
 
@@ -174,6 +222,12 @@ fn compare_ordered(
         (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) => a.cmp(b),
         (RuntimeValue::Decimal(a), RuntimeValue::Decimal(b)) => a
             .partial_cmp(b)
+            .ok_or_else(|| "decimal comparison failed".to_string())?,
+        (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) => integer_to_decimal(*a)?
+            .partial_cmp(b)
+            .ok_or_else(|| "decimal comparison failed".to_string())?,
+        (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) => a
+            .partial_cmp(&integer_to_decimal(*b)?)
             .ok_or_else(|| "decimal comparison failed".to_string())?,
         (RuntimeValue::String(a), RuntimeValue::String(b)) => a.cmp(b),
         (RuntimeValue::Boolean(a), RuntimeValue::Boolean(b)) => a.cmp(b),

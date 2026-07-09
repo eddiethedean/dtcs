@@ -7,8 +7,8 @@ use serde::Deserialize;
 use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, UnaryOp};
 use crate::diagnostics::{codes, Diagnostic, DiagnosticCategory, DiagnosticStage, Severity};
 use crate::model::{
-    parse_logical_type, type_compatible, Function, LogicalType, RegistryCategory, RegistryDocument,
-    TransformationContract, TypeCompatibility,
+    parse_logical_type, type_compatible, types_assignable, Function, LogicalType, RegistryCategory,
+    RegistryDocument, TransformationContract, TypeCompatibility,
 };
 use crate::registry;
 use crate::validation::field_index::{FieldIndex, TargetResolution};
@@ -640,10 +640,6 @@ fn primitive_name(
 
 fn is_numeric_primitive(name: &str) -> bool {
     matches!(name, "integer" | "decimal")
-}
-
-fn types_assignable(from: &LogicalType, to: &LogicalType) -> bool {
-    type_compatible(from, to) != TypeCompatibility::Incompatible
 }
 
 fn format_logical_type(logical_type: &LogicalType) -> String {

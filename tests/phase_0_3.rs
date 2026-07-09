@@ -184,3 +184,46 @@ fn evolution_identical_deprecated_has_no_deprecation_change() {
         .iter()
         .any(|c| c.object_ref.as_deref() == Some("metadata.deprecated")));
 }
+
+#[test]
+fn rule_parameter_change_is_incompatible() {
+    let old = load_contract(&compat_fixture("rule_params_old.yaml"));
+    let new = load_contract(&compat_fixture("rule_params_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::Incompatible);
+}
+
+#[test]
+fn lineage_input_reorder_with_overlap_is_incompatible() {
+    let old = load_contract(&compat_fixture("lineage_reorder_overlap_old.yaml"));
+    let new = load_contract(&compat_fixture("lineage_reorder_overlap_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::Incompatible);
+}
+
+#[test]
+fn extension_value_change_is_conditionally_compatible() {
+    let old = load_contract(&compat_fixture("conditional_a.yaml"));
+    let new = load_contract(&compat_fixture("extension_value_b.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert_eq!(report.level, CompatibilityLevel::ConditionallyCompatible);
+}
+
+#[test]
+fn optional_input_removal_is_not_incompatible() {
+    let old = load_contract(&compat_fixture("optional_removed_old.yaml"));
+    let new = load_contract(&compat_fixture("optional_removed_new.yaml"));
+    let report = analyze_compatibility(&old, &new, ComparisonScope::all());
+    assert!(report.is_compatible());
+    assert_ne!(report.level, CompatibilityLevel::Incompatible);
+}
+
+#[test]
+fn lineage_warns_when_declared_input_has_no_graph_edge() {
+    let mut contract = load_contract(&fixture("lineage_multi.yaml"));
+    contract.lineage = None;
+    let report = dtcs::lineage::analyze_with_options(&contract, Some("customers"), None);
+    assert!(report.diagnostics.iter().any(|d| {
+        d.id == codes::UNRESOLVED_REFERENCE && d.message.contains("has no lineage graph edge")
+    }));
+}

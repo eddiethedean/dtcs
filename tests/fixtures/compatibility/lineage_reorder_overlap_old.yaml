@@ -1,0 +1,31 @@
+dtcsVersion: "1.0.0"
+id: "compat.lineage_reorder"
+name: "Lineage Reorder Old"
+version: "1.0.0"
+
+inputs:
+  - id: "customers"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+  - id: "orders"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "enriched"
+    schema:
+      fields:
+        - name: "id"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "enriched"
+      inputs: ["customers", "orders"]

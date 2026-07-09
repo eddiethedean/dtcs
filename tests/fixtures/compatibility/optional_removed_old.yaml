@@ -1,0 +1,32 @@
+dtcsVersion: "1.0.0"
+id: "compat.optional_removed"
+name: "Optional Removed Old"
+version: "1.0.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+  - id: "extra"
+    optional: true
+    schema:
+      fields:
+        - name: "note"
+          type: "string"
+          nullable: true
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -92,7 +92,7 @@ fn merge_builtin_doc(registry: &mut RegistryDocument, bytes: &[u8], name: &'stat
             .join("; ");
         panic!("invalid embedded registry doc '{name}': {summary}");
     });
-    registry.merge(&doc);
+    registry.merge_trusted(&doc);
 }
 
 fn title_case(value: &str) -> String {

@@ -17,7 +17,7 @@ use crate::parser::DocumentFormat;
 pub use cache::{
     cache_dir, cache_path_for_uri, cache_remove, cache_store, is_cached, load_uri_cached,
 };
-pub use load::{load, load_bytes, validate_document};
+pub use load::{load, load_bytes, validate_document, MAX_REGISTRY_BYTES};
 
 /// Returns the embedded standard registry for this implementation.
 #[must_use]
@@ -44,7 +44,7 @@ pub fn resolve_default(id: &str) -> Option<&'static RegistryEntry> {
 pub fn load_merged(path: impl AsRef<Path>) -> Result<RegistryDocument, DiagnosticReport> {
     let mut registry = default_registry().clone();
     let loaded = load(path)?;
-    registry.merge(&loaded);
+    registry.merge(&loaded)?;
     Ok(registry)
 }
 
@@ -52,7 +52,7 @@ pub fn load_merged(path: impl AsRef<Path>) -> Result<RegistryDocument, Diagnosti
 pub fn load_uri_merged(uri: &str) -> Result<RegistryDocument, DiagnosticReport> {
     let mut registry = default_registry().clone();
     let loaded = load_uri_cached(uri)?;
-    registry.merge(&loaded);
+    registry.merge(&loaded)?;
     Ok(registry)
 }
 

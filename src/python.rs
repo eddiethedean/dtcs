@@ -56,32 +56,7 @@ fn contract_from_py(
     if contract.is_none() {
         return Err(PyTypeError::new_err("contract must be a dict, not None"));
     }
-    let json_mod = py.import("json")?;
-    let json_str: String = json_mod
-        .call_method(
-            "dumps",
-            (contract,),
-            Some(&{
-                let kwargs = PyDict::new(py);
-                kwargs.set_item("allow_nan", false)?;
-                kwargs
-            }),
-        )
-        .map_err(|err| {
-            // `json.dumps(..., allow_nan=False)` raises `ValueError` for NaN/Infinity, but it can
-            // also raise other exceptions (e.g. TypeError for non-serializable objects). Only
-            // map the former to our friendlier message; otherwise preserve the original error.
-            let message = err.to_string();
-            if message.contains("Out of range float values are not JSON compliant")
-                || message.contains("NaN")
-                || message.contains("Infinity")
-            {
-                PyValueError::new_err("contract contains non-finite float values (NaN or Infinity)")
-            } else {
-                err
-            }
-        })?
-        .extract()?;
+    let json_str = py_to_json_str(py, contract, "contract")?;
     serde_json::from_str(&json_str).map_err(|e| contract_deserialize_error(&e.to_string()))
 }
 
@@ -98,11 +73,16 @@ fn plan_from_py(py: Python<'_>, plan_obj: &Bound<'_, PyAny>) -> PyResult<plan::T
     if plan_obj.is_none() {
         return Err(PyTypeError::new_err("plan must be a dict, not None"));
     }
+    let json_str = py_to_json_str(py, plan_obj, "plan")?;
+    serde_json::from_str(&json_str).map_err(|e| PyValueError::new_err(format!("invalid plan: {e}")))
+}
+
+fn py_to_json_str(py: Python<'_>, value: &Bound<'_, PyAny>, label: &str) -> PyResult<String> {
     let json_mod = py.import("json")?;
-    let json_str: String = json_mod
+    json_mod
         .call_method(
             "dumps",
-            (plan_obj,),
+            (value,),
             Some(&{
                 let kwargs = PyDict::new(py);
                 kwargs.set_item("allow_nan", false)?;
@@ -115,13 +95,14 @@ fn plan_from_py(py: Python<'_>, plan_obj: &Bound<'_, PyAny>) -> PyResult<plan::T
                 || message.contains("NaN")
                 || message.contains("Infinity")
             {
-                PyValueError::new_err("plan contains non-finite float values (NaN or Infinity)")
+                PyValueError::new_err(format!(
+                    "{label} contains non-finite float values (NaN or Infinity)"
+                ))
             } else {
                 err
             }
         })?
-        .extract()?;
-    serde_json::from_str(&json_str).map_err(|e| PyValueError::new_err(format!("invalid plan: {e}")))
+        .extract()
 }
 
 fn parse_result_to_py(py: Python<'_>, result: ParseResult) -> PyResult<Py<PyAny>> {
@@ -420,8 +401,7 @@ fn execution_plan_from_py(
             "execution plan must be a dict, not None",
         ));
     }
-    let json_mod = py.import("json")?;
-    let json_str: String = json_mod.call_method1("dumps", (plan,))?.extract()?;
+    let json_str = py_to_json_str(py, plan, "execution plan")?;
     serde_json::from_str(&json_str)
         .map_err(|e| PyValueError::new_err(format!("invalid execution plan dict: {e}")))
 }
@@ -433,8 +413,7 @@ fn runtime_inputs_from_py(
     if inputs.is_none() {
         return Err(PyTypeError::new_err("inputs must be a dict, not None"));
     }
-    let json_mod = py.import("json")?;
-    let json_str: String = json_mod.call_method1("dumps", (inputs,))?.extract()?;
+    let json_str = py_to_json_str(py, inputs, "runtime inputs")?;
     serde_json::from_str(&json_str)
         .map_err(|e| PyValueError::new_err(format!("invalid runtime inputs dict: {e}")))
 }
@@ -456,8 +435,7 @@ fn capability_match(
     let plan = plan_from_py(py, plan)?;
     let capability = match profile {
         Some(value) => {
-            let json_mod = py.import("json")?;
-            let json_str: String = json_mod.call_method1("dumps", (value,))?.extract()?;
+            let json_str = py_to_json_str(py, value, "capability profile")?;
             serde_json::from_str(&json_str)
                 .map_err(|e| PyValueError::new_err(format!("invalid capability profile: {e}")))?
         }

@@ -42,20 +42,30 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .get(1)
                 .and_then(RuntimeValue::as_integer)
                 .ok_or("dtcs:substr start must be integer")?;
+            if start < 0 {
+                return Err("dtcs:substr start must be non-negative".into());
+            }
             match s {
                 RuntimeValue::Null => Ok(RuntimeValue::Null),
                 RuntimeValue::String(text) => {
                     let chars: Vec<char> = text.chars().collect();
-                    let start = start.max(0) as usize;
+                    let start = start as usize;
                     if start >= chars.len() {
                         return Ok(RuntimeValue::String(String::new()));
                     }
-                    let end = args
-                        .get(2)
-                        .map(|v| v.as_integer().unwrap_or(chars.len() as i64).max(0) as usize)
-                        .unwrap_or(chars.len());
-                    let end = end.min(chars.len());
-                    Ok(RuntimeValue::String(chars[start..end].iter().collect()))
+                    let slice = if let Some(len_arg) = args.get(2) {
+                        let len = len_arg
+                            .as_integer()
+                            .ok_or("dtcs:substr length must be integer")?;
+                        if len < 0 {
+                            return Err("dtcs:substr length must be non-negative".into());
+                        }
+                        let end = (start + len as usize).min(chars.len());
+                        &chars[start..end]
+                    } else {
+                        &chars[start..]
+                    };
+                    Ok(RuntimeValue::String(slice.iter().collect()))
                 }
                 other => Err(format!("dtcs:substr requires string, got {other:?}")),
             }
@@ -114,7 +124,12 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             match value {
                 RuntimeValue::Null => Ok(RuntimeValue::Null),
                 RuntimeValue::Integer(i) => Ok(RuntimeValue::Integer(*i)),
-                RuntimeValue::Decimal(d) => Ok(RuntimeValue::Integer(*d as i64)),
+                RuntimeValue::Decimal(d) => {
+                    if d.fract() != 0.0 {
+                        return Err("dtcs:to_integer requires integer-valued decimal".into());
+                    }
+                    Ok(RuntimeValue::Integer(*d as i64))
+                }
                 RuntimeValue::String(s) => s
                     .parse::<i64>()
                     .map(RuntimeValue::Integer)

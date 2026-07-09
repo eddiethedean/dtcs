@@ -201,5 +201,14 @@ fn emit_type_error(
                 Some("Use syntax such as list<string> or map<string,integer>"),
             );
         }
+        TypeParseError::TooDeep => {
+            ctx.error(
+                codes::INVALID_TYPE,
+                DiagnosticCategory::Type,
+                format!("logical type '{type_name}' exceeds maximum nesting depth of 32"),
+                Some(field_ref),
+                Some("Reduce composite type nesting depth"),
+            );
+        }
     }
 }

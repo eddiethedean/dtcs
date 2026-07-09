@@ -29,7 +29,7 @@ pub(crate) fn validate_document(ctx: &mut ValidationContext, contract: &Transfor
             Some("dtcsVersion"),
             Some("Set dtcsVersion to a supported DTCS specification version"),
         );
-    } else if !is_supported_dtcs_version(&contract.dtcs_version) {
+    } else if !is_supported_dtcs_version(contract.dtcs_version.trim()) {
         let supported = crate::model::SUPPORTED_DTCS_VERSIONS.join(", ");
         ctx.error(
             codes::UNSUPPORTED_VERSION,

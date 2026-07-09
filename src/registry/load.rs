@@ -8,11 +8,31 @@ use crate::diagnostics::{
 use crate::model::{is_namespaced_identifier, RegistryDocument, RegistryEntry};
 use crate::parser::DocumentFormat;
 
+/// Maximum registry document size (matches contract parser limit).
+pub const MAX_REGISTRY_BYTES: usize = 16 * 1024 * 1024;
+
 /// Load a registry document from a filesystem path.
 ///
 /// Format is inferred from the extension (`.json` → JSON, otherwise YAML).
 pub fn load(path: impl AsRef<Path>) -> Result<RegistryDocument, DiagnosticReport> {
     let path = path.as_ref();
+    let metadata = std::fs::metadata(path).map_err(|error| {
+        let mut report = DiagnosticReport::new();
+        report.push(
+            Diagnostic::new(
+                codes::INVALID_REGISTRY,
+                Severity::Error,
+                DiagnosticStage::Parse,
+                DiagnosticCategory::Syntax,
+                format!("failed to read registry '{}': {error}", path.display()),
+            )
+            .with_remediation("Provide a readable registry file path"),
+        );
+        report
+    })?;
+    if metadata.len() as usize > MAX_REGISTRY_BYTES {
+        return Err(oversize_error(metadata.len() as usize));
+    }
     let bytes = std::fs::read(path).map_err(|error| {
         let mut report = DiagnosticReport::new();
         report.push(
@@ -44,6 +64,9 @@ pub fn load_bytes(
     content: &[u8],
     format: DocumentFormat,
 ) -> Result<RegistryDocument, DiagnosticReport> {
+    if content.len() > MAX_REGISTRY_BYTES {
+        return Err(oversize_error(content.len()));
+    }
     let mut document: RegistryDocument = match format {
         DocumentFormat::Yaml => serde_yaml::from_slice(content)
             .map_err(|error| parse_error(format!("invalid registry YAML: {error}")))?,
@@ -165,6 +188,23 @@ fn validate_entry(report: &mut DiagnosticReport, entry: &RegistryEntry) {
             Some("Provide an entry version"),
         ));
     }
+}
+
+fn oversize_error(size: usize) -> DiagnosticReport {
+    let mut report = DiagnosticReport::new();
+    report.push(
+        Diagnostic::new(
+            codes::INVALID_REGISTRY,
+            Severity::Error,
+            DiagnosticStage::Parse,
+            DiagnosticCategory::Syntax,
+            format!(
+                "registry document exceeds maximum size of {MAX_REGISTRY_BYTES} bytes (got {size})"
+            ),
+        )
+        .with_remediation("Provide a smaller registry document"),
+    );
+    report
 }
 
 fn parse_error(message: impl Into<String>) -> DiagnosticReport {

@@ -8,7 +8,7 @@ mod requirements;
 mod validate;
 
 pub use builtin::{reference_profile, REFERENCE_ENGINE_ID};
-pub use matching::match_plan;
+pub use matching::{match_plan, match_plan_with_registry};
 pub use model::{
     CapabilityCategories, CapabilityGap, CapabilityMatchReport, EngineCapabilityDeclaration,
 };

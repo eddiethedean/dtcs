@@ -146,7 +146,8 @@ impl FieldIndex {
             return TargetResolution::Field(location);
         }
 
-        if let Some(qualified) = resolve_qualified_path(target, self.interface_ids().iter().copied())
+        if let Some(qualified) =
+            resolve_qualified_path(target, self.interface_ids().iter().copied())
         {
             if let Some(location) = self.qualified.get(&qualified) {
                 return TargetResolution::Field(location);

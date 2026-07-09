@@ -1,7 +1,9 @@
 //! Capability matching (SPEC Ch 14 §6).
 
 use crate::diagnostics::{codes, compilation_error, DiagnosticCategory};
-use crate::plan::TransformationPlan;
+use crate::model::RegistryDocument;
+use crate::plan::{validate_with_registry, TransformationPlan};
+use crate::registry;
 
 use super::model::{CapabilityMatchReport, EngineCapabilityDeclaration};
 use super::requirements::PlanRequirements;
@@ -13,7 +15,25 @@ pub fn match_plan(
     plan: &TransformationPlan,
     declaration: &EngineCapabilityDeclaration,
 ) -> CapabilityMatchReport {
+    match_plan_with_registry(plan, declaration, registry::default_registry())
+}
+
+/// Match a transformation plan against an engine capability declaration with a registry catalog.
+#[must_use]
+pub fn match_plan_with_registry(
+    plan: &TransformationPlan,
+    declaration: &EngineCapabilityDeclaration,
+    registry_doc: &RegistryDocument,
+) -> CapabilityMatchReport {
     let mut report = CapabilityMatchReport::default();
+
+    let plan_validation = validate_with_registry(plan, registry_doc);
+    if !plan_validation.is_valid() {
+        report.diagnostics = plan_validation.diagnostics;
+        report.supported = false;
+        return report;
+    }
+
     let validation = validate(declaration);
     if !validation.is_valid() {
         report.diagnostics = validation.diagnostics;
