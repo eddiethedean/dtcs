@@ -92,6 +92,30 @@ dtcs/
       optimize.rs
       equivalence.rs
       rule_key.rs
+    capability/
+      mod.rs
+      model.rs
+      builtin.rs
+      requirements.rs
+      match.rs
+      validate.rs
+    compile/
+      mod.rs
+      model.rs
+      compiler.rs
+      reference.rs
+      validate.rs
+    runtime/
+      mod.rs
+      model.rs
+      actions.rs
+      functions.rs
+      rules.rs
+      expr.rs
+      lineage.rs
+      reference.rs
+      validate.rs
+      runtime_trait.rs
     cli/
       mod.rs
     bin/
@@ -101,7 +125,8 @@ dtcs/
   tests/
     fixtures/
       compatibility/
-      registry/
+      runtime/
+      capability/
       plans/
       plans_optimized/
     fixture_expectations.json
@@ -114,6 +139,7 @@ dtcs/
     phase_0_6.rs
     phase_0_7.rs
     phase_0_8.rs
+    phase_0_9.rs
     manifest.rs
 ```
 

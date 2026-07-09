@@ -61,6 +61,17 @@ Integration tests: [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs).
 
 Integration tests: [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs). Python tests parametrize over `tests/optimize_expectations.json`.
 
+## Phase 0.9 fixture groups
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Capability matching | `valid_customer.yaml`, unsupported `dtcs:` action plans |
+| Compilation | execution plans produced from `valid_customer.yaml` |
+| Runtime | `tests/fixtures/runtime/customer_normalize_input.json`, `customer_normalize_output.json` |
+| End-to-end | `examples/customer_normalize.dtcs.yaml` |
+
+Integration tests: [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs).
+
 ## Phase 0.2 fixture groups
 
 | Concern | Example fixtures |

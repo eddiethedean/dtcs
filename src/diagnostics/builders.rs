@@ -52,3 +52,21 @@ pub(crate) fn optimization_error(
 ) -> Diagnostic {
     stage_error(id, DiagnosticStage::Optimization, category, message)
 }
+
+/// Convenience builder for compilation-stage errors.
+pub(crate) fn compilation_error(
+    id: &str,
+    category: DiagnosticCategory,
+    message: impl Into<String>,
+) -> Diagnostic {
+    stage_error(id, DiagnosticStage::Compilation, category, message)
+}
+
+/// Convenience builder for runtime-stage errors.
+pub(crate) fn runtime_error(
+    id: &str,
+    category: DiagnosticCategory,
+    message: impl Into<String>,
+) -> Diagnostic {
+    stage_error(id, DiagnosticStage::Runtime, category, message)
+}

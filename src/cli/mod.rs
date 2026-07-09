@@ -78,6 +78,63 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Match a transformation plan against engine capabilities.
+    Match {
+        /// Path to a DTCS contract or serialized plan JSON.
+        path: PathBuf,
+        /// Treat the input path as serialized plan JSON from `dtcs plan --json`.
+        #[arg(long)]
+        plan: bool,
+        /// Apply plan optimization before matching.
+        #[arg(long)]
+        optimize: bool,
+        /// Optional additional registry file to merge.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Engine profile identifier (default: `dtcs:reference`).
+        #[arg(long, default_value = "dtcs:reference")]
+        profile: String,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Compile a transformation plan to an execution plan.
+    Compile {
+        /// Path to a DTCS contract or serialized plan JSON.
+        path: PathBuf,
+        /// Treat the input path as serialized plan JSON from `dtcs plan --json`.
+        #[arg(long)]
+        plan: bool,
+        /// Apply plan optimization before compilation.
+        #[arg(long)]
+        optimize: bool,
+        /// Optional additional registry file to merge.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Engine profile identifier (default: `dtcs:reference`).
+        #[arg(long, default_value = "dtcs:reference")]
+        profile: String,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Execute a contract end-to-end using the reference runtime.
+    Run {
+        /// Path to a DTCS contract.
+        path: PathBuf,
+        /// JSON file with runtime inputs keyed by interface id.
+        #[arg(long)]
+        input: PathBuf,
+        /// Apply plan optimization before execution.
+        #[arg(long)]
+        optimize: bool,
+        /// Optional additional registry file to merge.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
     /// Print a contract summary.
     Inspect {
         /// Path to a DTCS document.
@@ -398,6 +455,112 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             }
             Ok(0)
         }
+        Command::Match {
+            path,
+            plan: from_plan,
+            optimize,
+            registry,
+            profile,
+            json,
+        } => {
+            let transformation_plan =
+                load_transformation_plan(&path, from_plan, optimize, registry.as_ref(), json)?;
+            let capability = load_capability_profile(&profile)?;
+            let match_report = crate::capability::match_plan(&transformation_plan, &capability);
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&match_report)
+                        .map_err(|e| miette::miette!("{e}"))?
+                );
+            } else if match_report.is_valid() {
+                println!("supported: {}", transformation_plan.identity.id);
+                println!("engine: {}", capability.engine_id);
+            } else {
+                let report = DiagnosticReport {
+                    diagnostics: match_report.diagnostics.clone(),
+                };
+                render_report(&report, json, ReportMode::Diagnostics)
+                    .map_err(|e| miette::miette!("{e}"))?;
+            }
+            Ok(if match_report.is_valid() { 0 } else { 1 })
+        }
+        Command::Compile {
+            path,
+            plan: from_plan,
+            optimize,
+            registry,
+            profile: _profile,
+            json,
+        } => {
+            let transformation_plan =
+                load_transformation_plan(&path, from_plan, optimize, registry.as_ref(), json)?;
+            let compile_result = crate::compile::compile(&transformation_plan);
+            if !compile_result.is_valid() {
+                let report = DiagnosticReport {
+                    diagnostics: compile_result.diagnostics,
+                };
+                render_report(&report, json, ReportMode::Diagnostics)
+                    .map_err(|e| miette::miette!("{e}"))?;
+                return Ok(1);
+            }
+            let execution_plan = compile_result.plan.expect("valid compile result");
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&execution_plan)
+                        .map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                println!("execution plan: {}", execution_plan.identity.id);
+                println!("target: {}", execution_plan.target.engine_id);
+                println!("steps: {}", execution_plan.steps.len());
+            }
+            Ok(0)
+        }
+        Command::Run {
+            path,
+            input,
+            optimize,
+            registry,
+            json,
+        } => {
+            let transformation_plan =
+                load_transformation_plan(&path, false, optimize, registry.as_ref(), json)?;
+            let compile_result = crate::compile::compile(&transformation_plan);
+            if !compile_result.is_valid() {
+                let report = DiagnosticReport {
+                    diagnostics: compile_result.diagnostics,
+                };
+                render_report(&report, json, ReportMode::Diagnostics)
+                    .map_err(|e| miette::miette!("{e}"))?;
+                return Ok(1);
+            }
+            let execution_plan = compile_result.plan.expect("valid compile result");
+            let inputs = load_runtime_inputs(&input)?;
+            let execute_result = crate::runtime::execute(&execution_plan, &inputs);
+            if !execute_result.is_valid() {
+                let report = DiagnosticReport {
+                    diagnostics: execute_result.diagnostics,
+                };
+                render_report(&report, json, ReportMode::Diagnostics)
+                    .map_err(|e| miette::miette!("{e}"))?;
+                return Ok(1);
+            }
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&execute_result.outputs)
+                        .map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                let outputs = execute_result.outputs.expect("valid execute result");
+                for (interface_id, dataset) in outputs {
+                    println!("{interface_id}: {} row(s)", dataset.len());
+                }
+            }
+            Ok(0)
+        }
         Command::Inspect { path, json } => {
             let contract = load_valid_contract_with_registry(&path, None, json)?;
             if json {
@@ -643,6 +806,88 @@ fn load_valid_contract_with_registry(
         return Err(miette::miette!("validation failed for {}", path.display()));
     }
     Ok(contract)
+}
+
+fn load_capability_profile(
+    profile: &str,
+) -> miette::Result<crate::capability::EngineCapabilityDeclaration> {
+    if profile == crate::capability::REFERENCE_ENGINE_ID {
+        return Ok(crate::capability::reference_profile());
+    }
+    Err(miette::miette!(
+        "unsupported capability profile '{profile}'"
+    ))
+}
+
+fn load_transformation_plan(
+    path: &PathBuf,
+    from_plan: bool,
+    optimize: bool,
+    registry: Option<&PathBuf>,
+    json: bool,
+) -> miette::Result<crate::plan::TransformationPlan> {
+    let merged = match registry {
+        Some(registry_path) => Some(
+            crate::registry::load_merged(registry_path)
+                .map_err(|report| registry_report_error(&report))?,
+        ),
+        None => None,
+    };
+    let registry_doc = merged
+        .as_ref()
+        .unwrap_or_else(|| crate::registry::default_registry());
+
+    let mut plan = if from_plan {
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+        serde_json::from_str(&content)
+            .map_err(|e| miette::miette!("invalid plan JSON in {}: {e}", path.display()))?
+    } else {
+        let contract = load_valid_contract_with_registry(path, registry, json)?;
+        let analysis_report = analysis::check_contract(&contract, Some(registry_doc));
+        let plan_result = crate::plan::lower(&contract, Some(registry_doc), Some(&analysis_report));
+        if !plan_result.is_valid() {
+            let report = DiagnosticReport {
+                diagnostics: plan_result.diagnostics,
+            };
+            render_report(&report, json, ReportMode::Diagnostics)
+                .map_err(|e| miette::miette!("{e}"))?;
+            return Err(miette::miette!(
+                "plan lowering failed for {}",
+                path.display()
+            ));
+        }
+        plan_result.plan.expect("valid plan result")
+    };
+
+    if optimize {
+        let optimize_result = crate::plan::optimize_with_registry(
+            &plan,
+            registry_doc,
+            &crate::plan::OptimizeOptions::default(),
+        );
+        if !optimize_result.is_valid() {
+            let report = DiagnosticReport {
+                diagnostics: optimize_result.diagnostics,
+            };
+            render_report(&report, json, ReportMode::Diagnostics)
+                .map_err(|e| miette::miette!("{e}"))?;
+            return Err(miette::miette!(
+                "plan optimization failed for {}",
+                path.display()
+            ));
+        }
+        plan = optimize_result.plan.expect("valid optimize result");
+    }
+
+    Ok(plan)
+}
+
+fn load_runtime_inputs(path: &PathBuf) -> miette::Result<crate::runtime::RuntimeInputs> {
+    let content = std::fs::read_to_string(path)
+        .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+    serde_json::from_str(&content)
+        .map_err(|e| miette::miette!("invalid runtime input JSON in {}: {e}", path.display()))
 }
 
 #[derive(Debug)]

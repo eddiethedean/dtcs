@@ -141,4 +141,18 @@ Additional CLI command:
 dtcs optimize <contract-or-plan>
 ```
 
-Do not implement compilers or runtime execution yet.
+## Phase 13 — Execution Pipeline (Phase 0.9)
+
+- Engine capability model and embedded `dtcs:reference` profile
+- Capability matching against transformation plans
+- `ExecutionPlan` IR and reference compiler
+- In-memory reference runtime for embedded `dtcs:` stdlib entries
+- Golden runtime fixtures and end-to-end `customer_normalize` coverage
+
+Additional CLI commands:
+
+```bash
+dtcs match <contract-or-plan>
+dtcs compile <contract-or-plan>
+dtcs run <contract> --input <json>
+```

@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from importlib.metadata import PackageNotFoundError, version
 
+from dtcs._native import capability_match as _capability_match
+from dtcs._native import capability_reference_profile as _capability_reference_profile
 from dtcs._native import compat_analyze as _compat_analyze
+from dtcs._native import compile_plan as _compile_plan
+from dtcs._native import execution_validate as _execution_validate
+from dtcs._native import runtime_execute as _runtime_execute
 from dtcs._native import evolve_analyze as _evolve_analyze
 from dtcs._native import inspect as _inspect
 from dtcs._native import analyze_contract as _analyze_contract
@@ -112,6 +117,31 @@ def inspect(contract: dict) -> str:
     return _inspect(contract)
 
 
+def capability_reference_profile() -> dict:
+    """Return the embedded reference engine capability profile."""
+    return _capability_reference_profile()
+
+
+def capability_match(plan: dict, profile: dict | None = None) -> dict:
+    """Match a transformation plan against an engine capability profile."""
+    return _capability_match(plan, profile)
+
+
+def compile_plan(plan: dict) -> dict:
+    """Compile a transformation plan to an execution plan."""
+    return _compile_plan(plan)
+
+
+def execution_validate(plan: dict) -> dict:
+    """Validate an execution plan."""
+    return _execution_validate(plan)
+
+
+def runtime_execute(execution_plan: dict, inputs: dict) -> dict:
+    """Execute an execution plan with runtime inputs."""
+    return _runtime_execute(execution_plan, inputs)
+
+
 def compat_analyze(source: dict, target: dict, scope: list[str] | None = None) -> dict:
     """Analyze compatibility between two parsed contracts."""
     return _compat_analyze(source, target, scope)
@@ -163,8 +193,12 @@ __all__ = [
     "SPEC_VERSION",
     "__version__",
     "analyze",
+    "capability_match",
+    "capability_reference_profile",
+    "compile_plan",
     "compat_analyze",
     "evolve_analyze",
+    "execution_validate",
     "inspect",
     "is_valid",
     "lineage_analyze",
@@ -180,6 +214,7 @@ __all__ = [
     "registry_list",
     "registry_load",
     "registry_resolve",
+    "runtime_execute",
     "validate",
     "validate_result",
     "validate_with_registry",

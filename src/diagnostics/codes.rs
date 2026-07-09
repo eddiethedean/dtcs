@@ -76,6 +76,22 @@ pub const UNRESOLVED_PLAN_REFERENCE: &str = "dtcs:unresolved-plan-reference";
 pub const INVALID_OPTIMIZATION: &str = "dtcs:invalid-optimization";
 /// Optimization pass skipped a rewrite conservatively.
 pub const OPTIMIZATION_SKIPPED: &str = "dtcs:optimization-skipped";
+/// Unsupported engine capability for a transformation plan.
+pub const UNSUPPORTED_CAPABILITY: &str = "dtcs:unsupported-capability";
+/// Invalid engine capability declaration.
+pub const INVALID_CAPABILITY: &str = "dtcs:invalid-capability";
+/// Compilation failure.
+pub const COMPILATION_FAILED: &str = "dtcs:compilation-failed";
+/// Invalid execution plan.
+pub const INVALID_EXECUTION_PLAN: &str = "dtcs:invalid-execution-plan";
+/// Invalid runtime input.
+pub const INVALID_RUNTIME_INPUT: &str = "dtcs:invalid-runtime-input";
+/// Precondition violation at runtime.
+pub const PRECONDITION_VIOLATION: &str = "dtcs:precondition-violation";
+/// Postcondition violation at runtime.
+pub const POSTCONDITION_VIOLATION: &str = "dtcs:postcondition-violation";
+/// General runtime execution error.
+pub const RUNTIME_ERROR: &str = "dtcs:runtime-error";
 
 /// All standardized diagnostic identifiers registered by this implementation.
 pub const ALL_CODES: &[&str] = &[
@@ -117,4 +133,12 @@ pub const ALL_CODES: &[&str] = &[
     UNRESOLVED_PLAN_REFERENCE,
     INVALID_OPTIMIZATION,
     OPTIMIZATION_SKIPPED,
+    UNSUPPORTED_CAPABILITY,
+    INVALID_CAPABILITY,
+    COMPILATION_FAILED,
+    INVALID_EXECUTION_PLAN,
+    INVALID_RUNTIME_INPUT,
+    PRECONDITION_VIOLATION,
+    POSTCONDITION_VIOLATION,
+    RUNTIME_ERROR,
 ];

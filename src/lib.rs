@@ -51,7 +51,9 @@
 pub const SPEC_VERSION: &str = "1.0.0-draft";
 
 pub mod analysis;
+pub mod capability;
 pub mod compatibility;
+pub mod compile;
 pub mod diagnostics;
 pub mod lineage;
 pub mod metadata;
@@ -59,6 +61,7 @@ pub mod model;
 pub mod parser;
 pub mod plan;
 pub mod registry;
+pub mod runtime;
 pub mod validation;
 pub mod versioning;
 
@@ -69,9 +72,17 @@ pub mod cli;
 mod python;
 
 pub use analysis::{check_contract, check_expression, AnalysisFinding, AnalysisReport};
+pub use capability::{
+    discover as discover_capabilities, match_plan, reference_profile, CapabilityMatchReport,
+    EngineCapabilityDeclaration,
+};
 pub use compatibility::{
     analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,
     CompatibilityLevel, CompatibilityReport, EvolutionReport,
+};
+pub use compile::{
+    compile, compile_after_match, compile_with_capability, validate as validate_execution_plan,
+    CompileResult, ExecutionPlan,
 };
 pub use diagnostics::{
     codes, inspect_contract, Diagnostic, DiagnosticCategory, DiagnosticReport, DiagnosticStage,
@@ -81,7 +92,7 @@ pub use lineage::{analyze as analyze_lineage, LineageAnalysisReport, LineageGove
 pub use model::{
     parse_logical_type, type_compatible, ExtensionCompatibility, LogicalType, RegistryCategory,
     RegistryDocument, RegistryEntry, RegistryEntryStatus, RegistryPublicationStatus, RegistryRef,
-    TransformationContract, TypeCompatibility, TypeParseError,
+    Rule, RulePhase, TransformationContract, TypeCompatibility, TypeParseError,
 };
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
 pub use plan::{
@@ -93,6 +104,7 @@ pub use registry::{
     default_registry, is_known_action, is_known_function, is_known_rule, load as load_registry,
     load_merged, resolve as resolve_registry, resolve_default,
 };
+pub use runtime::{execute, ExecuteResult, RuntimeInputs, RuntimeOutputs, RuntimeValue};
 pub use validation::{validate, validate_with_registry, ValidationPhase};
 
 /// Parse and validate a DTCS document in one step.
@@ -184,6 +196,74 @@ pub fn parse_validate_and_optimize_with_registry(
     let mut result =
         plan::optimize_with_registry(&plan, &registry_doc, &plan::OptimizeOptions::default());
     result.diagnostics = plan_result
+        .diagnostics
+        .into_iter()
+        .chain(result.diagnostics)
+        .collect();
+    result
+}
+
+/// Parse, validate, lower, compile, and optimize a DTCS document.
+#[must_use]
+pub fn parse_validate_and_compile(
+    content: &[u8],
+    format: DocumentFormat,
+) -> compile::CompileResult {
+    parse_validate_and_compile_with_registry(content, format, None)
+}
+
+/// Parse, validate, lower, and compile using an optional vendor registry.
+#[must_use]
+pub fn parse_validate_and_compile_with_registry(
+    content: &[u8],
+    format: DocumentFormat,
+    registry_path: Option<&std::path::Path>,
+) -> compile::CompileResult {
+    let plan_result = parse_validate_and_plan_with_registry(content, format, registry_path);
+    let Some(plan) = plan_result.plan else {
+        return compile::CompileResult {
+            diagnostics: plan_result.diagnostics,
+            ..compile::CompileResult::default()
+        };
+    };
+
+    let mut result = compile::compile(&plan);
+    result.diagnostics = plan_result
+        .diagnostics
+        .into_iter()
+        .chain(result.diagnostics)
+        .collect();
+    result
+}
+
+/// Parse, validate, lower, compile, and execute a DTCS document.
+#[must_use]
+pub fn parse_validate_and_run(
+    content: &[u8],
+    format: DocumentFormat,
+    inputs: &runtime::RuntimeInputs,
+) -> runtime::ExecuteResult {
+    parse_validate_and_run_with_registry(content, format, None, inputs)
+}
+
+/// Parse through compile and execute with an optional vendor registry.
+#[must_use]
+pub fn parse_validate_and_run_with_registry(
+    content: &[u8],
+    format: DocumentFormat,
+    registry_path: Option<&std::path::Path>,
+    inputs: &runtime::RuntimeInputs,
+) -> runtime::ExecuteResult {
+    let compile_result = parse_validate_and_compile_with_registry(content, format, registry_path);
+    let Some(execution_plan) = compile_result.plan else {
+        return runtime::ExecuteResult {
+            diagnostics: compile_result.diagnostics,
+            ..runtime::ExecuteResult::default()
+        };
+    };
+
+    let mut result = runtime::execute(&execution_plan, inputs);
+    result.diagnostics = compile_result
         .diagnostics
         .into_iter()
         .chain(result.diagnostics)

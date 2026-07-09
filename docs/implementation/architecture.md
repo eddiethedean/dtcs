@@ -2,7 +2,7 @@
 
 Follow the architecture defined in `SPEC.md`.
 
-Implementation pipeline (Phase 0.8):
+Implementation pipeline (Phase 0.9):
 
 ```text
 DTCS Document
@@ -30,7 +30,16 @@ Plan lowering (0.7)
 Plan optimization (0.8)
         │
         ▼
-Transformation Plan
+Capability matching (0.9)
+        │
+        ▼
+Compilation (0.9)
+        │
+        ▼
+Reference runtime (0.9)
+        │
+        ▼
+Outputs
 ```
 
 Analysis is **read-only** — it never mutates the Canonical Object Model.
@@ -38,17 +47,6 @@ Registry resolution is also read-only; the embedded catalog is authoritative for
 Standard library entries include structured definitions used during semantic validation.
 Plan lowering is **read-only** with respect to the COM — it produces a separate `TransformationPlan` IR.
 Plan optimization transforms a validated plan into a semantically equivalent optimized plan.
+Capability matching, compilation, and the reference runtime execute validated contracts in-memory for conformance and development use.
 
-Future pipeline:
-
-```text
-Transformation Plan
-        │
-        ▼
-Execution Plan
-        │
-        ▼
-Runtime
-```
-
-For this crate through Phase 0.8 (`0.8.0`), implement through Diagnostics, Contract Analysis, Registries, starter Standard Libraries, static semantic analysis, transformation plan lowering, and plan optimization.
+For this crate through Phase 0.9 (`0.9.0`), implement through Diagnostics, Contract Analysis, Registries, starter Standard Libraries, static semantic analysis, transformation plan lowering, plan optimization, capability matching, compilation, and reference runtime execution.

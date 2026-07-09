@@ -31,7 +31,7 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Static semantic analysis | Complete (Phase 0.6, `0.6.0`) |
 | Transformation plan lowering | Complete (Phase 0.7, `0.7.0`) |
 | Plan optimization | Complete (Phase 0.8, `0.8.0`) |
-| Execution / runtime | Not started (Phase 0.9) |
+| Execution / runtime | Reference in-memory runtime (Phase 0.9) |
 | Conformance certification (Ch 23) | Not started (Phase 0.10) |
 
 *Released reference implementation: `0.8.0`.*

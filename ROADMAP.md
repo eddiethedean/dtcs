@@ -34,7 +34,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | **Complete** (`0.6.0`) |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | **Complete** (`0.7.0`) |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | **Complete** (`0.8.0`) |
-| **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | Planned |
+| **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | **Complete** (`0.9.0`) |
 | **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | Planned |
 
 ## SPEC chapter index
@@ -449,8 +449,9 @@ Ship in three milestones within the phase:
 
 ### Exit criteria
 
-- [Ch 14 §12](SPEC.md#chapter-14----engine-capability-model), [Ch 15 §13](SPEC.md#chapter-15----compilation), [Ch 16 §13](SPEC.md#chapter-16----runtime)
-- Reference backend covers all `dtcs:` entries from 0.5
+- [x] [Ch 14 §12](SPEC.md#chapter-14----engine-capability-model), [Ch 15 §13](SPEC.md#chapter-15----compilation), [Ch 16 §13](SPEC.md#chapter-16----runtime)
+- [x] Reference backend covers all `dtcs:` entries from 0.5
+- [ ] Publish to crates.io and PyPI at `0.9.0` (tag `v0.9.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

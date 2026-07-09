@@ -411,6 +411,91 @@ fn registry_error(report: crate::diagnostics::DiagnosticReport) -> PyErr {
     PyValueError::new_err(messages.join("; "))
 }
 
+fn execution_plan_from_py(
+    py: Python<'_>,
+    plan: &Bound<'_, PyAny>,
+) -> PyResult<crate::compile::ExecutionPlan> {
+    if plan.is_none() {
+        return Err(PyTypeError::new_err(
+            "execution plan must be a dict, not None",
+        ));
+    }
+    let json_mod = py.import("json")?;
+    let json_str: String = json_mod.call_method1("dumps", (plan,))?.extract()?;
+    serde_json::from_str(&json_str)
+        .map_err(|e| PyValueError::new_err(format!("invalid execution plan dict: {e}")))
+}
+
+fn runtime_inputs_from_py(
+    py: Python<'_>,
+    inputs: &Bound<'_, PyAny>,
+) -> PyResult<crate::runtime::RuntimeInputs> {
+    if inputs.is_none() {
+        return Err(PyTypeError::new_err("inputs must be a dict, not None"));
+    }
+    let json_mod = py.import("json")?;
+    let json_str: String = json_mod.call_method1("dumps", (inputs,))?.extract()?;
+    serde_json::from_str(&json_str)
+        .map_err(|e| PyValueError::new_err(format!("invalid runtime inputs dict: {e}")))
+}
+
+/// Return the embedded reference capability profile.
+#[pyfunction]
+fn capability_reference_profile(py: Python<'_>) -> PyResult<Py<PyAny>> {
+    value_to_py(py, &crate::capability::reference_profile())
+}
+
+/// Match a transformation plan against an engine capability profile.
+#[pyfunction]
+#[pyo3(signature = (plan, profile=None))]
+fn capability_match(
+    py: Python<'_>,
+    plan: &Bound<'_, PyAny>,
+    profile: Option<&Bound<'_, PyAny>>,
+) -> PyResult<Py<PyAny>> {
+    let plan = plan_from_py(py, plan)?;
+    let capability = match profile {
+        Some(value) => {
+            let json_mod = py.import("json")?;
+            let json_str: String = json_mod.call_method1("dumps", (value,))?.extract()?;
+            serde_json::from_str(&json_str)
+                .map_err(|e| PyValueError::new_err(format!("invalid capability profile: {e}")))?
+        }
+        None => crate::capability::reference_profile(),
+    };
+    value_to_py(py, &crate::capability::match_plan(&plan, &capability))
+}
+
+/// Compile a transformation plan to an execution plan.
+#[pyfunction]
+fn compile_plan(py: Python<'_>, plan: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    let plan = plan_from_py(py, plan)?;
+    value_to_py(py, &crate::compile::compile(&plan))
+}
+
+/// Validate an execution plan.
+#[pyfunction]
+fn execution_validate(py: Python<'_>, plan: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
+    let plan = execution_plan_from_py(py, plan)?;
+    let report = crate::compile::validate(&plan);
+    value_to_py(
+        py,
+        &serde_json::json!({ "diagnostics": report.diagnostics }),
+    )
+}
+
+/// Execute an execution plan with runtime inputs.
+#[pyfunction]
+fn runtime_execute(
+    py: Python<'_>,
+    plan: &Bound<'_, PyAny>,
+    inputs: &Bound<'_, PyAny>,
+) -> PyResult<Py<PyAny>> {
+    let plan = execution_plan_from_py(py, plan)?;
+    let inputs = runtime_inputs_from_py(py, inputs)?;
+    value_to_py(py, &crate::runtime::execute(&plan, &inputs))
+}
+
 /// Native extension module for the Python `dtcs` package.
 #[pymodule]
 fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -434,5 +519,10 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(registry_list, m)?)?;
     m.add_function(wrap_pyfunction!(registry_resolve, m)?)?;
     m.add_function(wrap_pyfunction!(registry_load, m)?)?;
+    m.add_function(wrap_pyfunction!(capability_reference_profile, m)?)?;
+    m.add_function(wrap_pyfunction!(capability_match, m)?)?;
+    m.add_function(wrap_pyfunction!(compile_plan, m)?)?;
+    m.add_function(wrap_pyfunction!(execution_validate, m)?)?;
+    m.add_function(wrap_pyfunction!(runtime_execute, m)?)?;
     Ok(())
 }

@@ -36,5 +36,6 @@ pub use semantics::{ActionOrdering, SideEffectDeclaration, TransformationSemanti
 pub use types::{
     infer_logical_type, is_extension_type_identifier, is_known_logical_type, parse_logical_type,
     type_compatible, Field, LogicalType, Schema, TypeCompatibility, TypeConversion, TypeParseError,
+    COMPOSITE_TYPES, PRIMITIVE_TYPES,
 };
 pub use versioning::Versioning;

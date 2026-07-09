@@ -2,18 +2,17 @@
 
 Do not implement these yet:
 
-- ETL execution
+- Production ETL orchestration
 - Polars backend
 - Spark backend
 - SQL compiler
-- Runtime engine
 - WASM bindings
 - Node bindings
 - Conformance profiles and Ch 23 certification suites
 
 The reference crate should remain a correct spec core based on [`SPEC.md`](../../SPEC.md).
 
-## In scope through 0.8.0
+## In scope through 0.9.0
 
 - Parse YAML and JSON into the Canonical Object Model
 - Seven-phase validation with structured diagnostics
@@ -32,7 +31,9 @@ The reference crate should remain a correct spec core based on [`SPEC.md`](../..
 - Static semantic analysis (Phase 0.6)
 - Transformation plan lowering with dependency graph and plan validation (Phase 0.7)
 - Plan optimization with semantics-preserving passes and equivalence checking (Phase 0.8)
-- CLI (`validate`, `analyze`, `plan`, `optimize`, `inspect`, `diagnostics`, `version`, `compat`, `evolve`, `lineage`, `registry`)
+- Engine capability matching with embedded `dtcs:reference` profile (Phase 0.9)
+- Compilation to execution plans and reference in-memory runtime (Phase 0.9)
+- CLI (`validate`, `analyze`, `plan`, `optimize`, `match`, `compile`, `run`, `inspect`, `diagnostics`, `version`, `compat`, `evolve`, `lineage`, `registry`)
 - Python bindings via maturin
 
 Lineage is **not** waived in the MVP core — contracts with outputs must declare provenance mappings.

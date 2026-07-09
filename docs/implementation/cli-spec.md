@@ -12,6 +12,10 @@ Commands:
 dtcs validate <path>
 dtcs analyze <path> [--registry PATH] [--json]
 dtcs plan <path> [--registry PATH] [--json]
+dtcs optimize <path> [--plan] [--registry PATH] [--no-validate] [--json]
+dtcs match <path> [--plan] [--optimize] [--registry PATH] [--profile dtcs:reference] [--json]
+dtcs compile <path> [--plan] [--optimize] [--registry PATH] [--profile dtcs:reference] [--json]
+dtcs run <path> --input <json> [--optimize] [--registry PATH] [--json]
 dtcs inspect <path>
 dtcs diagnostics <path>
 dtcs version
@@ -40,6 +44,12 @@ dtcs registry resolve <id> [--registry PATH] [--json]
 `registry resolve` returns exit code 0 when the identifier is found, exit code 1 when unresolved.
 
 `plan` returns exit code 1 when lowering or plan validation fails.
+
+`match` returns exit code 1 when mandatory capabilities are unsupported.
+
+`compile` returns exit code 1 when compilation or execution-plan validation fails.
+
+`run` returns exit code 1 when compile or runtime execution fails. Runtime inputs are JSON keyed by interface id with row arrays of field objects.
 
 CLI behavior should reflect the diagnostics and validation model in `SPEC.md`.
 

@@ -180,6 +180,67 @@ use dtcs::{parse_validate_and_optimize, DocumentFormat};
 let result = parse_validate_and_optimize(yaml_bytes, DocumentFormat::Yaml);
 ```
 
+## Execution pipeline (Phase 0.9)
+
+### Capability matching
+
+```rust
+use dtcs::{capability, parse_file, plan};
+
+let contract = parse_file("contract.dtcs.yaml")?.into_contract()?;
+let plan_result = plan::lower(&contract, None, None);
+let plan = plan_result.plan.expect("plan");
+let profile = capability::reference_profile();
+let match_report = capability::match_plan(&plan, &profile);
+assert!(match_report.is_valid());
+```
+
+### Compilation
+
+```rust
+use dtcs::compile;
+
+let compile_result = compile::compile(&plan);
+assert!(compile_result.is_valid());
+let execution_plan = compile_result.plan.expect("execution plan");
+```
+
+### Runtime execution
+
+```rust
+use dtcs::runtime::{execute, RuntimeInputs, RuntimeValue};
+use std::collections::BTreeMap;
+
+let mut inputs = RuntimeInputs::new();
+let mut row = BTreeMap::new();
+row.insert("email".into(), RuntimeValue::String("ALICE@EXAMPLE.COM".into()));
+inputs.insert("customer_raw".into(), vec![row]);
+
+let result = execute(&execution_plan, &inputs);
+assert!(result.is_valid());
+```
+
+```python
+import dtcs
+
+plan = dtcs.plan_lower(contract)["plan"]
+match = dtcs.capability_match(plan)
+assert dtcs.is_valid({"diagnostics": match["diagnostics"]})
+
+compiled = dtcs.compile_plan(plan)
+execution = compiled["plan"]
+outputs = dtcs.runtime_execute(execution, inputs)
+assert dtcs.is_valid(outputs)
+```
+
+One-shot convenience:
+
+```rust
+use dtcs::{parse_validate_and_run, DocumentFormat, RuntimeInputs};
+
+let result = parse_validate_and_run(yaml_bytes, DocumentFormat::Yaml, &inputs);
+```
+
 ## Registry (Phase 0.4–0.5)
 
 The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,

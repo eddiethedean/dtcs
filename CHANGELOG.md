@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.9.0
+
+Phase 0.9 — Execution pipeline (Ch 14–16).
+
+### Features
+
+- New `capability` module with `reference_profile`, `match_plan`, `validate`, and `discover`.
+- Embedded `dtcs:reference` engine capability profile derived from the 0.5 stdlib catalog.
+- New `compile` module with `ExecutionPlan` IR, `Compiler` trait, and `ReferenceCompiler`.
+- New `runtime` module with in-memory row-oriented `ReferenceRuntime` executing all embedded `dtcs:` actions, functions, and rules.
+- Capability-stage diagnostics: `dtcs:unsupported-capability`, `dtcs:invalid-capability`.
+- Compilation-stage diagnostics: `dtcs:compilation-failed`, `dtcs:invalid-execution-plan`.
+- Runtime-stage diagnostics: `dtcs:invalid-runtime-input`, `dtcs:precondition-violation`, `dtcs:postcondition-violation`, `dtcs:runtime-error`.
+- CLI and Python: `dtcs match`, `dtcs compile`, `dtcs run`; Rust `parse_validate_and_compile` / `parse_validate_and_run`.
+- Python: `capability_match`, `capability_reference_profile`, `compile_plan`, `execution_validate`, `runtime_execute`.
+
+### Tests
+
+- Phase 0.9 integration tests, `tests/capability_expectations.json`, and runtime fixtures under `tests/fixtures/runtime/`.
+
+**Release:** push tag `v0.9.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
 ## 0.8.0
 
 Phase 0.8 — Plan optimization (Ch 13 §9, Ch 8 §14, Ch 15 §9, Ch 17–19 §11).

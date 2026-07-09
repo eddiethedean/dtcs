@@ -1,0 +1,16 @@
+{
+  "fixtures": [
+    {
+      "file": "valid_customer.yaml",
+      "match_supported": true,
+      "compile_valid": true,
+      "runtime_fixture": "runtime/customer_normalize_input.json",
+      "expected_output": "runtime/customer_normalize_output.json"
+    },
+    {
+      "file": "stdlib_action_uppercase_valid.yaml",
+      "match_supported": true,
+      "compile_valid": true
+    }
+  ]
+}

@@ -16,7 +16,10 @@ pub use stage::DiagnosticStage;
 
 use crate::model::TransformationContract;
 
-pub(crate) use builders::{com_error, emit, optimization_error, planning_error, validation_error};
+pub(crate) use builders::{
+    com_error, compilation_error, emit, optimization_error, planning_error, runtime_error,
+    validation_error,
+};
 
 /// Returns a short human-readable contract summary.
 #[must_use]
