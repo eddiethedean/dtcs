@@ -56,7 +56,9 @@ pub fn to_diagnostic(expression: &Expression, err: ParseError) -> Diagnostic {
         category: DiagnosticCategory::Syntax,
         message: err.message,
         object_ref: Some(format!("expressions.{}", expression.id)),
-        remediation: Some("Fix expression syntax (operators, parentheses, or string literals)".into()),
+        remediation: Some(
+            "Fix expression syntax (operators, parentheses, or string literals)".into(),
+        ),
     }
 }
 
@@ -429,64 +431,148 @@ impl<'a> Lexer<'a> {
         let Some((start, ch)) = self.bump() else {
             return Ok(Token {
                 kind: TokenKind::Eof,
-                span: Span { start: self.source.len(), end: self.source.len() },
+                span: Span {
+                    start: self.source.len(),
+                    end: self.source.len(),
+                },
             });
         };
 
         match ch {
-            '(' => Ok(Token { kind: TokenKind::LParen, span: Span { start, end: start + 1 } }),
-            ')' => Ok(Token { kind: TokenKind::RParen, span: Span { start, end: start + 1 } }),
-            ',' => Ok(Token { kind: TokenKind::Comma, span: Span { start, end: start + 1 } }),
+            '(' => Ok(Token {
+                kind: TokenKind::LParen,
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
+            ')' => Ok(Token {
+                kind: TokenKind::RParen,
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
+            ',' => Ok(Token {
+                kind: TokenKind::Comma,
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
             '"' | '\'' => self.lex_string(start, ch),
             '0'..='9' => self.lex_number(start, ch),
             '!' => {
                 if self.try_match('=') {
-                    Ok(Token { kind: TokenKind::Op("!="), span: Span { start, end: start + 2 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("!="),
+                        span: Span {
+                            start,
+                            end: start + 2,
+                        },
+                    })
                 } else {
-                    Ok(Token { kind: TokenKind::Op("!"), span: Span { start, end: start + 1 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("!"),
+                        span: Span {
+                            start,
+                            end: start + 1,
+                        },
+                    })
                 }
             }
             '=' => {
                 if self.try_match('=') {
-                    Ok(Token { kind: TokenKind::Op("=="), span: Span { start, end: start + 2 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("=="),
+                        span: Span {
+                            start,
+                            end: start + 2,
+                        },
+                    })
                 } else {
                     Err(ParseError {
                         message: "unexpected '='; did you mean '=='?".into(),
-                        span: Span { start, end: start + 1 },
+                        span: Span {
+                            start,
+                            end: start + 1,
+                        },
                     })
                 }
             }
             '<' => {
                 if self.try_match('=') {
-                    Ok(Token { kind: TokenKind::Op("<="), span: Span { start, end: start + 2 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("<="),
+                        span: Span {
+                            start,
+                            end: start + 2,
+                        },
+                    })
                 } else {
-                    Ok(Token { kind: TokenKind::Op("<"), span: Span { start, end: start + 1 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("<"),
+                        span: Span {
+                            start,
+                            end: start + 1,
+                        },
+                    })
                 }
             }
             '>' => {
                 if self.try_match('=') {
-                    Ok(Token { kind: TokenKind::Op(">="), span: Span { start, end: start + 2 } })
+                    Ok(Token {
+                        kind: TokenKind::Op(">="),
+                        span: Span {
+                            start,
+                            end: start + 2,
+                        },
+                    })
                 } else {
-                    Ok(Token { kind: TokenKind::Op(">"), span: Span { start, end: start + 1 } })
+                    Ok(Token {
+                        kind: TokenKind::Op(">"),
+                        span: Span {
+                            start,
+                            end: start + 1,
+                        },
+                    })
                 }
             }
             '&' => {
                 if self.try_match('&') {
-                    Ok(Token { kind: TokenKind::Op("&&"), span: Span { start, end: start + 2 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("&&"),
+                        span: Span {
+                            start,
+                            end: start + 2,
+                        },
+                    })
                 } else {
                     Err(ParseError {
                         message: "unexpected '&'; did you mean '&&'?".into(),
-                        span: Span { start, end: start + 1 },
+                        span: Span {
+                            start,
+                            end: start + 1,
+                        },
                     })
                 }
             }
             '|' => {
                 if self.try_match('|') {
-                    Ok(Token { kind: TokenKind::Op("||"), span: Span { start, end: start + 2 } })
+                    Ok(Token {
+                        kind: TokenKind::Op("||"),
+                        span: Span {
+                            start,
+                            end: start + 2,
+                        },
+                    })
                 } else {
                     Err(ParseError {
                         message: "unexpected '|'; did you mean '||'?".into(),
-                        span: Span { start, end: start + 1 },
+                        span: Span {
+                            start,
+                            end: start + 1,
+                        },
                     })
                 }
             }
@@ -498,12 +584,18 @@ impl<'a> Lexer<'a> {
                     '/' => "/",
                     _ => unreachable!(),
                 }),
-                span: Span { start, end: start + 1 },
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
             }),
             _ if is_ident_start(ch) => self.lex_ident(start, ch),
             _ => Err(ParseError {
                 message: format!("unexpected character '{ch}'"),
-                span: Span { start, end: start + ch.len_utf8() },
+                span: Span {
+                    start,
+                    end: start + ch.len_utf8(),
+                },
             }),
         }
     }
@@ -526,24 +618,24 @@ impl<'a> Lexer<'a> {
 
     fn lex_string(&mut self, start: usize, quote: char) -> Result<Token, ParseError> {
         let mut out = String::new();
-        let mut end = start + 1;
+        let mut end: Option<usize> = None;
 
         while let Some((idx, ch)) = self.bump() {
-            end = idx + ch.len_utf8();
+            let ch_end = idx + ch.len_utf8();
             if ch == quote {
                 return Ok(Token {
                     kind: TokenKind::String(out),
-                    span: Span { start, end },
+                    span: Span { start, end: ch_end },
                 });
             }
             if ch == '\\' {
                 let Some((idx2, escaped)) = self.bump() else {
                     return Err(ParseError {
                         message: "unterminated escape sequence in string literal".into(),
-                        span: Span { start, end },
+                        span: Span { start, end: ch_end },
                     });
                 };
-                end = idx2 + escaped.len_utf8();
+                end = Some(idx2 + escaped.len_utf8());
                 out.push(match escaped {
                     'n' => '\n',
                     'r' => '\r',
@@ -555,12 +647,16 @@ impl<'a> Lexer<'a> {
                 });
                 continue;
             }
+            end = Some(ch_end);
             out.push(ch);
         }
 
         Err(ParseError {
             message: "unterminated string literal".into(),
-            span: Span { start, end: self.source.len() },
+            span: Span {
+                start,
+                end: end.unwrap_or(start + 1),
+            },
         })
     }
 
@@ -592,13 +688,19 @@ impl<'a> Lexer<'a> {
                 message: "invalid decimal literal".into(),
                 span: Span { start, end },
             })?;
-            Ok(Token { kind: TokenKind::Decimal(value), span: Span { start, end } })
+            Ok(Token {
+                kind: TokenKind::Decimal(value),
+                span: Span { start, end },
+            })
         } else {
             let value = buf.parse::<i64>().map_err(|_| ParseError {
                 message: "invalid integer literal".into(),
                 span: Span { start, end },
             })?;
-            Ok(Token { kind: TokenKind::Integer(value), span: Span { start, end } })
+            Ok(Token {
+                kind: TokenKind::Integer(value),
+                span: Span { start, end },
+            })
         }
     }
 
@@ -623,7 +725,10 @@ impl<'a> Lexer<'a> {
             _ => TokenKind::Ident(buf),
         };
 
-        Ok(Token { kind, span: Span { start, end } })
+        Ok(Token {
+            kind,
+            span: Span { start, end },
+        })
     }
 }
 
@@ -634,4 +739,3 @@ fn is_ident_start(ch: char) -> bool {
 fn is_ident_continue(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || matches!(ch, '_' | ':' | '.')
 }
-

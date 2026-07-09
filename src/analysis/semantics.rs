@@ -5,7 +5,10 @@ use crate::registry;
 
 /// Contract-level transformation semantics checks (SPEC Chapter 7).
 #[must_use]
-pub fn check_semantics(contract: &TransformationContract, registry_doc: &RegistryDocument) -> AnalysisReport {
+pub fn check_semantics(
+    contract: &TransformationContract,
+    registry_doc: &RegistryDocument,
+) -> AnalysisReport {
     let mut report = AnalysisReport::default();
 
     check_action_composition(&mut report, contract);
@@ -22,7 +25,12 @@ fn check_action_composition(report: &mut AnalysisReport, contract: &Transformati
         return;
     }
 
-    if contract.semantics.as_ref().and_then(|s| s.ordering.as_ref()).is_some() {
+    if contract
+        .semantics
+        .as_ref()
+        .and_then(|s| s.ordering.as_ref())
+        .is_some()
+    {
         return;
     }
 
@@ -116,18 +124,17 @@ fn check_purity(report: &mut AnalysisReport, contract: &TransformationContract) 
                 ));
             }
         }
-        Some(false) => {
-            if semantics.side_effects.is_empty() {
-                report.diagnostics.push(analysis_error(
-                    codes::INVALID_SEMANTICS,
-                    DiagnosticCategory::Semantic,
-                    "transformation declares pure: false but does not declare any side effects",
-                    Some("semantics.sideEffects".into()),
-                    Some("Declare sideEffects when pure is false".into()),
-                ));
-            }
+        Some(false) if semantics.side_effects.is_empty() => {
+            report.diagnostics.push(analysis_error(
+                codes::INVALID_SEMANTICS,
+                DiagnosticCategory::Semantic,
+                "transformation declares pure: false but does not declare any side effects",
+                Some("semantics.sideEffects".into()),
+                Some("Declare sideEffects when pure is false".into()),
+            ));
         }
         None => {}
+        Some(false) => {}
     }
 }
 
@@ -189,11 +196,15 @@ fn check_determinism(
     }
 }
 
-fn check_lineage_consistency_warnings(report: &mut AnalysisReport, contract: &TransformationContract) {
+fn check_lineage_consistency_warnings(
+    report: &mut AnalysisReport,
+    contract: &TransformationContract,
+) {
     let Some(lineage) = contract.lineage.as_ref() else {
         return;
     };
-    let mapped_outputs: std::collections::HashSet<_> = lineage.mappings.iter().map(|m| m.output.as_str()).collect();
+    let mapped_outputs: std::collections::HashSet<_> =
+        lineage.mappings.iter().map(|m| m.output.as_str()).collect();
 
     for action in &contract.semantic_actions {
         let Some((interface_id, _)) = action.target.split_once('.') else {
@@ -241,4 +252,3 @@ pub(crate) fn analysis_info_finding(
         attributes: Default::default(),
     }
 }
-

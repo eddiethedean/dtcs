@@ -168,7 +168,13 @@ fn analyze_contract(
 
     let validation = crate::validate_with_registry(&contract, &registry_doc);
     let analysis = analysis::check_contract(&contract, Some(&registry_doc));
-    value_to_py(py, &AnalyzeResult { validation, analysis })
+    value_to_py(
+        py,
+        &AnalyzeResult {
+            validation,
+            analysis,
+        },
+    )
 }
 
 /// Parse and validate a DTCS document in one step.

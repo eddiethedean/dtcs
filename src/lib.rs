@@ -48,11 +48,11 @@
 /// DTCS specification version this crate targets.
 pub const SPEC_VERSION: &str = "1.0.0-draft";
 
+pub mod analysis;
 pub mod compatibility;
 pub mod diagnostics;
 pub mod lineage;
 pub mod metadata;
-pub mod analysis;
 pub mod model;
 pub mod parser;
 pub mod plan;
@@ -66,6 +66,7 @@ pub mod cli;
 #[cfg(feature = "python")]
 mod python;
 
+pub use analysis::{check_contract, check_expression, AnalysisFinding, AnalysisReport};
 pub use compatibility::{
     analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,
     CompatibilityLevel, CompatibilityReport, EvolutionReport,
@@ -75,7 +76,6 @@ pub use diagnostics::{
     Severity, ValidationReport,
 };
 pub use lineage::{analyze as analyze_lineage, LineageAnalysisReport, LineageGovernance};
-pub use analysis::{check_contract, check_expression, AnalysisFinding, AnalysisReport};
 pub use model::{
     parse_logical_type, type_compatible, ExtensionCompatibility, LogicalType, RegistryCategory,
     RegistryDocument, RegistryEntry, RegistryEntryStatus, RegistryPublicationStatus, RegistryRef,

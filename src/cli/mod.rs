@@ -174,7 +174,9 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 ),
                 None => None,
             };
-            let registry_doc = merged.as_ref().unwrap_or_else(|| crate::registry::default_registry());
+            let registry_doc = merged
+                .as_ref()
+                .unwrap_or_else(|| crate::registry::default_registry());
 
             let validation = validate_with_registry(&contract, registry_doc);
             let analysis_report = analysis::check_contract(&contract, Some(registry_doc));
@@ -221,7 +223,11 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 }
             }
 
-            Ok(if validation.is_valid() && analysis_report.is_valid() { 0 } else { 1 })
+            Ok(if validation.is_valid() && analysis_report.is_valid() {
+                0
+            } else {
+                1
+            })
         }
         Command::Inspect { path, json } => {
             let contract = load_valid_contract(&path, json)?;

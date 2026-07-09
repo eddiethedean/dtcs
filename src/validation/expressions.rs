@@ -185,15 +185,28 @@ fn format_logical_type(logical_type: &LogicalType) -> String {
     }
 }
 
-fn emit_type_error(ctx: &mut ValidationContext, object_ref: &str, type_name: &str, error: TypeParseError) {
+fn emit_type_error(
+    ctx: &mut ValidationContext,
+    object_ref: &str,
+    type_name: &str,
+    error: TypeParseError,
+) {
     let message = match error {
         TypeParseError::Unknown(unknown) => format!("unknown logical type '{unknown}'"),
         TypeParseError::BareComposite(kind) => {
             format!("composite type '{kind}' is missing parameters")
         }
-        TypeParseError::Malformed(detail) => format!("malformed logical type '{type_name}': {detail}"),
-        TypeParseError::UnknownParameter(unknown) => format!("unknown nested logical type '{unknown}'"),
-        TypeParseError::InvalidArity { kind, expected, actual } => {
+        TypeParseError::Malformed(detail) => {
+            format!("malformed logical type '{type_name}': {detail}")
+        }
+        TypeParseError::UnknownParameter(unknown) => {
+            format!("unknown nested logical type '{unknown}'")
+        }
+        TypeParseError::InvalidArity {
+            kind,
+            expected,
+            actual,
+        } => {
             format!("composite type '{kind}' expects {expected}, found {actual}")
         }
     };
@@ -206,4 +219,3 @@ fn emit_type_error(ctx: &mut ValidationContext, object_ref: &str, type_name: &st
         Some("Use a valid DTCS logical type declaration"),
     );
 }
-

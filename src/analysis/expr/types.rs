@@ -71,7 +71,9 @@ fn infer_expr(
                 nullable_from_fields: inner.nullable_from_fields,
             })
         }
-        Expr::Binary { op, left, right, .. } => {
+        Expr::Binary {
+            op, left, right, ..
+        } => {
             let left_type = infer_expr(left, index, functions, registry_doc)?;
             let right_type = infer_expr(right, index, functions, registry_doc)?;
             let logical = infer_binary_type(*op, &left_type.logical, &right_type.logical)?;
@@ -143,7 +145,9 @@ fn resolve_field_type(
     }
 }
 
-fn negate_type(logical: &LogicalType) -> Result<LogicalType, (&'static str, DiagnosticCategory, String)> {
+fn negate_type(
+    logical: &LogicalType,
+) -> Result<LogicalType, (&'static str, DiagnosticCategory, String)> {
     match logical {
         LogicalType::Primitive(name) if is_numeric_primitive(name) => Ok(logical.clone()),
         _ => Err((
@@ -157,7 +161,9 @@ fn negate_type(logical: &LogicalType) -> Result<LogicalType, (&'static str, Diag
     }
 }
 
-fn not_type(logical: &LogicalType) -> Result<LogicalType, (&'static str, DiagnosticCategory, String)> {
+fn not_type(
+    logical: &LogicalType,
+) -> Result<LogicalType, (&'static str, DiagnosticCategory, String)> {
     match logical {
         LogicalType::Primitive(name) if name == "boolean" => Ok(logical.clone()),
         _ => Err((
@@ -394,6 +400,7 @@ struct RegistryFunctionDef {
     return_type: String,
     #[serde(rename = "returnNullable")]
     return_nullable: Option<bool>,
+    #[allow(dead_code)]
     deterministic: Option<bool>,
 }
 
@@ -447,7 +454,10 @@ fn infer_registry_call_type(
         return Err((
             codes::INVALID_FUNCTION,
             DiagnosticCategory::Type,
-            format!("function '{name}' expects at least {min_args} argument(s), found {}", args.len()),
+            format!(
+                "function '{name}' expects at least {min_args} argument(s), found {}",
+                args.len()
+            ),
         ));
     }
     if let Some(max) = def.max_args {
@@ -455,7 +465,10 @@ fn infer_registry_call_type(
             return Err((
                 codes::INVALID_FUNCTION,
                 DiagnosticCategory::Type,
-                format!("function '{name}' expects at most {max} argument(s), found {}", args.len()),
+                format!(
+                    "function '{name}' expects at most {max} argument(s), found {}",
+                    args.len()
+                ),
             ));
         }
     }
@@ -522,7 +535,9 @@ fn infer_registry_call_type(
             (
                 codes::INVALID_FUNCTION,
                 DiagnosticCategory::Type,
-                format!("function '{name}' registry declares an invalid argument type '{expected}'"),
+                format!(
+                    "function '{name}' registry declares an invalid argument type '{expected}'"
+                ),
             )
         })?;
 
@@ -544,7 +559,10 @@ fn infer_registry_call_type(
         (
             codes::INVALID_FUNCTION,
             DiagnosticCategory::Type,
-            format!("function '{name}' registry declares an invalid return type '{}'", def.return_type),
+            format!(
+                "function '{name}' registry declares an invalid return type '{}'",
+                def.return_type
+            ),
         )
     })?;
 
@@ -604,7 +622,9 @@ fn function_return_nullable(function: &Function, registry_doc: &RegistryDocument
         .unwrap_or(false)
 }
 
-fn primitive_name(logical_type: &LogicalType) -> Result<&str, (&'static str, DiagnosticCategory, String)> {
+fn primitive_name(
+    logical_type: &LogicalType,
+) -> Result<&str, (&'static str, DiagnosticCategory, String)> {
     match logical_type {
         LogicalType::Primitive(name) => Ok(name.as_str()),
         _ => Err((
@@ -635,4 +655,3 @@ fn format_logical_type(logical_type: &LogicalType) -> String {
         LogicalType::Extension(name) => name.clone(),
     }
 }
-

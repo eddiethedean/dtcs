@@ -51,4 +51,3 @@ pub struct AnalysisFinding {
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
     pub attributes: std::collections::BTreeMap<String, serde_json::Value>,
 }
-

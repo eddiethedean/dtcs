@@ -32,4 +32,3 @@ pub fn check_contract<'a>(
     let _ = &mut report.findings as &mut Vec<AnalysisFinding>;
     report
 }
-

@@ -44,4 +44,3 @@ fn rejects_duplicate_action_targets_without_ordering() {
         report.diagnostics
     );
 }
-

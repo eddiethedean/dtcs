@@ -14,11 +14,30 @@ pub struct Span {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Expr {
-    Literal { value: LiteralValue, span: Span },
-    FieldRef { target: String, span: Span },
-    Unary { op: UnaryOp, expr: Box<Expr>, span: Span },
-    Binary { op: BinaryOp, left: Box<Expr>, right: Box<Expr>, span: Span },
-    Call { callee: String, args: Vec<Expr>, span: Span },
+    Literal {
+        value: LiteralValue,
+        span: Span,
+    },
+    FieldRef {
+        target: String,
+        span: Span,
+    },
+    Unary {
+        op: UnaryOp,
+        expr: Box<Expr>,
+        span: Span,
+    },
+    Binary {
+        op: BinaryOp,
+        left: Box<Expr>,
+        right: Box<Expr>,
+        span: Span,
+    },
+    Call {
+        callee: String,
+        args: Vec<Expr>,
+        span: Span,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -53,4 +72,3 @@ pub enum BinaryOp {
     And,
     Or,
 }
-

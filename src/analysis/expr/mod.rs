@@ -7,9 +7,9 @@ use crate::diagnostics::Diagnostic;
 use crate::model::{Expression, RegistryDocument, TransformationContract};
 
 pub mod ast;
+mod constants;
 pub(crate) mod parse;
 pub(crate) mod types;
-mod constants;
 
 /// Output of analyzing a single expression body.
 #[derive(Debug, Clone, Default)]
@@ -58,7 +58,8 @@ pub fn check_expression(
                 Err(mut diag) => {
                     diag.object_ref = Some(format!("expressions.{}", expression.id));
                     diag.remediation = Some(
-                        "Fix field references, operators, or function calls in the expression".into(),
+                        "Fix field references, operators, or function calls in the expression"
+                            .into(),
                     );
                     out.diagnostics.push(diag);
                 }
@@ -71,4 +72,3 @@ pub fn check_expression(
 
     out
 }
-

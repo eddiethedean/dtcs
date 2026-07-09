@@ -27,7 +27,10 @@ pub enum ActionOrdering {
     /// Semantic action ordering is irrelevant.
     Unordered,
     /// Semantic actions are ordered as declared by the `order` list.
-    Explicit { order: Vec<String> },
+    Explicit {
+        /// Semantic action identifiers in the required application order.
+        order: Vec<String>,
+    },
 }
 
 /// Declared side effect metadata (SPEC Chapter 7 §8).

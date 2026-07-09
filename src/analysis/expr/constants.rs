@@ -12,4 +12,3 @@ pub fn is_constant(expr: &Expr) -> bool {
         Expr::Call { .. } => false,
     }
 }
-
