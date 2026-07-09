@@ -1,0 +1,79 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.action.normalize_whitespace.valid",
+    "name": "Stdlib Normalize Whitespace Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "text",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "text_norm",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "norm",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "norm",
+        "action": "dtcs:normalize_whitespace",
+        "target": "in.text"
+      },
+      "objectRef": "semanticActions.norm"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "norm",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {},
+  "findings": [
+    {
+      "objectRef": "semanticActions.norm",
+      "kind": "lineageCoverage",
+      "message": "semantic action targets 'in', but lineage mappings do not mention that output"
+    }
+  ]
+}

@@ -34,3 +34,12 @@ pub(crate) fn com_error(
 ) -> Diagnostic {
     stage_error(id, DiagnosticStage::CanonicalObjectModel, category, message)
 }
+
+/// Convenience builder for planning-stage errors.
+pub(crate) fn planning_error(
+    id: &str,
+    category: DiagnosticCategory,
+    message: impl Into<String>,
+) -> Diagnostic {
+    stage_error(id, DiagnosticStage::Planning, category, message)
+}

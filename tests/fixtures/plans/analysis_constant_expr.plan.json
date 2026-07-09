@@ -1,0 +1,74 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "analysis.constant.expr",
+    "name": "Analysis constant expr",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "const_add",
+      "kind": {
+        "kind": "expression",
+        "id": "const_add",
+        "expr": "1 + 2",
+        "type": "integer"
+      },
+      "objectRef": "expressions.const_add"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {},
+  "findings": [
+    {
+      "objectRef": "expressions.const_add",
+      "kind": "constantExpression",
+      "message": "expression is constant and may be evaluated during planning"
+    }
+  ]
+}

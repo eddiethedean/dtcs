@@ -11,6 +11,7 @@ Commands:
 ```bash
 dtcs validate <path>
 dtcs analyze <path> [--registry PATH] [--json]
+dtcs plan <path> [--registry PATH] [--json]
 dtcs inspect <path>
 dtcs diagnostics <path>
 dtcs version
@@ -37,6 +38,8 @@ dtcs registry resolve <id> [--registry PATH] [--json]
 `registry list` prints the embedded catalog (optionally merged with `--registry`).
 
 `registry resolve` returns exit code 0 when the identifier is found, exit code 1 when unresolved.
+
+`plan` returns exit code 1 when lowering or plan validation fails.
 
 CLI behavior should reflect the diagnostics and validation model in `SPEC.md`.
 

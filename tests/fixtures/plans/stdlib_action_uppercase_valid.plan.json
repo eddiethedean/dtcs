@@ -1,0 +1,79 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.action.uppercase.valid",
+    "name": "Stdlib Uppercase Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "email_upper",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "make_upper",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "make_upper",
+        "action": "dtcs:uppercase",
+        "target": "in.email"
+      },
+      "objectRef": "semanticActions.make_upper"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "make_upper",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {},
+  "findings": [
+    {
+      "objectRef": "semanticActions.make_upper",
+      "kind": "lineageCoverage",
+      "message": "semantic action targets 'in', but lineage mappings do not mention that output"
+    }
+  ]
+}

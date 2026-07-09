@@ -1,0 +1,77 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "expression.precedence.compare",
+    "name": "Expression Precedence Compare",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "a",
+            "type": "integer",
+            "nullable": false
+          },
+          {
+            "name": "b",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "flag",
+            "type": "boolean",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "compare_sum",
+      "kind": {
+        "kind": "expression",
+        "id": "compare_sum",
+        "expr": "in.a < in.b + 1",
+        "type": "boolean"
+      },
+      "objectRef": "expressions.compare_sum"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "compare_sum",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

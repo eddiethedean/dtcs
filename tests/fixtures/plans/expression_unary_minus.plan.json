@@ -1,0 +1,72 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "expression.unary.minus",
+    "name": "Expression Unary Minus",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "negate",
+      "kind": {
+        "kind": "expression",
+        "id": "negate",
+        "expr": "-in.value",
+        "type": "integer"
+      },
+      "objectRef": "expressions.negate"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "negate",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

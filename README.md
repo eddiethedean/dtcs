@@ -15,11 +15,11 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.6.0` — validation, analysis (Ch 7–8), registries, and embedded standard libraries with registry-driven semantics validation |
+| **Reference implementation** | `0.7.0` — validation, analysis, registries, standard libraries, and transformation plan lowering |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
-**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, and trace dataset lineage — all read-only, no execution engine required.
+**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage, and lower validated contracts to transformation plans — all read-only, no execution engine required.
 
 [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
@@ -37,7 +37,7 @@ dtcs validate examples/customer_normalize.dtcs.yaml
 
 Both packages install the `dtcs` CLI on `PATH`:
 
-`validate` · `analyze` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
+`validate` · `analyze` · `plan` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
 
 **Develop from source** (requires Rust + [maturin](https://www.maturin.rs/)): see [CONTRIBUTING.md](CONTRIBUTING.md).
 
@@ -49,6 +49,9 @@ dtcs validate examples/customer_normalize.dtcs.yaml
 
 # Analyze a contract (static semantics; no runtime evaluation)
 dtcs analyze examples/customer_normalize.dtcs.yaml
+
+# Lower a validated contract to a transformation plan
+dtcs plan examples/customer_normalize.dtcs.yaml
 
 # Human-readable summary
 dtcs inspect examples/customer_normalize.dtcs.yaml
@@ -70,13 +73,16 @@ report = dtcs.parse_and_validate(
     open("examples/customer_normalize.dtcs.yaml", "rb").read()
 )
 assert dtcs.is_valid(report)
+
+plan = dtcs.plan_lower(dtcs.parse_file("examples/customer_normalize.dtcs.yaml")["contract"])
+assert dtcs.is_valid({"diagnostics": plan["diagnostics"]})
 ```
 
 Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full walkthrough. For normative definitions, see [SPEC.md](SPEC.md) — start with [Chapter 3 (COM)](SPEC.md#chapter-3----canonical-object-model) and [Chapter 9 (Validation)](SPEC.md#chapter-9----validation).
 
 ## Pipeline
 
-The reference implementation through Phase 0.5:
+The reference implementation through Phase 0.7:
 
 ```text
 DTCS Document
@@ -86,20 +92,21 @@ Parser → Canonical Object Model
         │
         ├──────────────────────────────┐
         ▼                              ▼
-Validator (0.1–0.5)              Analyzer (0.3)
+Validator (0.1–0.6)              Analyzer (0.3, 0.6)
         │                              │
         │  registry::resolve           ├─ compatibility::analyze
         │  stdlib definition checks    ├─ analyze_evolution
         ▼                              ├─ versioning::validate
 Diagnostics                            └─ lineage::analyze
         │                              │
-        │                              ▼
-        │                         Analysis reports
+        ▼                              ▼
+   Plan lowering (0.7)            Analysis reports
+        │
         ▼
-   (valid contracts only for analysis)
+Transformation Plan
 ```
 
-Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation. Phase 0.5 embeds starter standard libraries for semantic actions, functions, and rules, and validates contract usage against structured registry definitions (target types, phases, arity, and return types).
+Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation. Phase 0.5 embeds starter standard libraries for semantic actions, functions, and rules, and validates contract usage against structured registry definitions (target types, phases, arity, and return types). Phase 0.6 adds static semantic analysis. Phase 0.7 lowers validated contracts into transformation plans with dependency graphs and plan validation.
 
 Execution, backend compilation, and runtime behavior remain out of scope. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 

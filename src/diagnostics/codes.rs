@@ -62,6 +62,16 @@ pub const INVALID_SEMANTICS: &str = "dtcs:invalid-semantics";
 pub const NON_DETERMINISTIC_SEMANTICS: &str = "dtcs:non-deterministic-semantics";
 /// Implicit or inconsistent null handling in expressions.
 pub const NULL_SEMANTICS_VIOLATION: &str = "dtcs:null-semantics-violation";
+/// General transformation plan validation failure.
+pub const INVALID_PLAN: &str = "dtcs:invalid-plan";
+/// Missing required semantic content in a plan.
+pub const INCOMPLETE_PLAN: &str = "dtcs:incomplete-plan";
+/// Cyclic dependency in the plan graph.
+pub const CYCLIC_DEPENDENCY: &str = "dtcs:cyclic-dependency";
+/// Type preservation failure during planning.
+pub const PLAN_TYPE_MISMATCH: &str = "dtcs:plan-type-mismatch";
+/// Unresolved reference in a plan dependency or node.
+pub const UNRESOLVED_PLAN_REFERENCE: &str = "dtcs:unresolved-plan-reference";
 
 /// All standardized diagnostic identifiers registered by this implementation.
 pub const ALL_CODES: &[&str] = &[
@@ -96,4 +106,9 @@ pub const ALL_CODES: &[&str] = &[
     INVALID_SEMANTICS,
     NON_DETERMINISTIC_SEMANTICS,
     NULL_SEMANTICS_VIOLATION,
+    INVALID_PLAN,
+    INCOMPLETE_PLAN,
+    CYCLIC_DEPENDENCY,
+    PLAN_TYPE_MISMATCH,
+    UNRESOLVED_PLAN_REFERENCE,
 ];

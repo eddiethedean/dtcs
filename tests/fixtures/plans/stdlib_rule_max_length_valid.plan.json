@@ -1,0 +1,76 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.rule.max_length.valid",
+    "name": "Stdlib Max Length Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "code_max",
+      "kind": {
+        "kind": "rule",
+        "id": "code_max",
+        "rule": "dtcs:max_length",
+        "target": "in.code",
+        "phase": "postcondition",
+        "parameters": {
+          "max": 10
+        }
+      },
+      "objectRef": "rules.code_max"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "code_max",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

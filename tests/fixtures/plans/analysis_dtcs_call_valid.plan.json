@@ -1,0 +1,72 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "analysis.dtcs.call.valid",
+    "name": "Analysis dtcs call valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "lowered",
+      "kind": {
+        "kind": "expression",
+        "id": "lowered",
+        "expr": "dtcs:lower(in.value)",
+        "type": "string"
+      },
+      "objectRef": "expressions.lowered"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "lowered",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

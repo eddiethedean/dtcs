@@ -1,0 +1,104 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "lineage.multi",
+    "name": "Multi IO Lineage",
+    "version": "1.0.0"
+  },
+  "inputs": [
+    {
+      "id": "customers",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    },
+    {
+      "id": "orders",
+      "schema": {
+        "fields": [
+          {
+            "name": "customer_id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "customer_summary",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "order_enriched",
+      "schema": {
+        "fields": [
+          {
+            "name": "customer_id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "customers",
+      "to": "customer_summary",
+      "reason": "lineage"
+    },
+    {
+      "from": "customers",
+      "to": "order_enriched",
+      "reason": "lineage"
+    },
+    {
+      "from": "orders",
+      "to": "order_enriched",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "customer_summary",
+        "inputs": [
+          "customers"
+        ]
+      },
+      {
+        "output": "order_enriched",
+        "inputs": [
+          "orders",
+          "customers"
+        ]
+      }
+    ]
+  },
+  "guarantees": {},
+  "metadata": {
+    "governance": {
+      "owner": "data-platform",
+      "steward": "analytics"
+    }
+  }
+}

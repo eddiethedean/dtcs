@@ -1,0 +1,129 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "precondition.example",
+    "name": "Precondition Example",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "source",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false,
+      "preconditions": [
+        {
+          "rule": "source_not_empty"
+        }
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "result",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "postconditions": [
+        {
+          "rule": "result_not_empty"
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "id": "result_not_empty",
+      "kind": {
+        "kind": "rule",
+        "id": "result_not_empty",
+        "rule": "dtcs:not_null",
+        "target": "result.id",
+        "phase": "postcondition"
+      },
+      "objectRef": "rules.result_not_empty"
+    },
+    {
+      "id": "source_not_empty",
+      "kind": {
+        "kind": "rule",
+        "id": "source_not_empty",
+        "rule": "dtcs:not_null",
+        "target": "source.id",
+        "phase": "precondition"
+      },
+      "objectRef": "rules.source_not_empty"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "source",
+      "to": "result",
+      "reason": "lineage"
+    },
+    {
+      "from": "source",
+      "to": "result_not_empty",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source",
+      "to": "result_not_empty",
+      "reason": "interfaceCondition"
+    },
+    {
+      "from": "source",
+      "to": "source_not_empty",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "source",
+      "to": "source_not_empty",
+      "reason": "interfaceCondition"
+    },
+    {
+      "from": "source_not_empty",
+      "to": "result_not_empty",
+      "reason": "rulePhase"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "result",
+        "inputs": [
+          "source"
+        ]
+      }
+    ]
+  },
+  "guarantees": {
+    "inputPreconditions": [
+      {
+        "interfaceId": "source",
+        "isInput": true,
+        "ruleId": "source_not_empty"
+      }
+    ],
+    "outputPostconditions": [
+      {
+        "interfaceId": "result",
+        "isInput": false,
+        "ruleId": "result_not_empty"
+      }
+    ]
+  }
+}

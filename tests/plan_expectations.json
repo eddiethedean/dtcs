@@ -1,0 +1,196 @@
+{
+  "fixtures": [
+    {
+      "file": "valid_customer.yaml",
+      "plan_valid": true,
+      "golden": "plans/valid_customer.plan.json"
+    },
+    {
+      "file": "valid_minimal.json",
+      "plan_valid": true,
+      "golden": "plans/valid_minimal.plan.json"
+    },
+    {
+      "file": "valid_metadata.yaml",
+      "plan_valid": true,
+      "golden": "plans/valid_metadata.plan.json"
+    },
+    {
+      "file": "streaming_unbounded.yaml",
+      "plan_valid": true,
+      "golden": "plans/streaming_unbounded.plan.json"
+    },
+    {
+      "file": "optional_input.yaml",
+      "plan_valid": true,
+      "golden": "plans/optional_input.plan.json"
+    },
+    {
+      "file": "input_precondition.yaml",
+      "plan_valid": true,
+      "golden": "plans/input_precondition.plan.json"
+    },
+    {
+      "file": "map_type_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/map_type_valid.plan.json"
+    },
+    {
+      "file": "extension_type_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/extension_type_valid.plan.json"
+    },
+    {
+      "file": "expression_with_type.yaml",
+      "plan_valid": true,
+      "golden": "plans/expression_with_type.plan.json"
+    },
+    {
+      "file": "analysis_dtcs_call_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/analysis_dtcs_call_valid.plan.json"
+    },
+    {
+      "file": "analysis_logical_ops.yaml",
+      "plan_valid": true,
+      "golden": "plans/analysis_logical_ops.plan.json"
+    },
+    {
+      "file": "analysis_constant_expr.yaml",
+      "plan_valid": true,
+      "golden": "plans/analysis_constant_expr.plan.json"
+    },
+    {
+      "file": "analysis_duplicate_action_target.yaml",
+      "plan_valid": false,
+      "codes": [
+        "dtcs:invalid-plan"
+      ]
+    },
+    {
+      "file": "nested_collection_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/nested_collection_valid.plan.json"
+    },
+    {
+      "file": "valid_conversion_lossy.yaml",
+      "plan_valid": true,
+      "golden": "plans/valid_conversion_lossy.plan.json"
+    },
+    {
+      "file": "expression_precedence_multiply.yaml",
+      "plan_valid": true,
+      "golden": "plans/expression_precedence_multiply.plan.json"
+    },
+    {
+      "file": "expression_precedence_compare.yaml",
+      "plan_valid": true,
+      "golden": "plans/expression_precedence_compare.plan.json"
+    },
+    {
+      "file": "expression_unary_minus.yaml",
+      "plan_valid": true,
+      "golden": "plans/expression_unary_minus.plan.json"
+    },
+    {
+      "file": "lineage_multi.yaml",
+      "plan_valid": true,
+      "golden": "plans/lineage_multi.plan.json"
+    },
+    {
+      "file": "stdlib_action_uppercase_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_action_uppercase_valid.plan.json"
+    },
+    {
+      "file": "stdlib_action_capitalize_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_action_capitalize_valid.plan.json"
+    },
+    {
+      "file": "stdlib_action_trim_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_action_trim_valid.plan.json"
+    },
+    {
+      "file": "stdlib_action_normalize_whitespace_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_action_normalize_whitespace_valid.plan.json"
+    },
+    {
+      "file": "stdlib_action_hash_sha256_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_action_hash_sha256_valid.plan.json"
+    },
+    {
+      "file": "stdlib_rule_min_length_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_rule_min_length_valid.plan.json"
+    },
+    {
+      "file": "stdlib_rule_max_length_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_rule_max_length_valid.plan.json"
+    },
+    {
+      "file": "stdlib_rule_regex_match_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_rule_regex_match_valid.plan.json"
+    },
+    {
+      "file": "stdlib_rule_range_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_rule_range_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_concat_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_concat_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_length_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_length_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_substr_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_substr_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_coalesce_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_coalesce_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_lower_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_lower_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_upper_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_upper_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_replace_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_replace_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_to_string_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_to_string_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_to_integer_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_to_integer_valid.plan.json"
+    },
+    {
+      "file": "stdlib_function_to_decimal_valid.yaml",
+      "plan_valid": true,
+      "golden": "plans/stdlib_function_to_decimal_valid.plan.json"
+    }
+  ]
+}

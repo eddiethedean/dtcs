@@ -1,0 +1,71 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.function.to_integer.valid",
+    "name": "Stdlib To Integer Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "raw",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "as_int",
+      "function": "dtcs:to_integer",
+      "type": "integer",
+      "nullable": true,
+      "parameters": [
+        {
+          "name": "raw",
+          "type": "string",
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

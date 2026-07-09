@@ -1,0 +1,77 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "expression.precedence.multiply",
+    "name": "Expression Precedence Multiply",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "a",
+            "type": "integer",
+            "nullable": false
+          },
+          {
+            "name": "b",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "sum_then_multiply",
+      "kind": {
+        "kind": "expression",
+        "id": "sum_then_multiply",
+        "expr": "in.a + in.b * 2",
+        "type": "integer"
+      },
+      "objectRef": "expressions.sum_then_multiply"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "sum_then_multiply",
+      "reason": "fieldRead"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

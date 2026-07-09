@@ -1,4 +1,14 @@
-//! Transformation plan (future milestone).
+//! Transformation plan lowering and validation (SPEC Chapter 13).
 
-/// Transformation plan IR (not yet implemented).
-pub struct TransformationPlan;
+mod graph;
+mod lowering;
+mod model;
+mod validate;
+
+pub use graph::topological_order;
+pub use lowering::{lower, lower_report, PlanResult};
+pub use model::{
+    DependencyReason, InterfaceConditionRef, PlanDependency, PlanGuarantees, PlanIdentity,
+    PlanNode, PlanNodeKind, TransformationPlan,
+};
+pub use validate::{validate, validate_with_registry};

@@ -1,0 +1,75 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.function.substr.valid",
+    "name": "Stdlib Substr Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "text",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "slice",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "slice_text",
+      "function": "dtcs:substr",
+      "type": "string",
+      "parameters": [
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "start",
+          "type": "integer",
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

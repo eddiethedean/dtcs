@@ -1,12 +1,13 @@
 //! Reference implementation of the Data Transformation Contract Standard (DTCS).
 //!
 //! [`SPEC.md`](../SPEC.md) at the repository root is the authoritative normative
-//! specification. This crate implements the pipeline through contract analysis:
+//! specification. This crate implements the pipeline through transformation plan lowering:
 //!
 //! ```text
 //! DTCS Document → Parser → Canonical Object Model → Validator → Diagnostics
 //!                                              ├→ Analyzer → Analysis reports
-//!                                              └→ Registry (identifier resolution)
+//!                                              ├→ Registry (identifier resolution)
+//!                                              └→ Planner → Transformation Plan
 //! ```
 //!
 //! # Example
@@ -82,6 +83,7 @@ pub use model::{
     TransformationContract, TypeCompatibility, TypeParseError,
 };
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
+pub use plan::{lower as lower_plan, validate as validate_plan, PlanResult, TransformationPlan};
 pub use registry::{
     default_registry, is_known_action, is_known_function, is_known_rule, load as load_registry,
     load_merged, resolve as resolve_registry, resolve_default,
@@ -92,6 +94,27 @@ pub use validation::{validate, validate_with_registry, ValidationPhase};
 #[must_use]
 pub fn parse_and_validate(content: &[u8], format: DocumentFormat) -> ValidationReport {
     parse(content, format).validate()
+}
+
+/// Parse, validate, and lower a DTCS document to a transformation plan.
+#[must_use]
+pub fn parse_validate_and_plan(content: &[u8], format: DocumentFormat) -> plan::PlanResult {
+    let parse_result = parse(content, format);
+    let Some(contract) = parse_result.contract else {
+        return plan::PlanResult {
+            diagnostics: parse_result.report.diagnostics,
+            ..plan::PlanResult::default()
+        };
+    };
+    let validation = validate(&contract);
+    if !validation.is_valid() {
+        return plan::PlanResult {
+            diagnostics: validation.diagnostics,
+            ..plan::PlanResult::default()
+        };
+    }
+    let analysis = analysis::check_contract(&contract, None);
+    plan::lower(&contract, None, Some(&analysis))
 }
 
 impl TransformationContract {

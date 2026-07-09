@@ -1,0 +1,62 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "streaming.example",
+    "name": "Streaming Example",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "events",
+      "schema": {
+        "fields": [
+          {
+            "name": "event_id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false,
+      "streaming": {
+        "mode": "unbounded"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "aggregated",
+      "schema": {
+        "fields": [
+          {
+            "name": "count",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "streaming": {
+        "mode": "bounded"
+      }
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "events",
+      "to": "aggregated",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "aggregated",
+        "inputs": [
+          "events"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

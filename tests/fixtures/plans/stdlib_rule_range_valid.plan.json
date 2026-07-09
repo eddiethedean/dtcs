@@ -1,0 +1,77 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.rule.range.valid",
+    "name": "Stdlib Range Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "score",
+            "type": "integer",
+            "nullable": true
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "score",
+            "type": "integer",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "score_range",
+      "kind": {
+        "kind": "rule",
+        "id": "score_range",
+        "rule": "dtcs:range",
+        "target": "in.score",
+        "phase": "postcondition",
+        "parameters": {
+          "min": 0,
+          "max": 100
+        }
+      },
+      "objectRef": "rules.score_range"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "score_range",
+      "reason": "fieldRead"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

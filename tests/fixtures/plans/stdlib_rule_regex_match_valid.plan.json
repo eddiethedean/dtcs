@@ -1,0 +1,76 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.rule.regex_match.valid",
+    "name": "Stdlib Regex Match Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "email_pattern",
+      "kind": {
+        "kind": "rule",
+        "id": "email_pattern",
+        "rule": "dtcs:regex_match",
+        "target": "in.email",
+        "phase": "postcondition",
+        "parameters": {
+          "pattern": "^[^@]+@[^@]+$"
+        }
+      },
+      "objectRef": "rules.email_pattern"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "email_pattern",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

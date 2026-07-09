@@ -17,6 +17,17 @@ Tests should be written against `SPEC.md`.
 
 Integration tests: [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs).
 
+## Phase 0.7 fixture groups
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Plan lowering | `valid_customer.yaml`, `valid_minimal.json`, `plan_explicit_ordering.yaml` |
+| Dependency graph | `lineage_multi.yaml` |
+| Ambiguous action order | `analysis_duplicate_action_target.yaml` (plan invalid) |
+| Golden plans | `tests/fixtures/plans/*.plan.json` via `tests/plan_expectations.json` |
+
+Integration tests: [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs).
+
 ## Phase 0.2 fixture groups
 
 | Concern | Example fixtures |

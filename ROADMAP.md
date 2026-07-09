@@ -32,7 +32,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
 | **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog) |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | **Complete** (`0.6.0`) |
-| **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | Planned |
+| **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | **Complete** (`0.7.0`) |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | Planned |
 | **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | Planned |
 | **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | Planned |
@@ -359,8 +359,8 @@ Lower validated COM into canonical semantic IR ([Ch 2 §5](SPEC.md#chapter-2----
 
 ### Exit criteria
 
-- [Ch 13 §14](SPEC.md#chapter-13----transformation-plan) (excluding optimization)
-- Golden files lock plan shape for fixture corpus
+- [x] [Ch 13 §14](SPEC.md#chapter-13----transformation-plan) (excluding optimization)
+- [x] Golden files lock plan shape for fixture corpus
 
 ---
 

@@ -1,0 +1,77 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "analysis.logical.ops",
+    "name": "Analysis logical ops",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "a",
+            "type": "integer",
+            "nullable": false
+          },
+          {
+            "name": "b",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "ok",
+            "type": "boolean",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ok_expr",
+      "kind": {
+        "kind": "expression",
+        "id": "ok_expr",
+        "expr": "in.a > 0 && in.b > 0",
+        "type": "boolean"
+      },
+      "objectRef": "expressions.ok_expr"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "ok_expr",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

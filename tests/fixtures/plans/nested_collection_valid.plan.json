@@ -1,0 +1,56 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "nested.collection",
+    "name": "Nested Collection",
+    "version": "0.2.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "nested",
+            "type": "list<map<string,integer>>",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "pair",
+            "type": "tuple<string,integer>",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

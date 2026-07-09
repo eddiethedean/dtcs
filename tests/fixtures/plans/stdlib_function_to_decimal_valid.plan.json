@@ -1,0 +1,71 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.function.to_decimal.valid",
+    "name": "Stdlib To Decimal Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "raw",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "decimal",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "as_dec",
+      "function": "dtcs:to_decimal",
+      "type": "decimal",
+      "nullable": true,
+      "parameters": [
+        {
+          "name": "raw",
+          "type": "string",
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

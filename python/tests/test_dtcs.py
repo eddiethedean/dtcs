@@ -14,6 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FIXTURES = REPO_ROOT / "tests" / "fixtures"
 EXAMPLE = REPO_ROOT / "examples" / "customer_normalize.dtcs.yaml"
 MANIFEST = REPO_ROOT / "tests" / "fixture_expectations.json"
+PLAN_MANIFEST = REPO_ROOT / "tests" / "plan_expectations.json"
 
 
 def _fixture_dir() -> Path:
@@ -30,6 +31,10 @@ def _fixture_format(name: str) -> str:
 
 def _load_manifest() -> list[dict]:
     return json.loads(MANIFEST.read_text(encoding="utf-8"))["fixtures"]
+
+
+def _load_plan_manifest() -> list[dict]:
+    return json.loads(PLAN_MANIFEST.read_text(encoding="utf-8"))["fixtures"]
 
 
 def test_spec_version() -> None:
@@ -195,6 +200,35 @@ def test_fixture_expectations(entry: dict) -> None:
             assert code in ids
 
 
+@pytest.mark.parametrize("entry", _load_plan_manifest(), ids=lambda entry: entry["file"])
+def test_plan_expectations(entry: dict) -> None:
+    name = entry["file"]
+    content = _fixture(name)
+    doc_format = _fixture_format(name)
+    result = dtcs.parse(content, doc_format)
+    contract = result["contract"]
+    assert contract is not None
+    plan_result = dtcs.plan_lower(contract)
+    assert dtcs.is_valid({"diagnostics": plan_result.get("diagnostics", [])}) is entry["plan_valid"]
+    if entry["plan_valid"]:
+        golden_path = FIXTURES / entry["golden"]
+        expected = json.loads(golden_path.read_text(encoding="utf-8"))
+        assert plan_result["plan"] == expected
+        validation = dtcs.plan_validate(plan_result["plan"])
+        assert dtcs.is_valid(validation)
+    elif codes := entry.get("codes"):
+        ids = {diagnostic["id"] for diagnostic in plan_result.get("diagnostics", [])}
+        for code in codes:
+            assert code in ids
+
+
+def test_plan_lower_deterministic() -> None:
+    result = dtcs.parse(_fixture("valid_customer.yaml"), "yaml")
+    first = dtcs.plan_lower(result["contract"])
+    second = dtcs.plan_lower(result["contract"])
+    assert first == second
+
+
 def _python_dtcs(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "dtcs", *args],
@@ -221,6 +255,20 @@ def test_cli_validate_fails_on_invalid_contract() -> None:
     path = _fixture_dir() / "missing_lineage.yaml"
     output = _python_dtcs("validate", str(path))
     assert output.returncode != 0
+
+
+def test_cli_plan_succeeds_on_example() -> None:
+    output = _python_dtcs("plan", str(EXAMPLE), "--json")
+    assert output.returncode == 0
+    plan = json.loads(output.stdout)
+    assert plan["identity"]["id"] == "customer.normalize"
+
+
+def test_cli_plan_fails_on_ambiguous_actions() -> None:
+    path = _fixture_dir() / "analysis_duplicate_action_target.yaml"
+    output = _python_dtcs("plan", str(path))
+    assert output.returncode != 0
+    assert "dtcs:invalid-plan" in output.stdout
 
 
 def test_cli_inspect_fails_on_invalid_contract() -> None:

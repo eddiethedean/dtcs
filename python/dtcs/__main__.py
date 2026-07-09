@@ -17,6 +17,7 @@ from dtcs import (
     is_valid,
     lineage_analyze,
     parse_file,
+    plan_lower,
     registry_list,
     registry_resolve,
     validate_result,
@@ -88,6 +89,11 @@ def _build_parser() -> argparse.ArgumentParser:
     analyze_parser.add_argument("path", type=Path)
     analyze_parser.add_argument("--registry", type=Path, default=None)
     analyze_parser.add_argument("--json", action="store_true")
+
+    plan_parser = subparsers.add_parser("plan", help="Lower a contract to a transformation plan")
+    plan_parser.add_argument("path", type=Path)
+    plan_parser.add_argument("--registry", type=Path, default=None)
+    plan_parser.add_argument("--json", action="store_true")
 
     inspect_parser = subparsers.add_parser("inspect", help="Print a contract summary")
     inspect_parser.add_argument("path", type=Path)
@@ -230,6 +236,34 @@ def main(argv: list[str] | None = None) -> int:
                 print("no analysis diagnostics")
         valid = is_valid(result.get("validation", {})) and is_valid(result.get("analysis", {}))
         return 0 if valid else 1
+
+    if args.command == "plan":
+        registry_path = str(args.registry) if args.registry else None
+        contract = _load_valid_contract(
+            args.path,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
+        try:
+            result = plan_lower(contract, registry_path)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not is_valid({"diagnostics": result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": result.get("diagnostics", [])},
+                json_output=args.json,
+                mode="diagnostics",
+            )
+            return 1
+        plan = result.get("plan")
+        if args.json:
+            print(json.dumps(plan, indent=2))
+        else:
+            print(f"plan: {plan.get('identity', {}).get('id', '')}")
+            print(f"nodes: {len(plan.get('nodes', []))}")
+            print(f"dependencies: {len(plan.get('dependencies', []))}")
+        return 0
 
     if args.command == "compat":
         registry_path = str(args.registry) if args.registry else None

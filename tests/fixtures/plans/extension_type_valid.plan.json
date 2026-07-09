@@ -1,0 +1,56 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "extension.type",
+    "name": "Extension Type",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "amount",
+            "type": "vendor:Money",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "amount",
+            "type": "vendor:Money",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

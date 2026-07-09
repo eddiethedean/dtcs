@@ -10,7 +10,7 @@ use crate::diagnostics::inspect_contract;
 use crate::lineage::analyze_with_options;
 use crate::model::TransformationContract;
 use crate::parser::{parse, parse_file, DocumentFormat, ParseResult};
-use crate::{analysis, AnalysisReport, ValidationReport};
+use crate::{analysis, plan, AnalysisReport, ValidationReport};
 
 fn value_to_py(py: Python<'_>, value: &impl Serialize) -> PyResult<Py<PyAny>> {
     let json = serde_json::to_string(value)
@@ -94,6 +94,15 @@ fn contract_deserialize_error(message: &str) -> PyErr {
     PyValueError::new_err(format!("invalid contract: {message}"))
 }
 
+fn plan_from_py(py: Python<'_>, plan_obj: &Bound<'_, PyAny>) -> PyResult<plan::TransformationPlan> {
+    if plan_obj.is_none() {
+        return Err(PyTypeError::new_err("plan must be a dict, not None"));
+    }
+    let json_mod = py.import("json")?;
+    let json_str: String = json_mod.call_method1("dumps", (plan_obj,))?.extract()?;
+    serde_json::from_str(&json_str).map_err(|e| PyValueError::new_err(format!("invalid plan: {e}")))
+}
+
 fn parse_result_to_py(py: Python<'_>, result: ParseResult) -> PyResult<Py<PyAny>> {
     let dict = PyDict::new(py);
     match result.contract {
@@ -175,6 +184,42 @@ fn analyze_contract(
             analysis,
         },
     )
+}
+
+/// Lower a parsed transformation contract to a plan.
+#[pyfunction]
+#[pyo3(signature = (contract, registry_path=None))]
+fn plan_lower(
+    py: Python<'_>,
+    contract: &Bound<'_, PyAny>,
+    registry_path: Option<String>,
+) -> PyResult<Py<PyAny>> {
+    let contract = contract_from_py(py, contract)?;
+    let registry_doc = if let Some(path) = registry_path.as_deref() {
+        crate::registry::load_merged(path).map_err(registry_error)?
+    } else {
+        crate::registry::default_registry().clone()
+    };
+    let analysis = analysis::check_contract(&contract, Some(&registry_doc));
+    let result = plan::lower(&contract, Some(&registry_doc), Some(&analysis));
+    value_to_py(py, &result)
+}
+
+/// Validate a transformation plan.
+#[pyfunction]
+#[pyo3(signature = (plan_obj, registry_path=None))]
+fn plan_validate(
+    py: Python<'_>,
+    plan_obj: &Bound<'_, PyAny>,
+    registry_path: Option<String>,
+) -> PyResult<Py<PyAny>> {
+    let plan = plan_from_py(py, plan_obj)?;
+    let registry_doc = if let Some(path) = registry_path.as_deref() {
+        crate::registry::load_merged(path).map_err(registry_error)?
+    } else {
+        crate::registry::default_registry().clone()
+    };
+    value_to_py(py, &plan::validate_with_registry(&plan, &registry_doc))
 }
 
 /// Parse and validate a DTCS document in one step.
@@ -305,6 +350,8 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(parse_path, m)?)?;
     m.add_function(wrap_pyfunction!(validate_contract, m)?)?;
     m.add_function(wrap_pyfunction!(analyze_contract, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_lower, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_validate, m)?)?;
     m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;
     m.add_function(wrap_pyfunction!(inspect, m)?)?;

@@ -1,0 +1,71 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.function.to_string.valid",
+    "name": "Stdlib To String Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "count",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "as_text",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "as_str",
+      "function": "dtcs:to_string",
+      "type": "string",
+      "nullable": true,
+      "parameters": [
+        {
+          "name": "count",
+          "type": "integer",
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

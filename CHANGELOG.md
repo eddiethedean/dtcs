@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.7.0
+
+Phase 0.7 — Transformation Plan lowering (Ch 13 §4–8, §11–12, §14).
+
+### Features
+
+- New `plan` module with `lower` / `validate` lowering validated COM into canonical semantic IR.
+- `TransformationPlan` IR: inputs, outputs, functions, semantic step nodes, dependency graph, lineage, and contractual guarantees.
+- Dependency graph construction from lineage, field references, explicit action ordering, rule phases, and interface conditions.
+- Planning-stage diagnostics: `dtcs:invalid-plan`, `dtcs:incomplete-plan`, `dtcs:cyclic-dependency`, `dtcs:plan-type-mismatch`, `dtcs:unresolved-plan-reference`.
+- CLI and Python: `dtcs plan` / `plan_lower` / `plan_validate`; `parse_validate_and_plan` convenience API.
+- Analysis findings automatically attached during lowering.
+
+### Tests
+
+- Phase 0.7 integration tests, `tests/plan_expectations.json`, and golden plan files under `tests/fixtures/plans/`.
+
 ## 0.6.0
 
 Phase 0.6 — Semantic analysis of transformation semantics (Ch 7) and expressions (Ch 8).

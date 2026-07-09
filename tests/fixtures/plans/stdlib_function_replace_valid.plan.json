@@ -1,0 +1,81 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "stdlib.function.replace.valid",
+    "name": "Stdlib Replace Valid",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "text",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "text_replaced",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "repl",
+      "function": "dtcs:replace",
+      "type": "string",
+      "nullable": true,
+      "parameters": [
+        {
+          "name": "text",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "from",
+          "type": "string",
+          "optional": false
+        },
+        {
+          "name": "to",
+          "type": "string",
+          "optional": false
+        }
+      ]
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

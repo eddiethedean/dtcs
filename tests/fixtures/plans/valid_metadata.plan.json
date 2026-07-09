@@ -1,0 +1,96 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "metadata.example",
+    "name": "Metadata Example",
+    "version": "0.2.0"
+  },
+  "inputs": [
+    {
+      "id": "source",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false,
+      "metadata": {
+        "description": "Primary input dataset",
+        "classification": "internal"
+      }
+    }
+  ],
+  "outputs": [
+    {
+      "id": "result",
+      "schema": {
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [],
+  "dependencies": [
+    {
+      "from": "source",
+      "to": "result",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "result",
+        "inputs": [
+          "source"
+        ]
+      }
+    ]
+  },
+  "guarantees": {},
+  "metadata": {
+    "description": "Contract with full metadata",
+    "tags": [
+      "example",
+      "metadata"
+    ],
+    "identity": {
+      "identifier": "metadata.example",
+      "name": "Metadata Example",
+      "version": "0.2.0"
+    },
+    "documentation": {
+      "summary": "Demonstrates metadata categories",
+      "examples": [
+        "See customer_normalize.dtcs.yaml"
+      ]
+    },
+    "governance": {
+      "owner": "data-platform",
+      "steward": "analytics-team",
+      "approvalStatus": "approved",
+      "reviewDate": "2026-01-15",
+      "policyRefs": [
+        "https://example.com/policies/data-governance",
+        "vendor:retention-policy"
+      ]
+    },
+    "provenance": {
+      "author": "platform-team",
+      "createdAt": "2026-01-10T09:00:00Z",
+      "modifiedAt": "2026-01-15T14:30:00Z",
+      "originatingSystem": "contract-editor"
+    },
+    "classification": "internal",
+    "vendor:customNote": "preserved extension metadata"
+  }
+}

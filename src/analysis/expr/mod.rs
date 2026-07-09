@@ -72,3 +72,30 @@ pub fn check_expression(
 
     out
 }
+
+/// Collect qualified field reference targets from an expression AST.
+#[must_use]
+pub fn collect_field_refs(expr: &ast::Expr) -> Vec<String> {
+    let mut refs = Vec::new();
+    collect_field_refs_inner(expr, &mut refs);
+    refs.sort();
+    refs.dedup();
+    refs
+}
+
+fn collect_field_refs_inner(expr: &ast::Expr, out: &mut Vec<String>) {
+    match expr {
+        ast::Expr::Literal { .. } => {}
+        ast::Expr::FieldRef { target, .. } => out.push(target.clone()),
+        ast::Expr::Unary { expr, .. } => collect_field_refs_inner(expr, out),
+        ast::Expr::Binary { left, right, .. } => {
+            collect_field_refs_inner(left, out);
+            collect_field_refs_inner(right, out);
+        }
+        ast::Expr::Call { args, .. } => {
+            for arg in args {
+                collect_field_refs_inner(arg, out);
+            }
+        }
+    }
+}

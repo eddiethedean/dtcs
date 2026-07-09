@@ -12,6 +12,8 @@ from dtcs._native import lineage_analyze as _lineage_analyze
 from dtcs._native import metadata_validate as _metadata_validate
 from dtcs._native import parse_document as _parse_document
 from dtcs._native import parse_path as _parse_path
+from dtcs._native import plan_lower as _plan_lower
+from dtcs._native import plan_validate as _plan_validate
 from dtcs._native import registry_list as _registry_list
 from dtcs._native import registry_load as _registry_load
 from dtcs._native import registry_resolve as _registry_resolve
@@ -50,6 +52,16 @@ def validate_with_registry(contract: dict, registry_path: str) -> dict:
 def analyze(contract: dict, registry_path: str | None = None) -> dict:
     """Analyze a parsed transformation contract (expressions + semantics)."""
     return _analyze_contract(contract, registry_path)
+
+
+def plan_lower(contract: dict, registry_path: str | None = None) -> dict:
+    """Lower a parsed transformation contract to a transformation plan."""
+    return _plan_lower(contract, registry_path)
+
+
+def plan_validate(plan: dict, registry_path: str | None = None) -> dict:
+    """Validate a transformation plan."""
+    return _plan_validate(plan, registry_path)
 
 
 def metadata_validate(contract: dict) -> dict:
@@ -136,6 +148,8 @@ __all__ = [
     "parse",
     "parse_and_validate",
     "parse_file",
+    "plan_lower",
+    "plan_validate",
     "registry_list",
     "registry_load",
     "registry_resolve",

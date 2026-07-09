@@ -1,0 +1,79 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "expression.type",
+    "name": "Expression Type",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "functions": [
+    {
+      "id": "sum_values",
+      "function": "vendor:sum",
+      "type": "integer"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "double_value",
+      "kind": {
+        "kind": "expression",
+        "id": "double_value",
+        "expr": "in.value * 2",
+        "type": "integer"
+      },
+      "objectRef": "expressions.double_value"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "double_value",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

@@ -117,6 +117,41 @@ assert dtcs.is_valid(result["validation"])
 assert dtcs.is_valid(result["analysis"])
 ```
 
+## Transformation plan (Phase 0.7)
+
+Lowering produces the canonical semantic IR (Ch 13) from a validated contract.
+
+```rust
+use dtcs::{analysis, parse_file, plan};
+
+let contract = parse_file("contract.dtcs.yaml")?.into_contract()?;
+let analysis = analysis::check_contract(&contract, None);
+let result = plan::lower(&contract, None, Some(&analysis));
+assert!(result.is_valid());
+let transformation_plan = result.plan.expect("plan");
+
+let validation = plan::validate(&transformation_plan);
+assert!(validation.is_valid());
+```
+
+```python
+import dtcs
+
+contract = dtcs.parse_file("contract.dtcs.yaml")["contract"]
+result = dtcs.plan_lower(contract)
+assert dtcs.is_valid({"diagnostics": result["diagnostics"]})
+plan = result["plan"]
+assert dtcs.is_valid(dtcs.plan_validate(plan))
+```
+
+One-shot convenience:
+
+```rust
+use dtcs::{parse_validate_and_plan, DocumentFormat};
+
+let result = parse_validate_and_plan(yaml_bytes, DocumentFormat::Yaml);
+```
+
 ## Registry (Phase 0.4–0.5)
 
 The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,
@@ -178,6 +213,8 @@ summary = dtcs.inspect(contract)
 | `compat_analyze` | Compare two contracts; returns level, aspects, diagnostics |
 | `evolve_analyze` | Evolution diff between two revisions of the same contract |
 | `lineage_analyze` | Dependency graph, impact, and governance summary |
+| `plan_lower` | Lower a validated contract to a transformation plan |
+| `plan_validate` | Validate a transformation plan |
 | `version_validate` | Ch 25 versioning block validation |
 | `registry_list` | List registry entries (optional vendor catalog path) |
 | `registry_resolve` | Resolve an identifier to a registry entry or `None` |
@@ -192,6 +229,8 @@ The `dtcs` binary is enabled by default in the Rust crate (`cli` feature):
 ```bash
 dtcs validate contract.yaml
 dtcs validate contract.yaml --json
+dtcs analyze contract.yaml --json
+dtcs plan contract.yaml --json
 dtcs inspect contract.yaml
 dtcs inspect contract.yaml --json
 dtcs diagnostics contract.yaml --json
