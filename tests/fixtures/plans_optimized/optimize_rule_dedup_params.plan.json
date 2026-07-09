@@ -1,0 +1,95 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "optimize.rule.dedup.params",
+    "name": "Optimize rule dedup params",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "code",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "code_min_a",
+      "kind": {
+        "kind": "rule",
+        "id": "code_min_a",
+        "rule": "dtcs:min_length",
+        "target": "in.code",
+        "phase": "postcondition",
+        "parameters": {
+          "min": 3
+        }
+      },
+      "objectRef": "rules.code_min_a"
+    },
+    {
+      "id": "code_min_b",
+      "kind": {
+        "kind": "rule",
+        "id": "code_min_b",
+        "rule": "dtcs:min_length",
+        "target": "in.code",
+        "phase": "postcondition",
+        "parameters": {
+          "min": 10
+        }
+      },
+      "objectRef": "rules.code_min_b"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "code_min_a",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "code_min_b",
+      "reason": "fieldRead"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

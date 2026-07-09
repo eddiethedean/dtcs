@@ -77,6 +77,7 @@ dtcs/
         parse.rs
         types.rs
         constants.rs
+        rewrite.rs
     registry/
       mod.rs
       builtin.rs
@@ -88,6 +89,9 @@ dtcs/
       lowering.rs
       graph.rs
       validate.rs
+      optimize.rs
+      equivalence.rs
+      rule_key.rs
     cli/
       mod.rs
     bin/
@@ -99,14 +103,17 @@ dtcs/
       compatibility/
       registry/
       plans/
+      plans_optimized/
     fixture_expectations.json
     plan_expectations.json
+    optimize_expectations.json
     mvp.rs
     phase_0_2.rs
     phase_0_3.rs
     phase_0_4.rs
     phase_0_6.rs
     phase_0_7.rs
+    phase_0_8.rs
     manifest.rs
 ```
 

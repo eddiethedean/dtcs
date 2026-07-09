@@ -244,6 +244,8 @@ summary = dtcs.inspect(contract)
 | `lineage_analyze` | Dependency graph, impact, and governance summary |
 | `plan_lower` | Lower a validated contract to a transformation plan |
 | `plan_validate` | Validate a transformation plan |
+| `plan_optimize` | Optimize a transformation plan (`validate=False` to skip validation) |
+| `plan_equivalent` | Compare two plans for semantic equivalence |
 | `version_validate` | Ch 25 versioning block validation |
 | `registry_list` | List registry entries (optional vendor catalog path) |
 | `registry_resolve` | Resolve an identifier to a registry entry or `None` |
@@ -260,6 +262,8 @@ dtcs validate contract.yaml
 dtcs validate contract.yaml --json
 dtcs analyze contract.yaml --json
 dtcs plan contract.yaml --json
+dtcs optimize contract.yaml --json
+dtcs optimize plan.json --plan --json
 dtcs inspect contract.yaml
 dtcs inspect contract.yaml --json
 dtcs diagnostics contract.yaml --json

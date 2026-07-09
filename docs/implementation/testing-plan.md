@@ -4,7 +4,7 @@ Tests should be written against `SPEC.md`.
 
 ## Shared fixture manifest
 
-[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs), [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs), [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs), [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs), [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs), [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
 
 ## Phase 0.4 fixture groups
 
@@ -46,6 +46,20 @@ Integration tests: [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs).
 | Golden plans | `tests/fixtures/plans/*.plan.json` via `tests/plan_expectations.json` |
 
 Integration tests: [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs).
+
+## Phase 0.8 fixture groups
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Constant folding | `optimize_constant_fold.yaml` |
+| Algebraic simplification | `optimize_algebraic.yaml` |
+| Action fusion | `optimize_action_fusion.yaml` |
+| Function inlining | `optimize_function_inline.yaml` |
+| Rule deduplication | `optimize_rule_dedup.yaml`, `optimize_rule_dedup_params.yaml` |
+| Dead-expression elimination | `optimize_dead_expr.yaml`, `optimize_dead_after_fold.yaml` |
+| Golden optimized plans | `tests/fixtures/plans_optimized/*.plan.json` via `tests/optimize_expectations.json` |
+
+Integration tests: [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs). Python tests parametrize over `tests/optimize_expectations.json`.
 
 ## Phase 0.2 fixture groups
 

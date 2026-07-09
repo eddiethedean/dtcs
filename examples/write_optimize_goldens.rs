@@ -14,7 +14,9 @@ fn main() {
         "optimize_action_fusion.yaml",
         "optimize_function_inline.yaml",
         "optimize_rule_dedup.yaml",
+        "optimize_rule_dedup_params.yaml",
         "optimize_dead_expr.yaml",
+        "optimize_dead_after_fold.yaml",
     ];
 
     let out_dir = root.join("tests/fixtures/plans_optimized");

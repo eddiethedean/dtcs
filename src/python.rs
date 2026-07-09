@@ -258,11 +258,12 @@ fn plan_validate(
 
 /// Optimize a transformation plan.
 #[pyfunction]
-#[pyo3(signature = (plan_obj, registry_path=None))]
+#[pyo3(signature = (plan_obj, registry_path=None, *, validate=true))]
 fn plan_optimize(
     py: Python<'_>,
     plan_obj: &Bound<'_, PyAny>,
     registry_path: Option<String>,
+    validate: bool,
 ) -> PyResult<Py<PyAny>> {
     let plan = plan_from_py(py, plan_obj)?;
     let registry_doc = if let Some(path) = registry_path.as_deref() {
@@ -270,8 +271,11 @@ fn plan_optimize(
     } else {
         crate::registry::default_registry().clone()
     };
-    let result =
-        plan::optimize_with_registry(&plan, &registry_doc, &plan::OptimizeOptions::default());
+    let options = plan::OptimizeOptions {
+        validate,
+        ..plan::OptimizeOptions::default()
+    };
+    let result = plan::optimize_with_registry(&plan, &registry_doc, &options);
     value_to_py(py, &result)
 }
 

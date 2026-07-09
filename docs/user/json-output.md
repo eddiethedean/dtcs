@@ -173,11 +173,41 @@ On success, emits the transformation plan document directly (not wrapped in a re
 
 On failure, emits a diagnostics array (same shape as `diagnostics --json`).
 
+## optimize
+
+```bash
+dtcs optimize contract.yaml --json
+```
+
+On success, emits an optimization result envelope:
+
+```json
+{
+  "plan": { },
+  "diagnostics": [],
+  "transforms": [
+    {
+      "pass": "expression",
+      "nodeId": "const_add",
+      "description": "rewrote expression '1 + 2' to '3'"
+    }
+  ]
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `plan` | object (optional) | Optimized transformation plan when optimization succeeded |
+| `diagnostics` | array | Optimization and validation diagnostics |
+| `transforms` | array | Informational log of applied rewrites |
+
+When `--plan` is set, the input path is serialized plan JSON rather than a contract file.
+
 ## version
 
 ```json
 {
-  "crateVersion": "0.7.0",
+  "crateVersion": "0.8.0",
   "specVersion": "1.0.0-draft"
 }
 ```

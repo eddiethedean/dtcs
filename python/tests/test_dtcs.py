@@ -15,6 +15,11 @@ FIXTURES = REPO_ROOT / "tests" / "fixtures"
 EXAMPLE = REPO_ROOT / "examples" / "customer_normalize.dtcs.yaml"
 MANIFEST = REPO_ROOT / "tests" / "fixture_expectations.json"
 PLAN_MANIFEST = REPO_ROOT / "tests" / "plan_expectations.json"
+OPTIMIZE_MANIFEST = REPO_ROOT / "tests" / "optimize_expectations.json"
+
+
+def _load_optimize_manifest() -> list[dict]:
+    return json.loads(OPTIMIZE_MANIFEST.read_text(encoding="utf-8"))["fixtures"]
 
 
 def _fixture_dir() -> Path:
@@ -235,7 +240,52 @@ def test_plan_optimize_constant_fold() -> None:
     optimized = dtcs.plan_optimize(plan_result["plan"])
     assert dtcs.is_valid({"diagnostics": optimized.get("diagnostics", [])})
     assert optimized.get("transforms")
+    assert optimized["plan"]["nodes"] == []
     assert dtcs.plan_equivalent(plan_result["plan"], optimized["plan"])
+
+
+@pytest.mark.parametrize("entry", _load_optimize_manifest(), ids=lambda e: e["file"])
+def test_optimize_expectations(entry: dict) -> None:
+    result = dtcs.parse(_fixture(entry["file"]), "yaml")
+    plan_result = dtcs.plan_lower(result["contract"])
+    optimized = dtcs.plan_optimize(plan_result["plan"])
+    assert (
+        dtcs.is_valid({"diagnostics": optimized.get("diagnostics", [])})
+        == entry["optimize_valid"]
+    )
+    if not entry["optimize_valid"]:
+        return
+    if entry.get("equivalent"):
+        assert dtcs.plan_equivalent(plan_result["plan"], optimized["plan"])
+    if transforms_min := entry.get("transforms_min"):
+        assert len(optimized.get("transforms") or []) >= transforms_min
+    if golden := entry.get("golden"):
+        expected = json.loads((FIXTURES / golden).read_text(encoding="utf-8"))
+        assert optimized["plan"] == expected
+
+
+def test_cli_optimize_json() -> None:
+    output = _python_dtcs(
+        "optimize",
+        str(FIXTURES / "optimize_constant_fold.yaml"),
+        "--json",
+    )
+    assert output.returncode == 0, output.stderr
+    payload = json.loads(output.stdout)
+    assert payload.get("plan") is not None
+    assert payload.get("transforms")
+
+
+def test_cli_optimize_plan(tmp_path: Path) -> None:
+    plan_result = dtcs.plan_lower(
+        dtcs.parse(_fixture("optimize_constant_fold.yaml"), "yaml")["contract"]
+    )
+    plan_path = tmp_path / "plan.json"
+    plan_path.write_text(json.dumps(plan_result["plan"]), encoding="utf-8")
+    output = _python_dtcs("optimize", str(plan_path), "--plan", "--json")
+    assert output.returncode == 0, output.stderr
+    payload = json.loads(output.stdout)
+    assert payload.get("plan") is not None
 
 
 def test_plan_equivalent_self() -> None:

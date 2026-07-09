@@ -41,6 +41,20 @@
       "equivalent": true,
       "golden": "plans_optimized/optimize_dead_expr.plan.json",
       "transforms_min": 1
+    },
+    {
+      "file": "optimize_rule_dedup_params.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_rule_dedup_params.plan.json",
+      "transforms_min": 1
+    },
+    {
+      "file": "optimize_dead_after_fold.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_dead_after_fold.plan.json",
+      "transforms_min": 1
     }
   ]
 }

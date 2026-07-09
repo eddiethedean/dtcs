@@ -18,6 +18,7 @@ from dtcs import (
     lineage_analyze,
     parse_file,
     plan_lower,
+    plan_optimize,
     plan_topological_order,
     registry_list,
     registry_resolve,
@@ -95,6 +96,24 @@ def _build_parser() -> argparse.ArgumentParser:
     plan_parser.add_argument("path", type=Path)
     plan_parser.add_argument("--registry", type=Path, default=None)
     plan_parser.add_argument("--json", action="store_true")
+
+    optimize_parser = subparsers.add_parser(
+        "optimize",
+        help="Optimize a transformation plan",
+    )
+    optimize_parser.add_argument("path", type=Path)
+    optimize_parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Treat path as serialized plan JSON instead of a contract",
+    )
+    optimize_parser.add_argument("--registry", type=Path, default=None)
+    optimize_parser.add_argument(
+        "--no-validate",
+        action="store_true",
+        help="Skip validation of the optimized plan",
+    )
+    optimize_parser.add_argument("--json", action="store_true")
 
     inspect_parser = subparsers.add_parser("inspect", help="Print a contract summary")
     inspect_parser.add_argument("path", type=Path)
@@ -267,6 +286,62 @@ def main(argv: list[str] | None = None) -> int:
             order = plan_topological_order(contract, plan)
             if order:
                 print(f"order: {' -> '.join(order)}")
+        return 0
+
+    if args.command == "optimize":
+        registry_path = str(args.registry) if args.registry else None
+        if args.plan:
+            try:
+                plan = json.loads(args.path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as error:
+                print(str(error), file=sys.stderr)
+                return 1
+        else:
+            contract = _load_valid_contract(
+                args.path,
+                json_output=args.json,
+                registry_path=registry_path,
+            )
+            try:
+                lower_result = plan_lower(contract, registry_path)
+            except ValueError as error:
+                print(str(error), file=sys.stderr)
+                return 1
+            if not is_valid({"diagnostics": lower_result.get("diagnostics", [])}):
+                _render_report(
+                    {"diagnostics": lower_result.get("diagnostics", [])},
+                    json_output=args.json,
+                    mode="diagnostics",
+                )
+                return 1
+            plan = lower_result.get("plan")
+            if plan is None:
+                print("no plan produced", file=sys.stderr)
+                return 1
+        try:
+            result = plan_optimize(
+                plan,
+                registry_path,
+                validate=not args.no_validate,
+            )
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not is_valid({"diagnostics": result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": result.get("diagnostics", [])},
+                json_output=args.json,
+                mode="diagnostics",
+            )
+            return 1
+        if args.json:
+            print(json.dumps(result, indent=2))
+        else:
+            optimized = result.get("plan") or {}
+            transforms = result.get("transforms") or []
+            print(f"plan: {optimized.get('identity', {}).get('id', '')}")
+            print(f"nodes: {len(optimized.get('nodes', []))}")
+            print(f"transforms: {len(transforms)}")
         return 0
 
     if args.command == "compat":

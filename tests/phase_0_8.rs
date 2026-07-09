@@ -59,12 +59,88 @@ fn optimize_constant_fold() {
     assert!(result.is_valid(), "{:?}", result.diagnostics);
     assert!(!result.transforms.is_empty());
     let optimized = result.plan.expect("optimized plan");
-    if let Some(expr) = optimized.nodes.iter().find(|n| n.id == "const_add") {
-        if let plan::PlanNodeKind::Expression(expression) = &expr.kind {
-            assert_eq!(expression.expr.as_deref(), Some("3"));
-        }
-    }
+    assert!(
+        optimized.nodes.is_empty(),
+        "folded constant expression should be eliminated as dead"
+    );
     assert!(equivalent(&original, &optimized));
+}
+
+#[test]
+fn optimize_rule_dedup_params() {
+    let original = lower_valid_plan("optimize_rule_dedup_params.yaml");
+    assert_eq!(original.nodes.len(), 3);
+    let result = optimize(&original);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let optimized = result.plan.expect("optimized plan");
+    assert_eq!(
+        optimized.nodes.len(),
+        2,
+        "only identical parameter sets should deduplicate"
+    );
+    assert!(equivalent(&original, &optimized));
+}
+
+#[test]
+fn optimize_dead_after_fold() {
+    let original = lower_valid_plan("optimize_dead_after_fold.yaml");
+    assert!(original.nodes.iter().any(|n| n.id == "dead_mul"));
+    let result = optimize(&original);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let optimized = result.plan.expect("optimized plan");
+    assert!(!optimized.nodes.iter().any(|n| n.id == "dead_mul"));
+    assert!(equivalent(&original, &optimized));
+}
+
+#[test]
+fn optimize_rejects_invalid_input_plan() {
+    let mut plan = lower_valid_plan("optimize_constant_fold.yaml");
+    plan.dependencies.push(plan::PlanDependency {
+        from: "const_add".into(),
+        to: "const_add".into(),
+        reason: plan::DependencyReason::FieldRead,
+    });
+    let result = plan::optimize_with_registry(
+        &plan,
+        dtcs::registry::default_registry(),
+        &plan::OptimizeOptions::default(),
+    );
+    assert!(!result.is_valid());
+    assert!(result.plan.is_none());
+    assert!(result.transforms.is_empty());
+}
+
+#[test]
+fn parse_validate_and_optimize_integration() {
+    let content = fs::read(fixture("optimize_constant_fold.yaml")).expect("read");
+    let result = dtcs::parse_validate_and_optimize(&content, DocumentFormat::Yaml);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let optimized = result.plan.expect("optimized plan");
+    assert!(optimized.nodes.is_empty());
+}
+
+#[test]
+fn cli_optimize_plan_json() {
+    let original = lower_valid_plan("optimize_constant_fold.yaml");
+    let plan_json = serde_json::to_string(&original).expect("serialize plan");
+    let temp = std::env::temp_dir().join("dtcs_optimize_plan_test.json");
+    fs::write(&temp, plan_json).expect("write temp plan");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_dtcs"))
+        .arg("optimize")
+        .arg(&temp)
+        .arg("--plan")
+        .arg("--json")
+        .output()
+        .expect("run dtcs optimize --plan");
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let payload: serde_json::Value = serde_json::from_slice(&output.stdout).expect("json");
+    assert!(payload.get("plan").is_some());
+    let _ = fs::remove_file(temp);
 }
 
 #[test]

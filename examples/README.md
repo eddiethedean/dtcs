@@ -14,7 +14,16 @@ dtcs inspect customer_normalize.dtcs.yaml
 dtcs analyze customer_normalize.dtcs.yaml
 dtcs plan customer_normalize.dtcs.yaml
 dtcs plan customer_normalize.dtcs.yaml --json
+dtcs optimize customer_normalize.dtcs.yaml
 ```
+
+## Development utilities
+
+| File | Description |
+|------|-------------|
+| [write_optimize_goldens.rs](write_optimize_goldens.rs) | Regenerates golden optimized plans under `tests/fixtures/plans_optimized/` (not a sample contract) |
+
+Run: `cargo run --example write_optimize_goldens`
 
 ## Analysis examples
 

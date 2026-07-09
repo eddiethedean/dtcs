@@ -5,6 +5,7 @@ mod graph;
 mod lowering;
 mod model;
 mod optimize;
+mod rule_key;
 mod validate;
 
 pub use equivalence::equivalent;

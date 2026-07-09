@@ -11,7 +11,7 @@ Phase 0.8 — Plan optimization (Ch 13 §9, Ch 8 §14, Ch 15 §9, Ch 17–19 §1
 - Registry-gated evaluation of deterministic `dtcs:` function calls in expressions.
 - Idempotent semantic-action fusion and duplicate rule deduplication.
 - Dependency graph rebuild and fail-closed `plan::validate` after optimization.
-- Optimization-stage diagnostics: `dtcs:invalid-optimization`, `dtcs:optimization-skipped`.
+- Optimization-stage diagnostics: `dtcs:invalid-optimization`, `dtcs:optimization-skipped` (information-level; emitted when a rewrite is skipped because a type guard would not hold).
 - CLI and Python: `dtcs optimize` / `plan_optimize` / `plan_equivalent`; Rust `parse_validate_and_optimize`.
 
 ### Tests

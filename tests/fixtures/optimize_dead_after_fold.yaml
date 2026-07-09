@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "optimize.dead.after.fold"
+name: "Optimize dead after fold"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "integer"
+          nullable: false
+
+expressions:
+  - id: "dead_mul"
+    expr: "in.value * 0"
+    type: "integer"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -17,6 +17,7 @@ pub enum DiagnosticStage {
     Validation,
     Analysis,
     Planning,
+    Optimization,
     Compilation,
     Runtime,
 }
@@ -84,6 +85,8 @@ Defined in [`src/diagnostics/codes.rs`](../../src/diagnostics/codes.rs):
 - `dtcs:cyclic-dependency` (Phase 0.7)
 - `dtcs:plan-type-mismatch` (Phase 0.7)
 - `dtcs:unresolved-plan-reference` (Phase 0.7)
+- `dtcs:invalid-optimization` (Phase 0.8) — optimized or input plan failed validation after optimization
+- `dtcs:optimization-skipped` (Phase 0.8, information) — a rewrite was conservatively skipped (for example when a type guard would not hold)
 
 ## Validation semantics
 

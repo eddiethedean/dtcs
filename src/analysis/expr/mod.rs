@@ -11,6 +11,7 @@ mod constants;
 pub(crate) mod eval;
 pub(crate) mod format;
 pub(crate) mod parse;
+pub(crate) mod rewrite;
 pub(crate) mod types;
 
 /// Output of analyzing a single expression body.

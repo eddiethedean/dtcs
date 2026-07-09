@@ -13,6 +13,7 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | `compat <source> <target>` | Compare compatibility between two contracts |
 | `evolve <older> <newer>` | Analyze evolution between two revisions |
 | `plan <path>` | Lower a validated contract to a transformation plan |
+| `optimize <path>` | Optimize a transformation plan (contract or serialized plan JSON) |
 | `lineage <path>` | Analyze dataset-level lineage |
 | `registry list` | List identifier registry entries |
 | `registry resolve <id>` | Resolve a registry identifier |
@@ -29,6 +30,7 @@ Optional `--registry <path>` merges a vendor catalog (YAML/JSON) with the embedd
 | `validate` | yes | yes |
 | `analyze` | yes | yes |
 | `plan` | yes | yes |
+| `optimize` | yes | yes |
 | `compat` | yes | yes |
 | `evolve` | yes | yes |
 | `lineage` | yes | yes |
@@ -85,6 +87,30 @@ Runs validation and semantic analysis, then lowers the contract to a canonical t
 | `1` | Validation, analysis, or lowering failed |
 
 With `--json`, success emits the plan document; failure emits a diagnostics array (same shape as `diagnostics --json`).
+
+## optimize
+
+```bash
+dtcs optimize contract.yaml
+dtcs optimize contract.yaml --registry vendor_catalog.yaml
+dtcs optimize contract.yaml --json
+dtcs optimize plan.json --plan
+dtcs optimize plan.json --plan --no-validate --json
+```
+
+Lowers a validated contract to a plan (unless `--plan` is set), then applies semantics-preserving optimization passes. With `--plan`, the path must be serialized plan JSON from a prior `dtcs plan --json` run.
+
+| Flag | Effect |
+|------|--------|
+| `--plan` | Treat `path` as serialized plan JSON instead of a contract |
+| `--registry` | Merge a vendor catalog for registry-gated function evaluation |
+| `--no-validate` | Skip validation of the input and optimized plans |
+| `--json` | Emit an `OptimizeResult` envelope (`plan`, `diagnostics`, `transforms`) |
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Optimization succeeded |
+| `1` | Validation, lowering, or optimization failed |
 
 ## inspect
 

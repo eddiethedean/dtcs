@@ -4,14 +4,17 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use serde::{Deserialize, Serialize};
 
-use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, Span, UnaryOp};
-use crate::analysis::expr::{eval, format, parse};
-use crate::diagnostics::{codes, optimization_error, Diagnostic, DiagnosticCategory};
+use crate::analysis::expr::ast::{Expr, LiteralValue, Span};
+use crate::analysis::expr::{eval, format, parse, rewrite};
+use crate::diagnostics::{
+    codes, optimization_error, Diagnostic, DiagnosticCategory, DiagnosticStage, Severity,
+};
 use crate::model::{ActionOrdering, RegistryCategory, RegistryDocument};
 use crate::registry;
 
 use super::graph;
 use super::model::{PlanNodeKind, TransformationPlan};
+use super::rule_key;
 use super::validate::{plan_as_contract, validate_with_registry};
 
 /// Options controlling optimization passes.
@@ -107,6 +110,23 @@ pub fn optimize_with_registry(
     options: &OptimizeOptions,
 ) -> OptimizeResult {
     let mut result = OptimizeResult::default();
+
+    if options.validate {
+        let input_validation = validate_with_registry(plan, registry_doc);
+        if !input_validation.is_valid() {
+            result.diagnostics = input_validation.diagnostics;
+            result.diagnostics.push(
+                optimization_error(
+                    codes::INVALID_OPTIMIZATION,
+                    DiagnosticCategory::Semantic,
+                    "input plan failed validation",
+                )
+                .with_object_ref("plan"),
+            );
+            return result;
+        }
+    }
+
     let mut working = plan.clone();
     let contract = plan_as_contract(&working);
 
@@ -116,6 +136,7 @@ pub fn optimize_with_registry(
             &contract,
             registry_doc,
             &mut result.transforms,
+            &mut result.diagnostics,
         );
     }
     if options.functions {
@@ -124,6 +145,7 @@ pub fn optimize_with_registry(
             &contract,
             registry_doc,
             &mut result.transforms,
+            &mut result.diagnostics,
         );
     }
     if options.actions {
@@ -132,14 +154,21 @@ pub fn optimize_with_registry(
     if options.rules {
         optimize_rules(&mut working, &mut result.transforms);
     }
-    if options.dead_expressions {
-        eliminate_dead_expressions(&mut working, &mut result.transforms);
-    }
 
     rebuild_dependencies(&mut working, registry_doc, &mut result);
-
     if !result.is_valid() {
         return result;
+    }
+
+    if options.dead_expressions {
+        let node_count_before = working.nodes.len();
+        eliminate_dead_expressions(&mut working, &mut result.transforms);
+        if working.nodes.len() != node_count_before {
+            rebuild_dependencies(&mut working, registry_doc, &mut result);
+            if !result.is_valid() {
+                return result;
+            }
+        }
     }
 
     if options.validate {
@@ -194,6 +223,7 @@ fn optimize_expressions(
     contract: &crate::model::TransformationContract,
     registry_doc: &RegistryDocument,
     transforms: &mut Vec<TransformRecord>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
     for node in &mut plan.nodes {
         let PlanNodeKind::Expression(expression) = &mut node.kind else {
@@ -210,29 +240,15 @@ fn optimize_expressions(
             continue;
         };
         let before = format::format_expression(&ast);
-        ast = simplify_expression(&ast);
+        ast = rewrite::simplify_expression(&ast);
         ast = fold_expression_calls(&ast, registry_doc);
-        ast = simplify_expression(&ast);
+        ast = rewrite::simplify_expression(&ast);
         if let Some(value) = eval::evaluate(&ast) {
             ast = eval::literal_expr(value, ast_span(&ast));
         }
         let after = format::format_expression(&ast);
         if after != before {
-            let mut accepted = true;
-            if let Some(type_name) = expression.type_name.as_deref() {
-                if let Ok(inferred) = crate::analysis::expr::types::infer_expression_type(
-                    &ast,
-                    contract,
-                    registry_doc,
-                ) {
-                    if let Ok(declared) = crate::model::parse_logical_type(type_name) {
-                        if declared != inferred.logical {
-                            accepted = false;
-                        }
-                    }
-                }
-            }
-            if accepted {
+            if expression_rewrite_accepted(&ast, expression, contract, registry_doc) {
                 expression.expr = Some(after);
                 transforms.push(TransformRecord {
                     pass: "expression".into(),
@@ -246,6 +262,13 @@ fn optimize_expressions(
                     .retain(|finding| finding.object_ref != node.object_ref);
             } else {
                 expression.expr = Some(original_body);
+                diagnostics.push(optimization_skipped(
+                    format!(
+                        "skipped expression rewrite for node '{}' due to type guard",
+                        node.id
+                    ),
+                    &node.object_ref,
+                ));
             }
         }
     }
@@ -256,6 +279,7 @@ fn optimize_functions(
     contract: &crate::model::TransformationContract,
     registry_doc: &RegistryDocument,
     transforms: &mut Vec<TransformRecord>,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
     for node in &mut plan.nodes {
         let PlanNodeKind::Expression(expression) = &mut node.kind else {
@@ -275,21 +299,7 @@ fn optimize_functions(
         }
         let after = format::format_expression(&ast);
         if after != before {
-            let mut accepted = true;
-            if let Some(type_name) = expression.type_name.as_deref() {
-                if let Ok(inferred) = crate::analysis::expr::types::infer_expression_type(
-                    &ast,
-                    contract,
-                    registry_doc,
-                ) {
-                    if let Ok(declared) = crate::model::parse_logical_type(type_name) {
-                        if declared != inferred.logical {
-                            accepted = false;
-                        }
-                    }
-                }
-            }
-            if accepted {
+            if expression_rewrite_accepted(&ast, expression, contract, registry_doc) {
                 expression.expr = Some(after.clone());
                 transforms.push(TransformRecord {
                     pass: "function".into(),
@@ -300,6 +310,13 @@ fn optimize_functions(
                     .retain(|finding| finding.object_ref != node.object_ref);
             } else {
                 expression.expr = Some(original_body);
+                diagnostics.push(optimization_skipped(
+                    format!(
+                        "skipped function rewrite for node '{}' due to type guard",
+                        node.id
+                    ),
+                    &node.object_ref,
+                ));
             }
         }
     }
@@ -349,141 +366,35 @@ fn fold_expression_calls(expr: &Expr, registry_doc: &RegistryDocument) -> Expr {
     }
 }
 
-fn simplify_expression(expr: &Expr) -> Expr {
-    match expr {
-        Expr::Unary { op, expr, span } => {
-            let inner = simplify_expression(expr);
-            match (op, &inner) {
-                (
-                    UnaryOp::Not,
-                    Expr::Unary {
-                        op: UnaryOp::Not,
-                        expr: inner2,
-                        ..
-                    },
-                ) => simplify_expression(inner2),
-                (
-                    UnaryOp::Negate,
-                    Expr::Unary {
-                        op: UnaryOp::Negate,
-                        expr: inner2,
-                        ..
-                    },
-                ) => simplify_expression(inner2),
-                _ => Expr::Unary {
-                    op: *op,
-                    span: span.clone(),
-                    expr: Box::new(inner),
-                },
-            }
-        }
-        Expr::Binary {
-            op,
-            left,
-            right,
-            span,
-        } => {
-            let left = simplify_expression(left);
-            let right = simplify_expression(right);
-            if let Some(simplified) = simplify_binary(*op, &left, &right, span) {
-                return simplified;
-            }
-            Expr::Binary {
-                op: *op,
-                span: span.clone(),
-                left: Box::new(left),
-                right: Box::new(right),
-            }
-        }
-        other => other.clone(),
-    }
+fn expression_rewrite_accepted(
+    ast: &Expr,
+    expression: &crate::model::Expression,
+    contract: &crate::model::TransformationContract,
+    registry_doc: &RegistryDocument,
+) -> bool {
+    let Some(type_name) = expression.type_name.as_deref() else {
+        return true;
+    };
+    let Ok(declared) = crate::model::parse_logical_type(type_name) else {
+        return false;
+    };
+    let Ok(inferred) =
+        crate::analysis::expr::types::infer_expression_type(ast, contract, registry_doc)
+    else {
+        return false;
+    };
+    declared == inferred.logical
 }
 
-fn simplify_binary(op: BinaryOp, left: &Expr, right: &Expr, span: &Span) -> Option<Expr> {
-    match op {
-        BinaryOp::Add => {
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_zero(value) {
-                    return Some(left.clone());
-                }
-            }
-            if let Expr::Literal { value, .. } = left {
-                if eval::is_zero(value) {
-                    return Some(right.clone());
-                }
-            }
-        }
-        BinaryOp::Sub => {
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_zero(value) {
-                    return Some(left.clone());
-                }
-            }
-        }
-        BinaryOp::Mul => {
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_one(value) {
-                    return Some(left.clone());
-                }
-                if eval::is_zero(value) {
-                    return Some(eval::literal_expr(value.clone(), span.clone()));
-                }
-            }
-            if let Expr::Literal { value, .. } = left {
-                if eval::is_one(value) {
-                    return Some(right.clone());
-                }
-                if eval::is_zero(value) {
-                    return Some(eval::literal_expr(value.clone(), span.clone()));
-                }
-            }
-        }
-        BinaryOp::Div => {
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_one(value) {
-                    return Some(left.clone());
-                }
-            }
-        }
-        BinaryOp::And => {
-            if let Expr::Literal { value, .. } = left {
-                if eval::is_false(value) {
-                    return Some(left.clone());
-                }
-                if eval::is_true(value) {
-                    return Some(right.clone());
-                }
-            }
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_false(value) {
-                    return Some(right.clone());
-                }
-                if eval::is_true(value) {
-                    return Some(left.clone());
-                }
-            }
-        }
-        BinaryOp::Or => {
-            if let Expr::Literal { value, .. } = left {
-                if eval::is_true(value) {
-                    return Some(left.clone());
-                }
-                if eval::is_false(value) {
-                    return Some(right.clone());
-                }
-            }
-            if let Expr::Literal { value, .. } = right {
-                if eval::is_true(value) {
-                    return Some(right.clone());
-                }
-                if eval::is_false(value) {
-                    return Some(left.clone());
-                }
-            }
-        }
-        _ => {}
-    }
-    None
+fn optimization_skipped(message: impl Into<String>, object_ref: &str) -> Diagnostic {
+    Diagnostic::new(
+        codes::OPTIMIZATION_SKIPPED,
+        Severity::Information,
+        DiagnosticStage::Optimization,
+        DiagnosticCategory::Semantic,
+        message,
+    )
+    .with_object_ref(object_ref)
 }
 
 fn optimize_actions(plan: &mut TransformationPlan, transforms: &mut Vec<TransformRecord>) {
@@ -552,7 +463,7 @@ fn optimize_rules(plan: &mut TransformationPlan, transforms: &mut Vec<TransformR
         let PlanNodeKind::Rule(rule) = &node.kind else {
             continue;
         };
-        let key = (rule.rule.as_str(), rule.target.as_str(), rule.phase);
+        let key = rule_key::rule_dedup_key(rule);
         if !seen.insert(key) && !protected.contains(&node.id) {
             remove_ids.insert(node.id.clone());
             transforms.push(TransformRecord {
@@ -670,28 +581,5 @@ fn ast_span(expr: &Expr) -> Span {
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
         | Expr::Call { span, .. } => span.clone(),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn simplify_add_zero() {
-        let expr = Expr::Binary {
-            op: BinaryOp::Add,
-            span: Span { start: 0, end: 3 },
-            left: Box::new(Expr::FieldRef {
-                target: "in.value".into(),
-                span: Span { start: 0, end: 8 },
-            }),
-            right: Box::new(Expr::Literal {
-                value: LiteralValue::Integer(0),
-                span: Span { start: 9, end: 10 },
-            }),
-        };
-        let simplified = simplify_expression(&expr);
-        assert!(matches!(simplified, Expr::FieldRef { .. }));
     }
 }

@@ -67,9 +67,14 @@ def plan_validate(plan: dict, registry_path: str | None = None) -> dict:
     return _plan_validate(plan, registry_path)
 
 
-def plan_optimize(plan: dict, registry_path: str | None = None) -> dict:
+def plan_optimize(
+    plan: dict,
+    registry_path: str | None = None,
+    *,
+    validate: bool = True,
+) -> dict:
     """Optimize a transformation plan."""
-    return _plan_optimize(plan, registry_path)
+    return _plan_optimize(plan, registry_path, validate=validate)
 
 
 def plan_equivalent(before: dict, after: dict) -> bool:
