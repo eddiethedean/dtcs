@@ -1,0 +1,61 @@
+name: Bug report
+description: Report a problem with the DTCS reference implementation or documentation
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue. Include as much detail as possible so we can reproduce the problem.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Commands run, contract file (or minimal snippet), and input data if applicable.
+      placeholder: |
+        dtcs validate my_contract.yaml
+        dtcs diagnostics my_contract.yaml --json
+    validations:
+      required: true
+
+  - type: textarea
+    id: version
+    attributes:
+      label: Version output
+      description: Output of `dtcs version --json`
+      placeholder: |
+        {
+          "crateVersion": "0.9.0",
+          "specVersion": "1.0.0-draft"
+        }
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How did you install DTCS?
+      options:
+        - pip install dtcs
+        - cargo install dtcs
+        - Built from source (maturin develop)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, Rust version (if relevant)
+    validations:
+      required: false

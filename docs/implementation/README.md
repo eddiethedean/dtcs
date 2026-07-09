@@ -27,5 +27,4 @@ Do not implement multi-backend compilers or production ETL orchestration without
 - [public-api.md](public-api.md)
 - [implementation-phases.md](implementation-phases.md)
 - [spec-usage.md](spec-usage.md)
-
-Cursor build prompt: [`.cursor/prompts/build.md`](../../.cursor/prompts/build.md)
+- [testing-plan.md](testing-plan.md)

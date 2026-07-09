@@ -6,7 +6,7 @@ Choose your path:
 |----------|------------|
 | **New users** | [user/getting-started.md](user/getting-started.md) |
 | **Evaluators / architects** | [adoption/overview.md](adoption/overview.md) |
-| **Contributors** | [implementation/README.md](implementation/README.md) · [CONTRIBUTING.md](../CONTRIBUTING.md) |
+| **Contributors** | [CONTRIBUTING.md](../CONTRIBUTING.md) · [implementation/README.md](implementation/README.md) |
 | **Spec authors** | [editorial/baseline.md](editorial/baseline.md) · [SPEC.md](../SPEC.md) |
 
 ## User guides
@@ -16,8 +16,11 @@ Choose your path:
 | [getting-started.md](user/getting-started.md) | Install and validate your first contract in 5 minutes |
 | [cli-guide.md](user/cli-guide.md) | All CLI commands, flags, and exit codes |
 | [writing-contracts.md](user/writing-contracts.md) | Contract structure, standard library catalog, and field reference |
+| [expressions.md](user/expressions.md) | Expression syntax, typing, and examples |
 | [compatibility.md](user/compatibility.md) | Compatibility levels and evolution analysis |
 | [json-output.md](user/json-output.md) | JSON output shapes for all commands |
+| [ci-integration.md](user/ci-integration.md) | CI gates and automation patterns |
+| [troubleshooting.md](user/troubleshooting.md) | Common installation and usage problems |
 | [faq.md](user/faq.md) | Frequently asked questions |
 
 ## Adoption

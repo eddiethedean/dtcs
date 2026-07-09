@@ -1,6 +1,15 @@
 # Implementation Build Order
 
-> **Note:** This document describes the *build order* used to scaffold the crate. For release milestones and SPEC chapter coverage, see [ROADMAP.md](../../ROADMAP.md) (Phases 0.1–0.10).
+> **Historical document.** This describes the *scaffold build order* (Phases 1–13 below), not the release roadmap. For current milestone status, use [ROADMAP.md](../../ROADMAP.md) (Phases 0.1–0.10).
+
+| Scaffold phase (this doc) | ROADMAP phase | Topic |
+|---------------------------|---------------|-------|
+| 1–2 | 0.1 | Skeleton, COM |
+| 3–4 | 0.1 | Parsing, diagnostics |
+| 5–7 | 0.1–0.2 | Validation, types, interfaces |
+| 8–10 | 0.3 | Compatibility, evolution, lineage |
+| 11 | 0.7–0.9 | Plan, compile, runtime (now implemented) |
+| 12–13 | 0.4–0.6 | Registry, stdlib, semantic analysis |
 
 ## Rule
 
@@ -125,7 +134,7 @@ Additional CLI command:
 dtcs plan <contract>
 ```
 
-Do not implement compilers or runtime execution yet.
+Phases 12–13 (optimization, capability matching, compilation, runtime) are implemented in ROADMAP 0.8–0.9. See [ROADMAP.md](../../ROADMAP.md).
 
 ## Phase 12 — Plan Optimization (Phase 0.8)
 

@@ -405,7 +405,7 @@ Produce semantically equivalent optimized plans (plan → plan only, never plan 
 - [x] [Ch 13 §9](SPEC.md#chapter-13----transformation-plan): optimized plans pass `plan::validate` and equivalence tests
 - [x] Golden files lock optimized plan shape for optimization fixtures
 - [x] Optimization-stage diagnostics with standardized codes
-- [ ] Publish to crates.io and PyPI at `0.8.0` (tag `v0.8.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [x] Publish to crates.io and PyPI at `0.8.0` (tag `v0.8.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 
@@ -452,7 +452,7 @@ Ship in three milestones within the phase:
 
 - [x] [Ch 14 §12](SPEC.md#chapter-14----engine-capability-model), [Ch 15 §13](SPEC.md#chapter-15----compilation), [Ch 16 §13](SPEC.md#chapter-16----runtime)
 - [x] Reference backend covers all `dtcs:` entries from 0.5
-- [ ] Publish to crates.io and PyPI at `0.9.0` (tag `v0.9.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [x] Publish to crates.io and PyPI at `0.9.0` (tag `v0.9.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

@@ -30,7 +30,7 @@ The classifier assigns one of five levels (SPEC Chapter 11):
 dtcs compat examples/analysis/backward_old.yaml examples/analysis/backward_new.yaml
 ```
 
-The `backward_new` contract adds an optional input field. Existing consumers of `backward_old` can adopt the new version without changes.
+The `backward_new` contract adds an optional input interface (`extra`) and a new nullable output field (`note`). Existing consumers of `backward_old` can adopt the new version without changes.
 
 ## Example: evolution analysis
 
@@ -97,3 +97,9 @@ All five classification levels have paired fixtures under `tests/fixtures/compat
 | `incompatible_a.yaml` / `incompatible_b.yaml` | Incompatible |
 
 User-facing copies of key pairs are in [`examples/analysis/`](../../examples/analysis/).
+
+## Next steps
+
+- JSON output for compat/evolve/lineage: [json-output.md](json-output.md)
+- Getting started walkthrough: [getting-started.md](getting-started.md)
+- Enterprise evaluation: [adoption/overview.md](../adoption/overview.md)

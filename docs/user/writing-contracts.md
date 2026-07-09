@@ -50,6 +50,8 @@ lineage:
 
 Optional sections: `metadata`, `semanticActions`, `expressions`, `functions`, `rules`, `versioning`, `extensions`.
 
+For expressions, see [expressions.md](expressions.md).
+
 ## Inputs and outputs
 
 Each interface has an `id` and a `schema` with typed fields:
@@ -136,6 +138,12 @@ rules:
     rule: "dtcs:not_null"
     target: "customer_raw.customer_id"
     phase: "postcondition"
+```
+
+Additional rule examples (not in the primary example contract):
+
+```yaml
+rules:
   - id: "email_min"
     rule: "dtcs:min_length"
     target: "customer_raw.email"
@@ -208,10 +216,11 @@ Common first-time errors:
 | `dtcs:unknown-registry-entry` | Use a `dtcs:` identifier from `dtcs registry list`, or declare a vendor extension |
 | stdlib semantics errors | Match target field type/nullability and rule `phase` to the registry definition |
 
-See [faq.md](faq.md) for more troubleshooting.
+See [faq.md](faq.md) and [troubleshooting.md](troubleshooting.md) for more help.
 
 ## Next steps
 
+- Expression syntax: [expressions.md](expressions.md)
 - Compare contract versions: [compatibility.md](compatibility.md)
 - All CLI commands: [cli-guide.md](cli-guide.md)
 - Full specification: [SPEC.md](../../SPEC.md)

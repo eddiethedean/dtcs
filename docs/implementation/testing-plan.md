@@ -2,9 +2,32 @@
 
 Tests should be written against `SPEC.md`.
 
+## How to add a test
+
+1. **Choose a fixture** — add a YAML or JSON file under [`tests/fixtures/`](../../tests/fixtures/) (or reuse an existing one).
+2. **Register expectations** — add an entry to [`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) for parse/validation outcomes, or to phase-specific manifests (`plan_expectations.json`, `optimize_expectations.json`, `compile_expectations.json`, `capability_expectations.json`).
+3. **Add integration coverage** — extend the appropriate phase test file (`tests/phase_0_*.rs`) or parametrize in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+4. **Golden files** — for plan, optimize, or compile output, add or regenerate JSON under `tests/fixtures/plans/`, `plans_optimized/`, or `execution_plans/`. Regenerate optimize goldens with `cargo run --example write_optimize_goldens`.
+5. **Run locally:**
+   ```bash
+   cargo test --locked
+   pytest python/tests -v
+   ```
+
 ## Shared fixture manifest
 
-[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs), [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs), [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs), [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs), [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs), [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs), [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs), [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+
+## Phase 0.5 fixture groups (standard libraries)
+
+| Concern | Example fixtures |
+|---------|------------------|
+| Semantic actions | `stdlib_action_normalize_whitespace_valid.yaml`, `invalid_semantic_action.yaml` |
+| Functions | `stdlib_function_concat_valid.yaml`, `stdlib_function_coalesce_valid.yaml` |
+| Rules | `stdlib_rule_range_valid.yaml`, `stdlib_rule_regex_match_valid.yaml` |
+| Signature errors | `stdlib_function_concat_signature_invalid.yaml`, `stdlib_function_substr_param_order_invalid.yaml` |
+
+Covered by [`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) and validation integration tests.
 
 ## Phase 0.4 fixture groups
 

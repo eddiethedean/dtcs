@@ -296,4 +296,12 @@ Example GitHub Actions step:
 
 Use exit codes for pass/fail gates. Parse `--json` output for structured diagnostics in PR comments.
 
-See [json-output.md](json-output.md) for field definitions.
+See [ci-integration.md](ci-integration.md) for extended CI examples and [json-output.md](json-output.md) for field definitions.
+
+## Next steps
+
+- JSON output shapes: [json-output.md](json-output.md)
+- CI integration: [ci-integration.md](ci-integration.md)
+- Troubleshooting: [troubleshooting.md](troubleshooting.md)
+- Library API: [public-api.md](../implementation/public-api.md)
+- Enterprise evaluation: [adoption/overview.md](../adoption/overview.md)

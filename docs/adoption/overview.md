@@ -93,8 +93,17 @@ Both Rust and Python packages install the same `dtcs` CLI.
 - [ ] Review diagnostic output for schema and lineage gaps
 - [ ] Compare current and proposed contract versions with `dtcs compat`
 - [ ] Trace lineage for critical inputs with `dtcs lineage --impact`
+- [ ] Match plans against engine capabilities with `dtcs match examples/customer_normalize.dtcs.yaml`
+- [ ] Compile contracts to execution plans with `dtcs compile examples/customer_normalize.dtcs.yaml`
+- [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_normalize.dtcs.yaml --input tests/fixtures/runtime/customer_normalize_input.json`
 - [ ] Review [ROADMAP.md](../../ROADMAP.md) for planned conformance and multi-backend work
 - [ ] Read SPEC Chapters 1–3 for design principles and scope
+
+Conformance certification (Phase 0.10) is not yet available. The checklist above exercises the reference implementation through Phase 0.9; it does not replace a formal conformance program.
+
+## Getting started
+
+Practitioners: [getting-started.md](../user/getting-started.md) · [cli-guide.md](../user/cli-guide.md) · [writing-contracts.md](../user/writing-contracts.md)
 
 ## Relationship to other standards
 
@@ -109,4 +118,4 @@ DTCS is complementary — it does not replace schema or API standards but adds a
 
 ## Questions
 
-Open a GitHub issue or see [faq.md](../user/faq.md).
+Open a [GitHub issue](https://github.com/eddiethedean/dtcs/issues) or see [faq.md](../user/faq.md).

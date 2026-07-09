@@ -162,8 +162,9 @@ assert match["supported"]
 
 compiled = dtcs.compile_plan(plan)
 inputs = {"customer_raw": [{"customer_id": "1", "email": "ALICE@EXAMPLE.COM"}]}
-outputs = dtcs.runtime_execute(compiled["plan"], inputs)
-assert dtcs.is_valid(outputs)
+result = dtcs.runtime_execute(compiled["plan"], inputs)
+assert dtcs.is_valid(result)
+assert result["outputs"]["customer_clean"][0]["email"] == "alice@example.com"
 ```
 
 Contract dicts returned by `parse` and `parse_file` use **camelCase** keys (`dtcsVersion`, `semanticActions`, etc.).
@@ -173,10 +174,14 @@ Contract dicts returned by `parse` and `parse_file` use **camelCase** keys (`dtc
 | Goal | Document |
 |------|----------|
 | Understand contract fields | [writing-contracts.md](writing-contracts.md) |
+| Expression syntax | [expressions.md](expressions.md) |
 | All CLI commands and flags | [cli-guide.md](cli-guide.md) |
 | Compatibility classifications | [compatibility.md](compatibility.md) |
 | JSON output shapes | [json-output.md](json-output.md) |
+| CI integration | [ci-integration.md](ci-integration.md) |
 | Common questions | [faq.md](faq.md) |
+| Troubleshooting | [troubleshooting.md](troubleshooting.md) |
+| Enterprise evaluation | [adoption/overview.md](../adoption/overview.md) |
 | Normative definitions | [SPEC.md](../../SPEC.md) |
 
 ## Develop from source
@@ -192,4 +197,4 @@ maturin develop --no-default-features --features python --locked
 pytest python/tests -v
 ```
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md) for the full workflow.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md#contributor-quickstart) for the full workflow.

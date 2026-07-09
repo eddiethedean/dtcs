@@ -2,7 +2,7 @@
 
 use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, UnaryOp};
 use crate::runtime::functions::call_function;
-use crate::runtime::model::{parse_qualified_field, Row, RuntimeValue};
+use crate::runtime::model::{parse_qualified_field_with_interfaces, Row, RuntimeValue};
 
 /// Evaluate an expression AST against a row workspace context.
 pub fn evaluate_expr(

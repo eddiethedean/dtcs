@@ -10,7 +10,7 @@
 This repository contains:
 
 - **[SPEC.md](SPEC.md)** — normative DTCS 1.0 draft (26 chapters)
-- **Reference tools** — parse, validate, and analyze contracts in Rust and Python
+- **Reference tools** — parse, validate, analyze, plan, optimize, match, compile, and run contracts in Rust and Python
 
 | | |
 |---|---|
@@ -21,7 +21,7 @@ This repository contains:
 
 **What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage, lower validated contracts to transformation plans, optimize plans with semantics-preserving rewrites, match plans against engine capabilities, compile to execution plans, and run contracts in the reference in-memory runtime — including end-to-end execution of sample contracts like `customer_normalize.dtcs.yaml`.
 
-[Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[Documentation](docs/README.md) · [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## Install
 
@@ -39,7 +39,7 @@ Both packages install the `dtcs` CLI on `PATH`:
 
 `validate` · `analyze` · `plan` · `optimize` · `match` · `compile` · `run` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
 
-**Develop from source** (requires Rust + [maturin](https://www.maturin.rs/)): see [CONTRIBUTING.md](CONTRIBUTING.md).
+**Develop from source** (requires Rust + [maturin](https://www.maturin.rs/)): see [CONTRIBUTING.md](CONTRIBUTING.md#contributor-quickstart).
 
 ## Quick start
 
@@ -87,8 +87,9 @@ assert dtcs.plan_equivalent(plan["plan"], optimized["plan"])
 
 compiled = dtcs.compile_plan(plan["plan"])
 inputs = json.loads(open("tests/fixtures/runtime/customer_normalize_input.json").read())
-outputs = dtcs.runtime_execute(compiled["plan"], inputs)
-assert outputs["customer_clean"][0]["email"] == "alice@example.com"
+result = dtcs.runtime_execute(compiled["plan"], inputs)
+assert dtcs.is_valid(result)
+assert result["outputs"]["customer_clean"][0]["email"] == "alice@example.com"
 ```
 
 Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full walkthrough. For normative definitions, see [SPEC.md](SPEC.md) — start with [Chapter 3 (COM)](SPEC.md#chapter-3----canonical-object-model) and [Chapter 9 (Validation)](SPEC.md#chapter-9----validation).
@@ -140,7 +141,7 @@ Production ETL orchestration and external engine backends remain out of scope. S
 | Path | Purpose |
 |------|---------|
 | [SPEC.md](SPEC.md) | Full DTCS 1.0 draft specification (26 chapters) |
-| [docs/user/](docs/user/) | User guides — getting started, CLI, compatibility |
+| [docs/user/](docs/user/) | User guides — getting started, CLI, writing contracts, expressions, compatibility, JSON output, troubleshooting, FAQ |
 | [docs/adoption/](docs/adoption/) | Adoption overview for evaluators |
 | [docs/implementation/](docs/implementation/) | Reference implementation design guides |
 | [docs/editorial/](docs/editorial/) | Specification authoring process |
@@ -152,7 +153,7 @@ Production ETL orchestration and external engine backends remain out of scope. S
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for editorial conventions, implementation guidelines, and the review process.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for editorial conventions, implementation guidelines, and the review process. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community standards.
 
 When implementation guidance conflicts with the specification, **SPEC.md wins**. See [docs/implementation/spec-usage.md](docs/implementation/spec-usage.md).
 

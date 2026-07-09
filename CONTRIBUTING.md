@@ -2,6 +2,45 @@
 
 Thank you for contributing to the Data Transformation Contract Standard and its reference implementation.
 
+## Contributor quickstart
+
+1. Clone the repo and install **Rust 1.75+** and **Python 3.9+**.
+2. Build the Python extension:
+   ```bash
+   python -m venv .venv && source .venv/bin/activate
+   pip install maturin pytest
+   maturin develop --no-default-features --features python --locked
+   ```
+3. Run tests:
+   ```bash
+   cargo test --locked
+   cargo clippy --all-targets -- -D warnings
+   cargo fmt --all -- --check
+   pytest python/tests -v
+   ./scripts/check-docs.sh
+   ```
+4. Read [docs/implementation/architecture.md](docs/implementation/architecture.md) and [public-api.md](docs/implementation/public-api.md).
+5. See [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md) for fixtures and golden files.
+
+Full user-oriented dev notes: [docs/user/getting-started.md](docs/user/getting-started.md#develop-from-source).
+
+### CI checks
+
+Pull requests must pass the workflow in [`.github/workflows/checks.yml`](.github/workflows/checks.yml):
+
+- **Rust:** `cargo fmt --check`, `cargo clippy`, `cargo test --locked`, `./scripts/check-docs.sh`
+- **Python:** `maturin develop` + `pytest python/tests -v` on Python 3.9–3.13
+
+### Pull request workflow
+
+1. Fork the repository and create a feature branch.
+2. Describe whether the change is specification, implementation, or editorial.
+3. Update [CHANGELOG.md](CHANGELOG.md) for user-visible behavioral changes.
+4. Add or update tests for behavioral changes (see testing-plan.md).
+5. Ensure `cargo test --locked` and `pytest python/tests -v` pass locally.
+
+Please follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
 ## Specification changes
 
 Normative changes belong in [SPEC.md](SPEC.md). Follow the editorial process documented in:

@@ -58,3 +58,5 @@ jobs:
         run: cargo build --locked --all-targets
       - name: cargo publish (dry run)
         run: cargo publish --dry-run --locked --allow-dirty
+      - name: documentation
+        run: ./scripts/check-docs.sh

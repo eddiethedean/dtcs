@@ -69,6 +69,18 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     );
 
     let index = FieldIndex::from_contract(contract);
+    for collision in index.qualified_collisions() {
+        ctx.error(
+            codes::DUPLICATE_IDENTIFIER,
+            DiagnosticCategory::Structure,
+            format!(
+                "qualified field path '{}' is declared on both '{}' and '{}'",
+                collision.qualified, collision.first_interface, collision.second_interface
+            ),
+            Some(&collision.qualified),
+            Some("Use unique interface and field name combinations"),
+        );
+    }
     if index.has_io_id_collision() {
         for output in &contract.outputs {
             if contract.inputs.iter().any(|input| input.id == output.id) {
@@ -84,6 +96,15 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     }
 
     for input in &contract.inputs {
+        if input.id.contains('.') {
+            ctx.error(
+                codes::INVALID_IDENTIFIER,
+                DiagnosticCategory::Structure,
+                format!("interface id '{}' must not contain '.'", input.id),
+                Some(&format!("inputs.{}.id", input.id)),
+                Some("Use identifiers without '.'; qualify fields as interface.field"),
+            );
+        }
         validate_interface_schema(
             ctx,
             &format!("inputs.{}.schema", input.id),
@@ -99,6 +120,15 @@ pub(crate) fn validate_structural(ctx: &mut ValidationContext, contract: &Transf
     }
 
     for output in &contract.outputs {
+        if output.id.contains('.') {
+            ctx.error(
+                codes::INVALID_IDENTIFIER,
+                DiagnosticCategory::Structure,
+                format!("interface id '{}' must not contain '.'", output.id),
+                Some(&format!("outputs.{}.id", output.id)),
+                Some("Use identifiers without '.'; qualify fields as interface.field"),
+            );
+        }
         validate_interface_schema(
             ctx,
             &format!("outputs.{}.schema", output.id),

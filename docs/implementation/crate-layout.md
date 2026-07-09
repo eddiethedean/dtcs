@@ -1,6 +1,6 @@
-# Proposed Crate Layout
+# Implemented Crate Layout
 
-Recommended layout (implemented as a scaffold in this repository):
+Module layout for the reference crate:
 
 ```text
 dtcs/

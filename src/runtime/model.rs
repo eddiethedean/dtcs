@@ -95,9 +95,46 @@ pub struct QualifiedField {
     pub field_name: String,
 }
 
-/// Parse `interface.field` qualified references.
+/// Parse `interface.field` qualified references using longest-prefix interface matching.
 #[must_use]
 pub fn parse_qualified_field(target: &str) -> Option<QualifiedField> {
+    parse_qualified_field_with_interfaces(target, &[])
+}
+
+/// Parse a qualified field reference against known interface identifiers.
+#[must_use]
+pub fn parse_qualified_field_with_interfaces(
+    target: &str,
+    interface_ids: &[String],
+) -> Option<QualifiedField> {
+    let target = target.trim();
+    if target.is_empty() || !target.contains('.') {
+        return None;
+    }
+
+    let mut best: Option<(&str, usize)> = None;
+    for id in interface_ids {
+        let prefix = format!("{id}.");
+        if target.starts_with(&prefix) {
+            let len = id.len();
+            if best.map_or(true, |(_, bl)| len > bl) {
+                best = Some((id.as_str(), len));
+            }
+        }
+    }
+
+    if let Some((id, len)) = best {
+        let field_name = &target[len + 1..];
+        if field_name.is_empty() {
+            return None;
+        }
+        return Some(QualifiedField {
+            interface_id: id.to_string(),
+            field_name: field_name.to_string(),
+        });
+    }
+
+    // Fallback when interface list is unavailable: first-segment split (legacy).
     let (interface_id, field_name) = target.split_once('.')?;
     if interface_id.is_empty() || field_name.is_empty() {
         return None;

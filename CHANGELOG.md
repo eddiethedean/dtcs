@@ -1,5 +1,17 @@
 # Changelog
 
+## Migration summary
+
+| Version | Breaking or notable changes |
+|---------|----------------------------|
+| **0.9.0** | New `match`, `compile`, `run` CLI and Python APIs. `runtime_execute` returns `{outputs, diagnostics}` envelope. |
+| **0.8.0** | Plan optimization APIs (`plan_optimize`, `plan_equivalent`). |
+| **0.7.0** | Transformation plan lowering (`plan_lower`, `plan_validate`). |
+| **0.3.0** | Diagnostic and report JSON uses **camelCase** field names. |
+| **0.2.0** | Extended validation (metadata, types, expressions, I/O interfaces). |
+
+For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/troubleshooting.md](docs/user/troubleshooting.md).
+
 ## 0.9.0
 
 Phase 0.9 — Execution pipeline (Ch 14–16).

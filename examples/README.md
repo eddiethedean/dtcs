@@ -2,6 +2,8 @@
 
 Sample DTCS transformation contracts for learning and testing.
 
+**Run all commands from the repository root** (paths below are relative to the repo root).
+
 ## Primary example
 
 | File | Description |
@@ -9,21 +11,21 @@ Sample DTCS transformation contracts for learning and testing.
 | [customer_normalize.dtcs.yaml](customer_normalize.dtcs.yaml) | Realistic contract with metadata, semantic actions, rules, and lineage |
 
 ```bash
-dtcs validate customer_normalize.dtcs.yaml
-dtcs inspect customer_normalize.dtcs.yaml
-dtcs analyze customer_normalize.dtcs.yaml
-dtcs plan customer_normalize.dtcs.yaml
-dtcs plan customer_normalize.dtcs.yaml --json
-dtcs optimize customer_normalize.dtcs.yaml
+dtcs validate examples/customer_normalize.dtcs.yaml
+dtcs inspect examples/customer_normalize.dtcs.yaml
+dtcs analyze examples/customer_normalize.dtcs.yaml
+dtcs plan examples/customer_normalize.dtcs.yaml
+dtcs plan examples/customer_normalize.dtcs.yaml --json
+dtcs optimize examples/customer_normalize.dtcs.yaml
+
+# Phase 0.9 execution pipeline
+dtcs match examples/customer_normalize.dtcs.yaml
+dtcs compile examples/customer_normalize.dtcs.yaml
+dtcs run examples/customer_normalize.dtcs.yaml \
+  --input tests/fixtures/runtime/customer_normalize_input.json
 ```
 
-## Development utilities
-
-| File | Description |
-|------|-------------|
-| [write_optimize_goldens.rs](write_optimize_goldens.rs) | Regenerates golden optimized plans under `tests/fixtures/plans_optimized/` (not a sample contract) |
-
-Run: `cargo run --example write_optimize_goldens`
+See [cli-guide.md](../docs/user/cli-guide.md) for all flags and [getting-started.md](../docs/user/getting-started.md) for a full walkthrough.
 
 ## Analysis examples
 
@@ -34,10 +36,10 @@ These copies live under `examples/analysis/` for easy discovery. Equivalent fixt
 | File | Description |
 |------|-------------|
 | [analysis/backward_old.yaml](analysis/backward_old.yaml) | Older revision (integer input/output) |
-| [analysis/backward_new.yaml](analysis/backward_new.yaml) | Backward-compatible update (adds optional input) |
+| [analysis/backward_new.yaml](analysis/backward_new.yaml) | Backward-compatible update (adds optional input interface and output field) |
 
 ```bash
-dtcs compat analysis/backward_old.yaml analysis/backward_new.yaml
+dtcs compat examples/analysis/backward_old.yaml examples/analysis/backward_new.yaml
 # Expected: backwardCompatible
 ```
 
@@ -51,7 +53,7 @@ Additional classification pairs (identical, forward, conditional, incompatible) 
 | [analysis/evolution/rev2.yaml](analysis/evolution/rev2.yaml) | Second revision (same `id`, version bump) |
 
 ```bash
-dtcs evolve analysis/evolution/rev1.yaml analysis/evolution/rev2.yaml
+dtcs evolve examples/analysis/evolution/rev1.yaml examples/analysis/evolution/rev2.yaml
 ```
 
 ### Lineage
@@ -61,9 +63,9 @@ dtcs evolve analysis/evolution/rev1.yaml analysis/evolution/rev2.yaml
 | [analysis/lineage_multi.yaml](analysis/lineage_multi.yaml) | Multi-input, multi-output contract with governance metadata |
 
 ```bash
-dtcs lineage analysis/lineage_multi.yaml
-dtcs lineage analysis/lineage_multi.yaml --impact customers
-dtcs lineage analysis/lineage_multi.yaml --dependency order_enriched
+dtcs lineage examples/analysis/lineage_multi.yaml
+dtcs lineage examples/analysis/lineage_multi.yaml --impact customers
+dtcs lineage examples/analysis/lineage_multi.yaml --dependency order_enriched
 ```
 
 ### Semantic analysis and planning
@@ -71,8 +73,12 @@ dtcs lineage analysis/lineage_multi.yaml --dependency order_enriched
 The primary example contract exercises semantic actions, rules, and lineage suitable for analysis and plan lowering:
 
 ```bash
-dtcs analyze customer_normalize.dtcs.yaml
-dtcs plan customer_normalize.dtcs.yaml
+dtcs analyze examples/customer_normalize.dtcs.yaml
+dtcs plan examples/customer_normalize.dtcs.yaml
+dtcs match examples/customer_normalize.dtcs.yaml
+dtcs compile examples/customer_normalize.dtcs.yaml
+dtcs run examples/customer_normalize.dtcs.yaml \
+  --input tests/fixtures/runtime/customer_normalize_input.json
 ```
 
 Golden plan fixtures for the test corpus live under `tests/fixtures/plans/`. Compare with:
@@ -101,3 +107,4 @@ dtcs diagnostics tests/fixtures/missing_lineage.yaml
 - [Getting started](../docs/user/getting-started.md)
 - [Writing contracts](../docs/user/writing-contracts.md)
 - [Compatibility guide](../docs/user/compatibility.md)
+- [CLI reference](../docs/user/cli-guide.md)

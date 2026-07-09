@@ -229,8 +229,9 @@ assert dtcs.is_valid({"diagnostics": match["diagnostics"]})
 
 compiled = dtcs.compile_plan(plan)
 execution = compiled["plan"]
-outputs = dtcs.runtime_execute(execution, inputs)
-assert dtcs.is_valid(outputs)
+result = dtcs.runtime_execute(execution, inputs)
+assert dtcs.is_valid(result)
+assert result["outputs"]["customer_clean"][0]["email"] == "alice@example.com"
 ```
 
 One-shot convenience:
@@ -301,32 +302,38 @@ summary = dtcs.inspect(contract)
 | `dtcs.SPEC_VERSION` | DTCS specification version targeted by this build |
 | `dtcs.__version__` | Installed package version (`0.0.0+dev` when running from source without metadata) |
 | `parse` / `parse_file` | Parse YAML or JSON into `{"contract": ..., "report": ...}` |
-| `validate` / `metadata_validate` | Validate a parsed contract dict |
+| `validate` / `metadata_validate` | Validate a parsed contract dict (`registry_path` optional) |
+| `validate_with_registry` | Validate with an explicit vendor registry file path |
 | `validate_result` | Merge parse-time and validation diagnostics |
 | `parse_and_validate` | Parse and validate in one step |
 | `analyze` | Static semantic and expression analysis |
 | `inspect` | Human-readable contract summary |
 | `is_valid` | True when a diagnostic report has no error-severity items |
-| `compat_analyze` | Compare two contracts; returns level, aspects, diagnostics |
+| `compat_analyze` | Compare two contracts (`scope` optional); returns level, aspects, diagnostics |
 | `evolve_analyze` | Evolution diff between two revisions of the same contract |
-| `lineage_analyze` | Dependency graph, impact, and governance summary |
-| `plan_lower` | Lower a validated contract to a transformation plan |
+| `lineage_analyze` | Dependency graph, impact, and governance (`impact`, `dependency` optional) |
+| `plan_lower` | Lower a validated contract to a transformation plan (`registry_path` optional) |
 | `plan_validate` | Validate a transformation plan |
-| `plan_optimize` | Optimize a transformation plan (`validate=False` to skip validation) |
+| `plan_topological_order` | Topological execution order for plan nodes |
+| `plan_optimize` | Optimize a transformation plan (`validate=False` to skip validation; `registry_path` optional) |
 | `plan_equivalent` | Compare two plans for semantic equivalence |
 | `capability_reference_profile` | Embedded `dtcs:reference` engine capability profile |
-| `capability_match` | Match a transformation plan against a capability profile |
+| `capability_match` | Match a transformation plan against a capability profile (`profile` optional) |
 | `compile_plan` | Compile a transformation plan to an execution plan |
 | `execution_validate` | Validate an execution plan |
-| `runtime_execute` | Execute an execution plan with runtime inputs |
+| `runtime_execute` | Execute an execution plan; returns `{"outputs": {...}, "diagnostics": [...]}` |
 | `version_validate` | Ch 25 versioning block validation |
-| `registry_list` | List registry entries (optional vendor catalog path) |
-| `registry_resolve` | Resolve an identifier to a registry entry or `None` |
+| `registry_list` | List registry entries (`registry_path` optional vendor catalog) |
+| `registry_resolve` | Resolve an identifier to a registry entry or `None` (`registry_path` optional) |
 | `registry_load` | Load a registry document from a file path |
 
 ## CLI
 
 Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install dtcs`) install a `dtcs` command on `PATH`.
+
+**Full command reference:** [docs/user/cli-guide.md](../user/cli-guide.md) (flags, exit codes, CI examples).
+
+**JSON output shapes:** [docs/user/json-output.md](../user/json-output.md).
 
 The `dtcs` binary is enabled by default in the Rust crate (`cli` feature):
 

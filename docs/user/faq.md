@@ -100,10 +100,22 @@ Read [CONTRIBUTING.md](../../CONTRIBUTING.md) and [docs/implementation/README.md
 
 **SPEC.md** is authoritative. Implementation docs in `docs/implementation/` are illustrative unless explicitly normative.
 
+### How do I upgrade between versions?
+
+See the [migration summary in CHANGELOG.md](../../CHANGELOG.md#migration-summary). Pin versions with `pip install dtcs==0.9.0` or `cargo install dtcs --version 0.9.0`.
+
 ## Where to get help
 
-Open a GitHub issue with:
+Open a [GitHub issue](https://github.com/eddiethedean/dtcs/issues) with:
 
 - The contract file (or minimal reproduction)
 - Output of `dtcs diagnostics contract.yaml --json`
 - Version from `dtcs version --json`
+
+See also [troubleshooting.md](troubleshooting.md).
+
+## Next steps
+
+- Installation problems: [troubleshooting.md](troubleshooting.md)
+- CI integration: [ci-integration.md](ci-integration.md)
+- Enterprise evaluation: [adoption/overview.md](../adoption/overview.md)

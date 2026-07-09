@@ -37,6 +37,17 @@ pub enum TargetResolution<'a> {
     NotFound,
 }
 
+/// A qualified field path collision between two declarations.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct QualifiedFieldCollision {
+    /// Colliding qualified path (`interface.field`).
+    pub qualified: String,
+    /// First declaring interface.
+    pub first_interface: String,
+    /// Second declaring interface.
+    pub second_interface: String,
+}
+
 /// Index of declared interfaces and schema fields.
 #[derive(Debug, Default)]
 pub struct FieldIndex {
@@ -44,6 +55,7 @@ pub struct FieldIndex {
     by_name: HashMap<String, Vec<FieldLocation>>,
     input_ids: HashSet<String>,
     output_ids: HashSet<String>,
+    qualified_collisions: Vec<QualifiedFieldCollision>,
 }
 
 impl FieldIndex {
@@ -74,7 +86,12 @@ impl FieldIndex {
     ) {
         for field in fields {
             let qualified = format!("{interface_id}.{}", field.name);
-            if self.qualified.contains_key(&qualified) {
+            if let Some(existing) = self.qualified.get(&qualified) {
+                self.qualified_collisions.push(QualifiedFieldCollision {
+                    qualified: qualified.clone(),
+                    first_interface: existing.interface_id.clone(),
+                    second_interface: interface_id.to_string(),
+                });
                 continue;
             }
             let location = FieldLocation {
@@ -90,6 +107,22 @@ impl FieldIndex {
                 .or_default()
                 .push(location);
         }
+    }
+
+    /// Qualified field path collisions detected while building the index.
+    #[must_use]
+    pub fn qualified_collisions(&self) -> &[QualifiedFieldCollision] {
+        &self.qualified_collisions
+    }
+
+    /// Returns all declared interface identifiers.
+    #[must_use]
+    pub fn interface_ids(&self) -> Vec<&str> {
+        self.input_ids
+            .iter()
+            .chain(self.output_ids.iter())
+            .map(String::as_str)
+            .collect()
     }
 
     /// Returns `true` when an identifier is declared on both inputs and outputs.
@@ -113,8 +146,8 @@ impl FieldIndex {
             return TargetResolution::Field(location);
         }
 
-        if let Some((interface_id, field_name)) = target.split_once('.') {
-            let qualified = format!("{interface_id}.{field_name}");
+        if let Some(qualified) = resolve_qualified_path(target, self.interface_ids().iter().copied())
+        {
             if let Some(location) = self.qualified.get(&qualified) {
                 return TargetResolution::Field(location);
             }
@@ -154,4 +187,27 @@ impl FieldIndex {
             .map(|(name, _)| name.clone())
             .collect()
     }
+}
+
+/// Resolve a qualified field path using longest-prefix interface matching.
+#[must_use]
+pub fn resolve_qualified_path<'a>(
+    target: &str,
+    interface_ids: impl IntoIterator<Item = &'a str>,
+) -> Option<String> {
+    let target = target.trim();
+    if !target.contains('.') {
+        return None;
+    }
+    let mut best: Option<(&str, usize)> = None;
+    for id in interface_ids {
+        let prefix = format!("{id}.");
+        if target.starts_with(&prefix) {
+            let len = id.len();
+            if best.map_or(true, |(_, bl)| len > bl) {
+                best = Some((id, len));
+            }
+        }
+    }
+    best.map(|_| target.to_string())
 }

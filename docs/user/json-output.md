@@ -171,7 +171,21 @@ On success, emits the transformation plan document directly (not wrapped in a re
 }
 ```
 
-On failure, emits a diagnostics array (same shape as `diagnostics --json`).
+On failure, emits a diagnostics envelope (same shape as `diagnostics --json`):
+
+```json
+{
+  "diagnostics": [
+    {
+      "id": "dtcs:missing-lineage",
+      "severity": "error",
+      "stage": "validation",
+      "category": "lineage",
+      "message": "output 'out' has no lineage mapping"
+    }
+  ]
+}
+```
 
 ## optimize
 
@@ -215,15 +229,63 @@ Success emits a capability match report:
 }
 ```
 
-Failure emits diagnostics in the same shape as `diagnostics --json`.
+Failure emits a diagnostics envelope (`{"diagnostics": [...]}`), same shape as `diagnostics --json`.
+
+`gaps` entries describe unsupported plan requirements when `supported` is `false`:
+
+```json
+{
+  "supported": false,
+  "diagnostics": [],
+  "gaps": [
+    {
+      "category": "semanticAction",
+      "requirement": "dtcs:unknown_action",
+      "message": "engine does not support semantic action"
+    }
+  ]
+}
+```
 
 ## compile
 
-Success emits an execution plan document (same shape as the Rust `ExecutionPlan` type). Failure emits diagnostics.
+```bash
+dtcs compile contract.yaml --json
+```
+
+Success emits an execution plan document (same shape as the Rust `ExecutionPlan` type). See [`tests/fixtures/execution_plans/valid_customer.exec.json`](../../tests/fixtures/execution_plans/valid_customer.exec.json) for a full example.
+
+```json
+{
+  "target": {
+    "engineId": "dtcs:reference",
+    "engineVersion": "0.9.0",
+    "capabilityVersion": "1.0.0"
+  },
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "customer.normalize",
+    "name": "Normalize Customer",
+    "version": "0.2.0"
+  },
+  "inputs": [],
+  "outputs": [],
+  "nodes": [],
+  "steps": [],
+  "guarantees": {},
+  "lineage": { "mappings": [] }
+}
+```
+
+Failure emits a diagnostics envelope (`{"diagnostics": [...]}`).
 
 ## run
 
-Success emits output datasets keyed by output interface id:
+```bash
+dtcs run contract.yaml --input inputs.json --json
+```
+
+**CLI:** success emits output datasets keyed by output interface id (flat map, not wrapped):
 
 ```json
 {
@@ -236,7 +298,55 @@ Success emits output datasets keyed by output interface id:
 }
 ```
 
-Failure emits diagnostics.
+**Python API:** `dtcs.runtime_execute(execution_plan, inputs)` returns an envelope with both outputs and diagnostics:
+
+```json
+{
+  "outputs": {
+    "customer_clean": [
+      {
+        "customer_id": "1",
+        "email": "alice@example.com"
+      }
+    ]
+  },
+  "diagnostics": []
+}
+```
+
+Failure emits a diagnostics envelope (`{"diagnostics": [...]}`) for both CLI and Python.
+
+## registry
+
+### registry list
+
+```bash
+dtcs registry list --json
+dtcs registry list --registry vendor_catalog.yaml --json
+```
+
+Success emits an array of registry entries:
+
+```json
+[
+  {
+    "id": "dtcs:lowercase",
+    "name": "Lowercase",
+    "category": "semanticAction",
+    "version": "1.0.0",
+    "status": "stable",
+    "supported": true
+  }
+]
+```
+
+### registry resolve
+
+```bash
+dtcs registry resolve dtcs:lowercase --json
+```
+
+Success emits a single registry entry (same object shape as list items, may include a `definition` field). When the identifier is not found, the command exits non-zero and prints a diagnostic message (no JSON entry object).
 
 ## version
 
@@ -268,3 +378,9 @@ Only **error**-severity diagnostics cause `validate` to exit non-zero.
 Python API functions return dicts with the same camelCase keys as CLI JSON output. When constructing contract dicts for `validate()` or `compat_analyze()`, use camelCase keys (`dtcsVersion`, not `dtcs_version`).
 
 See [diagnostics-guide.md](../implementation/diagnostics-guide.md) for the full list of diagnostic codes.
+
+## Next steps
+
+- CLI commands: [cli-guide.md](cli-guide.md)
+- Library API: [public-api.md](../implementation/public-api.md)
+- Troubleshooting: [troubleshooting.md](troubleshooting.md)
