@@ -79,9 +79,12 @@ impl<'a> Parser<'a> {
     }
 
     fn peek(&self) -> &Token {
-        self.tokens
-            .get(self.pos)
-            .unwrap_or_else(|| self.tokens.last().expect("lexer provides EOF"))
+        self.tokens.get(self.pos).unwrap_or_else(|| {
+            self.tokens.last().unwrap_or(&Token {
+                kind: TokenKind::Eof,
+                span: Span { start: 0, end: 0 },
+            })
+        })
     }
 
     fn consume(&mut self) -> Token {
@@ -576,14 +579,29 @@ impl<'a> Lexer<'a> {
                     })
                 }
             }
-            '+' | '-' | '*' | '/' => Ok(Token {
-                kind: TokenKind::Op(match ch {
-                    '+' => "+",
-                    '-' => "-",
-                    '*' => "*",
-                    '/' => "/",
-                    _ => unreachable!(),
-                }),
+            '+' => Ok(Token {
+                kind: TokenKind::Op("+"),
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
+            '-' => Ok(Token {
+                kind: TokenKind::Op("-"),
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
+            '*' => Ok(Token {
+                kind: TokenKind::Op("*"),
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
+            '/' => Ok(Token {
+                kind: TokenKind::Op("/"),
                 span: Span {
                     start,
                     end: start + 1,

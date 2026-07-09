@@ -7,6 +7,7 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | Command | Description |
 |---------|-------------|
 | `validate <path>` | Parse and validate a contract |
+| `analyze <path>` | Analyze transformation semantics and expressions (static; no runtime evaluation) |
 | `inspect <path>` | Print a human-readable contract summary |
 | `diagnostics <path>` | Print validation diagnostics |
 | `compat <source> <target>` | Compare compatibility between two contracts |
@@ -35,6 +36,21 @@ Optional `--registry` merges a vendor catalog for extension and stdlib validatio
 
 Warnings and information-level diagnostics do not cause a non-zero exit.
 
+## analyze
+
+```bash
+dtcs analyze contract.yaml
+dtcs analyze contract.yaml --registry vendor_catalog.yaml
+dtcs analyze contract.yaml --json
+```
+
+Runs validation and static analysis (SPEC Chapters 7–8). Requires a **valid** contract.
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Valid and no error-severity analysis diagnostics |
+| `1` | Validation failed or analysis reported errors |
+
 ## inspect
 
 ```bash
@@ -58,6 +74,7 @@ Same validation as `validate`, but always prints diagnostics (even when valid).
 ```bash
 dtcs compat older.yaml newer.yaml
 dtcs compat older.yaml newer.yaml --scope interfaces,types
+dtcs compat older.yaml newer.yaml --registry vendor_catalog.yaml
 dtcs compat older.yaml newer.yaml --json
 ```
 
@@ -77,6 +94,7 @@ Default scope is `all` when `--scope` is omitted.
 
 ```bash
 dtcs evolve rev1.yaml rev2.yaml
+dtcs evolve rev1.yaml rev2.yaml --registry vendor_catalog.yaml
 dtcs evolve rev1.yaml rev2.yaml --json
 ```
 
@@ -91,6 +109,7 @@ Compares two revisions. Intended for contracts with the same `id`.
 
 ```bash
 dtcs lineage contract.yaml
+dtcs lineage contract.yaml --registry vendor_catalog.yaml
 dtcs lineage contract.yaml --impact INPUT_ID
 dtcs lineage contract.yaml --dependency OUTPUT_ID
 dtcs lineage contract.yaml --json

@@ -30,12 +30,13 @@ pub(crate) fn validate_document(ctx: &mut ValidationContext, contract: &Transfor
             Some("Set dtcsVersion to a supported DTCS specification version"),
         );
     } else if !is_supported_dtcs_version(&contract.dtcs_version) {
+        let supported = crate::model::SUPPORTED_DTCS_VERSIONS.join(", ");
         ctx.error(
             codes::UNSUPPORTED_VERSION,
             DiagnosticCategory::Compatibility,
             format!(
-                "unsupported dtcsVersion '{}'; supported version is 1.0.0",
-                contract.dtcs_version
+                "unsupported dtcsVersion '{}'; supported versions: {supported}",
+                contract.dtcs_version,
             ),
             Some("dtcsVersion"),
             Some("Use a supported DTCS specification version"),

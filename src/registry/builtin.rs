@@ -46,9 +46,18 @@ pub fn builtin_registry() -> RegistryDocument {
     merge_builtin_doc(
         &mut registry,
         include_bytes!("builtin/semantic_actions.yaml"),
+        "builtin/semantic_actions.yaml",
     );
-    merge_builtin_doc(&mut registry, include_bytes!("builtin/functions.yaml"));
-    merge_builtin_doc(&mut registry, include_bytes!("builtin/rules.yaml"));
+    merge_builtin_doc(
+        &mut registry,
+        include_bytes!("builtin/functions.yaml"),
+        "builtin/functions.yaml",
+    );
+    merge_builtin_doc(
+        &mut registry,
+        include_bytes!("builtin/rules.yaml"),
+        "builtin/rules.yaml",
+    );
 
     registry
 }
@@ -73,8 +82,16 @@ fn insert_entry(entries: &mut IndexMap<String, RegistryEntry>, entry: RegistryEn
     entries.insert(entry.id.clone(), entry);
 }
 
-fn merge_builtin_doc(registry: &mut RegistryDocument, bytes: &[u8]) {
-    let doc = load::load_bytes(bytes, DocumentFormat::Yaml).expect("valid builtin registry doc");
+fn merge_builtin_doc(registry: &mut RegistryDocument, bytes: &[u8], name: &'static str) {
+    let doc = load::load_bytes(bytes, DocumentFormat::Yaml).unwrap_or_else(|report| {
+        let summary = report
+            .diagnostics
+            .iter()
+            .map(|d| format!("{}: {}", d.id, d.message))
+            .collect::<Vec<_>>()
+            .join("; ");
+        panic!("invalid embedded registry doc '{name}': {summary}");
+    });
     registry.merge(&doc);
 }
 

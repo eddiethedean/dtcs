@@ -42,7 +42,7 @@ fn content_to_bytes(content: &Bound<'_, PyAny>) -> PyResult<Vec<u8>> {
         return Ok(data);
     }
     if let Ok(byte_array) = content.downcast::<PyByteArray>() {
-        return Ok(unsafe { byte_array.as_bytes().to_vec() });
+        return Ok(byte_array.to_vec());
     }
     Err(PyTypeError::new_err(
         "content must be str, bytes, or bytearray",

@@ -19,7 +19,17 @@ When invalid, `valid` is `false` and `diagnostics` contains error entries.
 
 ## diagnostics
 
-Same shape as `validate` — always includes the diagnostics array.
+```bash
+dtcs diagnostics contract.yaml --json
+```
+
+```json
+{
+  "diagnostics": []
+}
+```
+
+`diagnostics` always emits the diagnostics array. It does not include a `valid` field.
 
 ## inspect
 
@@ -29,9 +39,32 @@ Same shape as `validate` — always includes the diagnostics array.
   "name": "Normalize Customer",
   "version": "0.2.0",
   "dtcsVersion": "1.0.0",
-  "inputCount": 1,
-  "outputCount": 1,
-  "semanticActionCount": 1
+  "inputs": 1,
+  "outputs": 1,
+  "semanticActions": 1,
+  "rules": 0,
+  "expressions": 0,
+  "functions": 0
+}
+```
+
+## analyze
+
+```bash
+dtcs analyze contract.yaml --json
+```
+
+```json
+{
+  "validation": {
+    "valid": true,
+    "diagnostics": []
+  },
+  "analysis": {
+    "valid": true,
+    "diagnostics": [],
+    "findings": []
+  }
 }
 ```
 
@@ -117,7 +150,7 @@ Same shape as `validate` — always includes the diagnostics array.
 
 ```json
 {
-  "crateVersion": "0.5.0",
+  "crateVersion": "0.6.0",
   "specVersion": "1.0.0-draft"
 }
 ```

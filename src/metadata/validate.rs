@@ -432,7 +432,7 @@ fn is_iso8601_timestamp(value: &str) -> bool {
         }
     }
     let segments: Vec<&str> = time_part.split(':').collect();
-    if segments.len() < 2 || segments.len() > 3 {
+    if segments.len() != 3 {
         return false;
     }
     for (index, segment) in segments.iter().enumerate() {

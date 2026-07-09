@@ -197,12 +197,17 @@ pub(crate) fn validate_semantics(
     }
 }
 
-fn parse_stdlib_definition(definition: Option<&str>) -> Option<StdlibDefinition> {
-    let definition = definition?.trim();
+fn parse_stdlib_definition(
+    definition: Option<&str>,
+) -> Result<Option<StdlibDefinition>, serde_json::Error> {
+    let Some(definition) = definition else {
+        return Ok(None);
+    };
+    let definition = definition.trim();
     if !definition.starts_with('{') {
-        return None;
+        return Ok(None);
     }
-    serde_json::from_str(definition).ok()
+    serde_json::from_str(definition).map(Some)
 }
 
 fn validate_stdlib_action(
@@ -222,10 +227,26 @@ fn validate_stdlib_action(
     ) else {
         return;
     };
+    let parsed = match parse_stdlib_definition(definition) {
+        Ok(value) => value,
+        Err(err) => {
+            ctx.error(
+                codes::INVALID_SEMANTIC_ACTION,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "registry definition for '{}' is invalid JSON: {err}",
+                    action.action
+                ),
+                Some(&format!("registry.{}", action.action)),
+                Some("Fix the registry entry definition JSON for this identifier"),
+            );
+            return;
+        }
+    };
     let Some(StdlibDefinition::SemanticAction {
         target_type,
         target_nullable_allowed,
-    }) = parse_stdlib_definition(definition)
+    }) = parsed
     else {
         return;
     };
@@ -278,12 +299,28 @@ fn validate_stdlib_rule(
     ) else {
         return;
     };
+    let parsed = match parse_stdlib_definition(definition) {
+        Ok(value) => value,
+        Err(err) => {
+            ctx.error(
+                codes::INVALID_RULE,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "registry definition for '{}' is invalid JSON: {err}",
+                    rule.rule
+                ),
+                Some(&format!("registry.{}", rule.rule)),
+                Some("Fix the registry entry definition JSON for this identifier"),
+            );
+            return;
+        }
+    };
     let Some(StdlibDefinition::Rule {
         phases,
         target_type,
         target_nullable_allowed,
         parameters,
-    }) = parse_stdlib_definition(definition)
+    }) = parsed
     else {
         return;
     };
@@ -412,13 +449,29 @@ fn validate_stdlib_function(
     function: &crate::model::Function,
     definition: Option<&str>,
 ) {
+    let parsed = match parse_stdlib_definition(definition) {
+        Ok(value) => value,
+        Err(err) => {
+            ctx.error(
+                codes::INVALID_FUNCTION,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "registry definition for '{}' is invalid JSON: {err}",
+                    function.function
+                ),
+                Some(&format!("registry.{}", function.function)),
+                Some("Fix the registry entry definition JSON for this identifier"),
+            );
+            return;
+        }
+    };
     let Some(StdlibDefinition::Function {
         min_args,
         max_args,
         arg_types,
         return_type,
         return_nullable,
-    }) = parse_stdlib_definition(definition)
+    }) = parsed
     else {
         return;
     };
@@ -729,10 +782,10 @@ mod tests {
             r#"{"kind":"semanticAction","targetType":"string","targetNullableAllowed":false}"#;
         let parsed = parse_stdlib_definition(Some(def)).expect("parsed");
         match parsed {
-            StdlibDefinition::SemanticAction {
+            Some(StdlibDefinition::SemanticAction {
                 target_type,
                 target_nullable_allowed,
-            } => {
+            }) => {
                 assert_eq!(target_type.as_deref(), Some("string"));
                 assert_eq!(target_nullable_allowed, Some(false));
             }

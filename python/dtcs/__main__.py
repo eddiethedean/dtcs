@@ -52,12 +52,17 @@ def _render_report(report: dict, *, json_output: bool, mode: str) -> None:
         print("valid")
 
 
-def _load_valid_contract(path: Path, *, json_output: bool = False) -> dict:
+def _load_valid_contract(
+    path: Path,
+    *,
+    json_output: bool = False,
+    registry_path: str | None = None,
+) -> dict:
     try:
         result = parse_file(str(path))
     except ValueError as error:
         raise SystemExit(str(error)) from error
-    report = validate_result(result)
+    report = validate_result(result, registry_path)
     if not is_valid(report):
         _render_report(report, json_output=json_output, mode="validate")
         raise SystemExit(f"validation failed for {path}")
@@ -98,6 +103,7 @@ def _build_parser() -> argparse.ArgumentParser:
     compat_parser = subparsers.add_parser("compat", help="Compare contract compatibility")
     compat_parser.add_argument("source", type=Path)
     compat_parser.add_argument("target", type=Path)
+    compat_parser.add_argument("--registry", type=Path, default=None)
     # Accept both comma-delimited and repeated flags: `--scope a,b` or `--scope a --scope b`.
     compat_parser.add_argument("--scope", action="append", default=[])
     compat_parser.add_argument("--json", action="store_true")
@@ -105,10 +111,12 @@ def _build_parser() -> argparse.ArgumentParser:
     evolve_parser = subparsers.add_parser("evolve", help="Analyze contract evolution")
     evolve_parser.add_argument("older", type=Path)
     evolve_parser.add_argument("newer", type=Path)
+    evolve_parser.add_argument("--registry", type=Path, default=None)
     evolve_parser.add_argument("--json", action="store_true")
 
     lineage_parser = subparsers.add_parser("lineage", help="Analyze contract lineage")
     lineage_parser.add_argument("path", type=Path)
+    lineage_parser.add_argument("--registry", type=Path, default=None)
     lineage_parser.add_argument("--impact", default=None)
     lineage_parser.add_argument("--dependency", default=None)
     lineage_parser.add_argument("--json", action="store_true")
@@ -196,8 +204,12 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
     if args.command == "analyze":
-        contract = _load_valid_contract(args.path, json_output=args.json)
         registry_path = str(args.registry) if args.registry else None
+        contract = _load_valid_contract(
+            args.path,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
         try:
             result = analyze(contract, registry_path)
         except ValueError as error:
@@ -220,8 +232,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if valid else 1
 
     if args.command == "compat":
-        source = _load_valid_contract(args.source, json_output=args.json)
-        target = _load_valid_contract(args.target, json_output=args.json)
+        registry_path = str(args.registry) if args.registry else None
+        source = _load_valid_contract(
+            args.source,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
+        target = _load_valid_contract(
+            args.target,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
         scope_tokens: list[str] = []
         for item in args.scope or []:
             scope_tokens.extend(part.strip() for part in str(item).split(","))
@@ -247,8 +268,17 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if level and level != "incompatible" else 1
 
     if args.command == "evolve":
-        older = _load_valid_contract(args.older, json_output=args.json)
-        newer = _load_valid_contract(args.newer, json_output=args.json)
+        registry_path = str(args.registry) if args.registry else None
+        older = _load_valid_contract(
+            args.older,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
+        newer = _load_valid_contract(
+            args.newer,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
         report = evolve_analyze(older, newer)
         if args.json:
             print(json.dumps(report, indent=2))
@@ -264,7 +294,12 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if report.get("sameIdentity") and report.get("compatibility") != "incompatible" else 1
 
     if args.command == "lineage":
-        contract = _load_valid_contract(args.path, json_output=args.json)
+        registry_path = str(args.registry) if args.registry else None
+        contract = _load_valid_contract(
+            args.path,
+            json_output=args.json,
+            registry_path=registry_path,
+        )
         report = lineage_analyze(contract, args.impact, args.dependency)
         if args.json:
             print(json.dumps(report, indent=2))
