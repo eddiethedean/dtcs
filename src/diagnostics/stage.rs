@@ -14,6 +14,8 @@ pub enum DiagnosticStage {
     Analysis,
     /// Planning.
     Planning,
+    /// Optimization.
+    Optimization,
     /// Compilation.
     Compilation,
     /// Runtime.

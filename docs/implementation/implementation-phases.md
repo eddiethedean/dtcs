@@ -126,3 +126,19 @@ dtcs plan <contract>
 ```
 
 Do not implement compilers or runtime execution yet.
+
+## Phase 12 — Plan Optimization (Phase 0.8)
+
+- Semantics-preserving plan optimization (`src/plan/optimize.rs`, `src/plan/equivalence.rs`)
+- Expression constant folding and algebraic simplification
+- Registry-gated deterministic function evaluation
+- Action fusion and rule deduplication
+- Golden optimized plan fixtures under `tests/fixtures/plans_optimized/`
+
+Additional CLI command:
+
+```bash
+dtcs optimize <contract-or-plan>
+```
+
+Do not implement compilers or runtime execution yet.

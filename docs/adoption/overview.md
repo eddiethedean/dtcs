@@ -30,11 +30,11 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Identifier registry & extensibility | Complete (Phase 0.4, `0.4.0`) |
 | Static semantic analysis | Complete (Phase 0.6, `0.6.0`) |
 | Transformation plan lowering | Complete (Phase 0.7, `0.7.0`) |
-| Plan optimization | Not started (Phase 0.8) |
+| Plan optimization | Complete (Phase 0.8, `0.8.0`) |
 | Execution / runtime | Not started (Phase 0.9) |
 | Conformance certification (Ch 23) | Not started (Phase 0.10) |
 
-*Released reference implementation: `0.7.0`.*
+*Released reference implementation: `0.8.0`.*
 
 See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 
@@ -47,12 +47,13 @@ See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 5. **Version management** — compare contract revisions for breaking changes (`dtcs compat`, `dtcs evolve`)
 6. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
 7. **Plan lowering** — produce canonical transformation plans from validated contracts (`dtcs plan`)
-8. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
+8. **Plan optimization** — apply semantics-preserving rewrites to lowered plans (`dtcs optimize`)
+9. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
 
 - ETL execution (Spark, Polars, SQL compilation)
-- Runtime engines and optimization
+- Runtime engines
 - WASM/Node bindings
 - Conformance profiles and certification suites
 

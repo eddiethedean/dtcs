@@ -35,7 +35,8 @@ pub fn validate_with_registry(
     report
 }
 
-fn plan_as_contract(plan: &TransformationPlan) -> crate::model::TransformationContract {
+/// Reconstruct a COM view from a transformation plan (for graph rebuild and validation).
+pub fn plan_as_contract(plan: &TransformationPlan) -> crate::model::TransformationContract {
     let mut semantic_actions = Vec::new();
     let mut expressions = Vec::new();
     let mut rules = Vec::new();

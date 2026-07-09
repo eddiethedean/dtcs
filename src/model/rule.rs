@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use super::metadata::Metadata;
 
 /// Rule evaluation phase per SPEC Chapter 19.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum RulePhase {
     /// Evaluated before execution.

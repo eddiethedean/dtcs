@@ -6,16 +6,17 @@ See the canonical documentation index at [`docs/README.md`](../README.md).
 
 Treat [`SPEC.md`](../../SPEC.md) as the authoritative source of truth.
 
-The implementation pipeline through Phase 0.7:
+The implementation pipeline through Phase 0.8:
 
 ```text
 parse -> Canonical Object Model -> validate -> diagnostics
                                               -> analyze (compat, evolution, lineage, versioning)
                                               -> analyze (semantics, expressions)
                                               -> plan (lowering, graph, validation)
+                                              -> optimize (semantics-preserving rewrites)
 ```
 
-Do not implement execution, optimization, or backend compilation yet.
+Do not implement execution or backend compilation yet.
 
 ## Related documents
 

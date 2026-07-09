@@ -152,6 +152,34 @@ use dtcs::{parse_validate_and_plan, DocumentFormat};
 let result = parse_validate_and_plan(yaml_bytes, DocumentFormat::Yaml);
 ```
 
+## Plan optimization (Phase 0.8)
+
+Optimization applies semantics-preserving rewrites to a lowered plan.
+
+```rust
+use dtcs::plan::{equivalent, optimize};
+
+let optimized = optimize(&transformation_plan);
+assert!(optimized.is_valid());
+assert!(equivalent(&transformation_plan, optimized.plan.as_ref().unwrap()));
+```
+
+```python
+import dtcs
+
+optimized = dtcs.plan_optimize(plan)
+assert dtcs.is_valid({"diagnostics": optimized["diagnostics"]})
+assert dtcs.plan_equivalent(plan, optimized["plan"])
+```
+
+One-shot convenience:
+
+```rust
+use dtcs::{parse_validate_and_optimize, DocumentFormat};
+
+let result = parse_validate_and_optimize(yaml_bytes, DocumentFormat::Yaml);
+```
+
 ## Registry (Phase 0.4–0.5)
 
 The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,

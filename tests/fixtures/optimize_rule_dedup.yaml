@@ -1,0 +1,35 @@
+dtcsVersion: "1.0.0"
+id: "optimize.rule.dedup"
+name: "Optimize rule dedup"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "customer_id"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "customer_id"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "customer_id_required_a"
+    rule: "dtcs:not_null"
+    target: "in.customer_id"
+    phase: "postcondition"
+  - id: "customer_id_required_b"
+    rule: "dtcs:not_null"
+    target: "in.customer_id"
+    phase: "postcondition"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -43,3 +43,12 @@ pub(crate) fn planning_error(
 ) -> Diagnostic {
     stage_error(id, DiagnosticStage::Planning, category, message)
 }
+
+/// Convenience builder for optimization-stage errors.
+pub(crate) fn optimization_error(
+    id: &str,
+    category: DiagnosticCategory,
+    message: impl Into<String>,
+) -> Diagnostic {
+    stage_error(id, DiagnosticStage::Optimization, category, message)
+}

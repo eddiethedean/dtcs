@@ -13,6 +13,8 @@ from dtcs._native import metadata_validate as _metadata_validate
 from dtcs._native import parse_document as _parse_document
 from dtcs._native import parse_path as _parse_path
 from dtcs._native import plan_lower as _plan_lower
+from dtcs._native import plan_optimize as _plan_optimize
+from dtcs._native import plan_equivalent as _plan_equivalent
 from dtcs._native import plan_topological_order as _plan_topological_order
 from dtcs._native import plan_validate as _plan_validate
 from dtcs._native import registry_list as _registry_list
@@ -63,6 +65,16 @@ def plan_lower(contract: dict, registry_path: str | None = None) -> dict:
 def plan_validate(plan: dict, registry_path: str | None = None) -> dict:
     """Validate a transformation plan."""
     return _plan_validate(plan, registry_path)
+
+
+def plan_optimize(plan: dict, registry_path: str | None = None) -> dict:
+    """Optimize a transformation plan."""
+    return _plan_optimize(plan, registry_path)
+
+
+def plan_equivalent(before: dict, after: dict) -> bool:
+    """Return True when two plans are semantically equivalent."""
+    return _plan_equivalent(before, after)
 
 
 def plan_topological_order(contract: dict, plan: dict) -> list[str]:
@@ -156,6 +168,8 @@ __all__ = [
     "parse_and_validate",
     "parse_file",
     "plan_lower",
+    "plan_optimize",
+    "plan_equivalent",
     "plan_topological_order",
     "plan_validate",
     "registry_list",

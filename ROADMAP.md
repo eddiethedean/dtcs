@@ -33,7 +33,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog) |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | **Complete** (`0.6.0`) |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | **Complete** (`0.7.0`) |
-| **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | Planned |
+| **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | **Complete** (`0.8.0`) |
 | **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | Planned |
 | **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | Planned |
 
@@ -372,7 +372,7 @@ Lower validated COM into canonical semantic IR ([Ch 2 §5](SPEC.md#chapter-2----
 
 ## Phase 0.8 — Plan Optimization
 
-**Target:** `0.8.x` · **Tier:** IV · **Prerequisite:** 0.7
+**Target:** `0.8.x` · **Tier:** IV · **Prerequisite:** 0.7 · **Status:** Complete (`0.8.0`)
 
 **Implements:** Optimizer · **SPEC:** [Ch 13 §9](SPEC.md#chapter-13----transformation-plan), [Ch 8 §14](SPEC.md#chapter-8----expression-language), [Ch 15 §9](SPEC.md#chapter-15----compilation), [Ch 17 §11](SPEC.md#chapter-17----semantic-actions), [Ch 18 §11](SPEC.md#chapter-18----function-model), [Ch 19 §11](SPEC.md#chapter-19----rule-model)
 
@@ -396,12 +396,16 @@ Produce semantically equivalent optimized plans (plan → plan only, never plan 
 
 | Surface | Entry point |
 |---------|-------------|
-| Rust | `plan::optimize` |
-| CLI | `dtcs optimize <plan>` |
+| Rust | `plan::optimize`, `plan::equivalent` |
+| CLI | `dtcs optimize <path>` |
+| Python | `plan_optimize`, `plan_equivalent` |
 
 ### Exit criteria
 
-- [Ch 13 §9](SPEC.md#chapter-13----transformation-plan): optimized plans pass `plan::validate` and equivalence tests
+- [x] [Ch 13 §9](SPEC.md#chapter-13----transformation-plan): optimized plans pass `plan::validate` and equivalence tests
+- [x] Golden files lock optimized plan shape for optimization fixtures
+- [x] Optimization-stage diagnostics with standardized codes
+- [ ] Publish to crates.io and PyPI at `0.8.0` (tag `v0.8.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

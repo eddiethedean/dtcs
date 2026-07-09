@@ -1,0 +1,38 @@
+dtcsVersion: "1.0.0"
+id: "optimize.action.fusion"
+name: "Optimize action fusion"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "email"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "email"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "lower_once"
+    action: "dtcs:lowercase"
+    target: "out.email"
+  - id: "lower_twice"
+    action: "dtcs:lowercase"
+    target: "out.email"
+
+semantics:
+  ordering:
+    mode: explicit
+    order: ["lower_once", "lower_twice"]
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.8.0
+
+Phase 0.8 — Plan optimization (Ch 13 §9, Ch 8 §14, Ch 15 §9, Ch 17–19 §11).
+
+### Features
+
+- New `plan::optimize` / `plan::equivalent` with semantics-preserving expression, function, action, and rule passes.
+- Expression constant folding, algebraic simplification, and dead-expression elimination.
+- Registry-gated evaluation of deterministic `dtcs:` function calls in expressions.
+- Idempotent semantic-action fusion and duplicate rule deduplication.
+- Dependency graph rebuild and fail-closed `plan::validate` after optimization.
+- Optimization-stage diagnostics: `dtcs:invalid-optimization`, `dtcs:optimization-skipped`.
+- CLI and Python: `dtcs optimize` / `plan_optimize` / `plan_equivalent`; Rust `parse_validate_and_optimize`.
+
+### Tests
+
+- Phase 0.8 integration tests, `tests/optimize_expectations.json`, and golden optimized plans under `tests/fixtures/plans_optimized/`.
+
+**Release:** push tag `v0.8.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
+
 ## 0.7.0
 
 Phase 0.7 — Transformation Plan lowering (Ch 13 §4–8, §11–12, §14).

@@ -1,0 +1,46 @@
+{
+  "fixtures": [
+    {
+      "file": "optimize_constant_fold.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_constant_fold.plan.json",
+      "transforms_min": 1
+    },
+    {
+      "file": "optimize_algebraic.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_algebraic.plan.json",
+      "transforms_min": 1
+    },
+    {
+      "file": "optimize_action_fusion.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_action_fusion.plan.json",
+      "transforms_min": 1
+    },
+    {
+      "file": "optimize_function_inline.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_function_inline.plan.json",
+      "transforms_min": 1
+    },
+    {
+      "file": "optimize_rule_dedup.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_rule_dedup.plan.json",
+      "transforms_min": 1
+    },
+    {
+      "file": "optimize_dead_expr.yaml",
+      "optimize_valid": true,
+      "equivalent": true,
+      "golden": "plans_optimized/optimize_dead_expr.plan.json",
+      "transforms_min": 1
+    }
+  ]
+}

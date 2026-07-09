@@ -1,0 +1,81 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "optimize.action.fusion",
+    "name": "Optimize action fusion",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "lower_once",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "lower_once",
+        "action": "dtcs:lowercase",
+        "target": "out.email"
+      },
+      "objectRef": "semanticActions.lower_once"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "lower_once",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {
+    "semantics": {
+      "ordering": {
+        "mode": "explicit",
+        "order": [
+          "lower_once"
+        ]
+      }
+    }
+  }
+}

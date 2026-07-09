@@ -1,0 +1,30 @@
+dtcsVersion: "1.0.0"
+id: "optimize.function.inline"
+name: "Optimize function inline"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+expressions:
+  - id: "normalized"
+    expr: "dtcs:upper(dtcs:lower(\"AbC\"))"
+    type: "string"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

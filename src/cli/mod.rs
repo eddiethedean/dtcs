@@ -61,6 +61,23 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Optimize a transformation plan (contract or serialized plan JSON).
+    Optimize {
+        /// Path to a DTCS contract or serialized plan JSON.
+        path: PathBuf,
+        /// Treat the input path as serialized plan JSON from `dtcs plan --json`.
+        #[arg(long)]
+        plan: bool,
+        /// Optional additional registry file to merge.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Skip post-optimization validation.
+        #[arg(long)]
+        no_validate: bool,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
     /// Print a contract summary.
     Inspect {
         /// Path to a DTCS document.
@@ -290,6 +307,91 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 println!("plan: {}", plan.identity.id);
                 println!("nodes: {}", plan.nodes.len());
                 println!("dependencies: {}", plan.dependencies.len());
+                if !order.is_empty() {
+                    println!("order: {}", order.join(" -> "));
+                }
+            }
+            Ok(0)
+        }
+        Command::Optimize {
+            path,
+            plan: from_plan,
+            registry,
+            no_validate,
+            json,
+        } => {
+            let merged = match registry.as_ref() {
+                Some(registry_path) => Some(
+                    crate::registry::load_merged(registry_path)
+                        .map_err(|report| registry_report_error(&report))?,
+                ),
+                None => None,
+            };
+            let registry_doc = merged
+                .as_ref()
+                .unwrap_or_else(|| crate::registry::default_registry());
+
+            let input_plan = if from_plan {
+                let content = std::fs::read_to_string(&path)
+                    .map_err(|e| miette::miette!("failed to read {}: {e}", path.display()))?;
+                serde_json::from_str(&content)
+                    .map_err(|e| miette::miette!("invalid plan JSON in {}: {e}", path.display()))?
+            } else {
+                let contract = load_valid_contract_with_registry(&path, registry.as_ref(), json)?;
+                let analysis_report = analysis::check_contract(&contract, Some(registry_doc));
+                let plan_result =
+                    crate::plan::lower(&contract, Some(registry_doc), Some(&analysis_report));
+                if !plan_result.is_valid() {
+                    let report = DiagnosticReport {
+                        diagnostics: plan_result.diagnostics,
+                    };
+                    render_report(&report, json, ReportMode::Diagnostics)
+                        .map_err(|e| miette::miette!("{e}"))?;
+                    return Ok(1);
+                }
+                plan_result.plan.expect("valid plan result")
+            };
+
+            let options = crate::plan::OptimizeOptions {
+                validate: !no_validate,
+                ..crate::plan::OptimizeOptions::default()
+            };
+            let optimize_result =
+                crate::plan::optimize_with_registry(&input_plan, registry_doc, &options);
+
+            if !optimize_result.is_valid() {
+                let report = DiagnosticReport {
+                    diagnostics: optimize_result.diagnostics,
+                };
+                render_report(&report, json, ReportMode::Diagnostics)
+                    .map_err(|e| miette::miette!("{e}"))?;
+                return Ok(1);
+            }
+
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&optimize_result)
+                        .map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                let optimized = optimize_result
+                    .plan
+                    .as_ref()
+                    .expect("valid optimize result");
+                let contract = crate::plan::plan_as_contract(optimized);
+                let order = crate::plan::topological_order(
+                    &contract,
+                    &optimized.nodes,
+                    &optimized.dependencies,
+                );
+                println!("plan: {}", optimized.identity.id);
+                println!(
+                    "nodes: {} -> {} ({} transforms)",
+                    input_plan.nodes.len(),
+                    optimized.nodes.len(),
+                    optimize_result.transforms.len()
+                );
                 if !order.is_empty() {
                     println!("order: {}", order.join(" -> "));
                 }

@@ -72,6 +72,10 @@ pub const CYCLIC_DEPENDENCY: &str = "dtcs:cyclic-dependency";
 pub const PLAN_TYPE_MISMATCH: &str = "dtcs:plan-type-mismatch";
 /// Unresolved reference in a plan dependency or node.
 pub const UNRESOLVED_PLAN_REFERENCE: &str = "dtcs:unresolved-plan-reference";
+/// Optimization produced an invalid plan.
+pub const INVALID_OPTIMIZATION: &str = "dtcs:invalid-optimization";
+/// Optimization pass skipped a rewrite conservatively.
+pub const OPTIMIZATION_SKIPPED: &str = "dtcs:optimization-skipped";
 
 /// All standardized diagnostic identifiers registered by this implementation.
 pub const ALL_CODES: &[&str] = &[
@@ -111,4 +115,6 @@ pub const ALL_CODES: &[&str] = &[
     CYCLIC_DEPENDENCY,
     PLAN_TYPE_MISMATCH,
     UNRESOLVED_PLAN_REFERENCE,
+    INVALID_OPTIMIZATION,
+    OPTIMIZATION_SKIPPED,
 ];

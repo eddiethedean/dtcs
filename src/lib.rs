@@ -1,13 +1,14 @@
 //! Reference implementation of the Data Transformation Contract Standard (DTCS).
 //!
 //! [`SPEC.md`](../SPEC.md) at the repository root is the authoritative normative
-//! specification. This crate implements the pipeline through transformation plan lowering:
+//! specification. This crate implements the pipeline through transformation plan optimization:
 //!
 //! ```text
 //! DTCS Document → Parser → Canonical Object Model → Validator → Diagnostics
 //!                                              ├→ Analyzer → Analysis reports
 //!                                              ├→ Registry (identifier resolution)
-//!                                              └→ Planner → Transformation Plan
+//!                                              ├→ Planner → Transformation Plan
+//!                                              └→ Optimizer → Optimized Plan
 //! ```
 //!
 //! # Example
@@ -83,7 +84,11 @@ pub use model::{
     TransformationContract, TypeCompatibility, TypeParseError,
 };
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
-pub use plan::{lower as lower_plan, validate as validate_plan, PlanResult, TransformationPlan};
+pub use plan::{
+    equivalent, equivalent as plan_equivalent, lower as lower_plan, optimize,
+    optimize as optimize_plan, validate as validate_plan, OptimizeOptions, OptimizeResult,
+    PlanResult, TransformationPlan,
+};
 pub use registry::{
     default_registry, is_known_action, is_known_function, is_known_rule, load as load_registry,
     load_merged, resolve as resolve_registry, resolve_default,
@@ -140,6 +145,50 @@ pub fn parse_validate_and_plan_with_registry(
 
     let analysis = analysis::check_contract(&contract, Some(&registry_doc));
     plan::lower(&contract, Some(&registry_doc), Some(&analysis))
+}
+
+/// Parse, validate, lower, and optimize a DTCS document.
+#[must_use]
+pub fn parse_validate_and_optimize(content: &[u8], format: DocumentFormat) -> plan::OptimizeResult {
+    parse_validate_and_optimize_with_registry(content, format, None)
+}
+
+/// Parse, validate, lower, and optimize a DTCS document using an optional vendor registry.
+#[must_use]
+pub fn parse_validate_and_optimize_with_registry(
+    content: &[u8],
+    format: DocumentFormat,
+    registry_path: Option<&std::path::Path>,
+) -> plan::OptimizeResult {
+    let plan_result = parse_validate_and_plan_with_registry(content, format, registry_path);
+    let Some(plan) = plan_result.plan else {
+        return plan::OptimizeResult {
+            diagnostics: plan_result.diagnostics,
+            ..plan::OptimizeResult::default()
+        };
+    };
+
+    let registry_doc = match registry_path {
+        Some(path) => match load_merged(path) {
+            Ok(merged) => merged,
+            Err(report) => {
+                return plan::OptimizeResult {
+                    diagnostics: report.diagnostics,
+                    ..plan::OptimizeResult::default()
+                };
+            }
+        },
+        None => default_registry().clone(),
+    };
+
+    let mut result =
+        plan::optimize_with_registry(&plan, &registry_doc, &plan::OptimizeOptions::default());
+    result.diagnostics = plan_result
+        .diagnostics
+        .into_iter()
+        .chain(result.diagnostics)
+        .collect();
+    result
 }
 
 impl TransformationContract {

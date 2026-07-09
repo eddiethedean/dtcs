@@ -8,6 +8,8 @@ use crate::model::{Expression, RegistryDocument, TransformationContract};
 
 pub mod ast;
 mod constants;
+pub(crate) mod eval;
+pub(crate) mod format;
 pub(crate) mod parse;
 pub(crate) mod types;
 

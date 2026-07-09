@@ -1,0 +1,38 @@
+dtcsVersion: "1.0.0"
+id: "optimize.dead.expr"
+name: "Optimize dead expression"
+version: "0.1.0"
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "lower_value"
+    action: "dtcs:lowercase"
+    target: "out.value"
+
+expressions:
+  - id: "unused_const"
+    expr: "1 + 1"
+    type: "integer"
+  - id: "read_value"
+    expr: "out.value"
+    type: "string"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

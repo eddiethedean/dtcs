@@ -1,0 +1,72 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "optimize.algebraic",
+    "name": "Optimize algebraic",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "integer",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "scale_identity",
+      "kind": {
+        "kind": "expression",
+        "id": "scale_identity",
+        "expr": "in.value",
+        "type": "integer"
+      },
+      "objectRef": "expressions.scale_identity"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "scale_identity",
+      "reason": "fieldRead"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

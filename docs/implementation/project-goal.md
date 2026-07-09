@@ -4,7 +4,7 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 
 `SPEC.md` is the source of truth.
 
-## Implemented through 0.7.0
+## Implemented through 0.8.0
 
 - Canonical Object Model
 - YAML and JSON parsing
@@ -22,6 +22,7 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 - Registry-aware extension validation (mandatory/optional processing)
 - Static semantic analysis (Ch 7–8)
 - Transformation plan lowering (`plan::lower`, `plan::validate`, dependency graph)
+- Plan optimization (`plan::optimize`, `plan::equivalent`, semantics-preserving passes)
 - CLI and Python bindings
 
 - Embedded starter standard libraries under `src/registry/builtin/` (semantic actions, functions, rules)
@@ -30,5 +31,5 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 ## Stubs / future milestones
 
 - Remaining Ch 17–19 standard library catalog entries (full libraries beyond the starter subset)
-- Plan optimization (`src/plan/optimize.rs` — Phase 0.8)
+- Plan optimization extensions (additional rewrite passes beyond the starter set)
 - Execution, runtime behavior, and backend compilation

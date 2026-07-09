@@ -1,0 +1,87 @@
+{
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "optimize.dead.expr",
+    "name": "Optimize dead expression",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "lower_value",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "lower_value",
+        "action": "dtcs:lowercase",
+        "target": "out.value"
+      },
+      "objectRef": "semanticActions.lower_value"
+    },
+    {
+      "id": "read_value",
+      "kind": {
+        "kind": "expression",
+        "id": "read_value",
+        "expr": "out.value",
+        "type": "string"
+      },
+      "objectRef": "expressions.read_value"
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "in",
+      "to": "lower_value",
+      "reason": "lineage"
+    },
+    {
+      "from": "in",
+      "to": "out",
+      "reason": "lineage"
+    },
+    {
+      "from": "lower_value",
+      "to": "read_value",
+      "reason": "fieldRead"
+    }
+  ],
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  },
+  "guarantees": {}
+}

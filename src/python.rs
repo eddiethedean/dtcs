@@ -256,6 +256,37 @@ fn plan_validate(
     value_to_py(py, &plan::validate_with_registry(&plan, &registry_doc))
 }
 
+/// Optimize a transformation plan.
+#[pyfunction]
+#[pyo3(signature = (plan_obj, registry_path=None))]
+fn plan_optimize(
+    py: Python<'_>,
+    plan_obj: &Bound<'_, PyAny>,
+    registry_path: Option<String>,
+) -> PyResult<Py<PyAny>> {
+    let plan = plan_from_py(py, plan_obj)?;
+    let registry_doc = if let Some(path) = registry_path.as_deref() {
+        crate::registry::load_merged(path).map_err(registry_error)?
+    } else {
+        crate::registry::default_registry().clone()
+    };
+    let result =
+        plan::optimize_with_registry(&plan, &registry_doc, &plan::OptimizeOptions::default());
+    value_to_py(py, &result)
+}
+
+/// Compare two transformation plans for semantic equivalence.
+#[pyfunction]
+fn plan_equivalent(
+    py: Python<'_>,
+    before: &Bound<'_, PyAny>,
+    after: &Bound<'_, PyAny>,
+) -> PyResult<bool> {
+    let before_plan = plan_from_py(py, before)?;
+    let after_plan = plan_from_py(py, after)?;
+    Ok(plan::equivalent(&before_plan, &after_plan))
+}
+
 /// Parse and validate a DTCS document in one step.
 #[pyfunction]
 #[pyo3(signature = (content, format="yaml"))]
@@ -387,6 +418,8 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(plan_lower, m)?)?;
     m.add_function(wrap_pyfunction!(plan_topological_order, m)?)?;
     m.add_function(wrap_pyfunction!(plan_validate, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_optimize, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_equivalent, m)?)?;
     m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;
     m.add_function(wrap_pyfunction!(inspect, m)?)?;

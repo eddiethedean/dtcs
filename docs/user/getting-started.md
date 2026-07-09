@@ -60,6 +60,17 @@ dtcs plan examples/customer_normalize.dtcs.yaml --json
 
 Human-readable output includes node count, dependency count, and topological execution order. With `--json`, the full plan document is printed on success.
 
+## Optimize a transformation plan
+
+Apply semantics-preserving rewrites to a lowered plan (constant folding, action fusion, rule dedup, and more):
+
+```bash
+dtcs optimize examples/customer_normalize.dtcs.yaml
+dtcs optimize examples/customer_normalize.dtcs.yaml --json
+```
+
+By default the path is a DTCS contract (lowered internally). Pass `--plan` when the input is serialized plan JSON from `dtcs plan --json`.
+
 ## Inspect a contract
 
 ```bash

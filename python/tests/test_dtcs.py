@@ -229,6 +229,21 @@ def test_plan_lower_deterministic() -> None:
     assert first == second
 
 
+def test_plan_optimize_constant_fold() -> None:
+    result = dtcs.parse(_fixture("optimize_constant_fold.yaml"), "yaml")
+    plan_result = dtcs.plan_lower(result["contract"])
+    optimized = dtcs.plan_optimize(plan_result["plan"])
+    assert dtcs.is_valid({"diagnostics": optimized.get("diagnostics", [])})
+    assert optimized.get("transforms")
+    assert dtcs.plan_equivalent(plan_result["plan"], optimized["plan"])
+
+
+def test_plan_equivalent_self() -> None:
+    result = dtcs.parse(_fixture("valid_customer.yaml"), "yaml")
+    plan_result = dtcs.plan_lower(result["contract"])
+    assert dtcs.plan_equivalent(plan_result["plan"], plan_result["plan"])
+
+
 def _python_dtcs(*args: str) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, "-m", "dtcs", *args],
