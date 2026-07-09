@@ -14,6 +14,15 @@ Phase 0.8 — Plan optimization (Ch 13 §9, Ch 8 §14, Ch 15 §9, Ch 17–19 §1
 - Optimization-stage diagnostics: `dtcs:invalid-optimization`, `dtcs:optimization-skipped` (information-level; emitted when a rewrite is skipped because a type guard would not hold).
 - CLI and Python: `dtcs optimize` / `plan_optimize` / `plan_equivalent`; Rust `parse_validate_and_optimize`.
 
+### Bug fixes
+
+- Rule deduplication includes rule `parameters` in the dedup key and equivalence fingerprints.
+- Equivalence checker preserves semantic action order and distinguishes rule parameters.
+- Dead-expression elimination runs after dependency graph rebuild (not before).
+- Expression rewrites fail closed on type-guard mismatch; emit `dtcs:optimization-skipped`.
+- Invalid input plans are rejected before optimization transforms when validation is enabled.
+- Python CLI gains `optimize` with `--plan`, `--registry`, `--no-validate`, and `--json`.
+
 ### Tests
 
 - Phase 0.8 integration tests, `tests/optimize_expectations.json`, and golden optimized plans under `tests/fixtures/plans_optimized/`.

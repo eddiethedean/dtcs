@@ -366,7 +366,7 @@ Lower validated COM into canonical semantic IR ([Ch 2 §5](SPEC.md#chapter-2----
 - [x] [Ch 13 §14](SPEC.md#chapter-13----transformation-plan) (excluding optimization)
 - [x] Golden files lock plan shape for fixture corpus
 - [x] Planning-stage diagnostics with standardized codes
-- [ ] Publish to crates.io and PyPI at `0.7.0` (tag `v0.7.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [x] Publish to crates.io and PyPI at `0.7.0` (tag `v0.7.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 
