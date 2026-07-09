@@ -1,0 +1,89 @@
+{
+  "version": "1.0.0",
+  "tests": [
+    {
+      "id": "parse-valid-customer",
+      "profiles": ["parser", "validator", "analyzer", "planner", "optimizer", "compiler", "runtime", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "parseValid" }
+    },
+    {
+      "id": "parse-invalid-malformed",
+      "profiles": ["parser", "integrated-platform"],
+      "fixture": "malformed.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "parseInvalid" }
+    },
+    {
+      "id": "validate-valid-customer",
+      "profiles": ["validator", "analyzer", "planner", "optimizer", "compiler", "runtime", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "validateValid" }
+    },
+    {
+      "id": "validate-invalid-missing-lineage",
+      "profiles": ["validator", "integrated-platform"],
+      "fixture": "missing_lineage.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "validateInvalid",
+        "codes": ["dtcs:missing-lineage"]
+      }
+    },
+    {
+      "id": "plan-valid-customer",
+      "profiles": ["planner", "optimizer", "compiler", "runtime", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "planValid" }
+    },
+    {
+      "id": "optimize-equivalent-customer",
+      "profiles": ["optimizer", "integrated-platform"],
+      "fixture": "optimize_constant_fold.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "optimizeEquivalent" }
+    },
+    {
+      "id": "match-supported-customer",
+      "profiles": ["compiler", "runtime", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "matchSupported" }
+    },
+    {
+      "id": "compile-valid-customer",
+      "profiles": ["compiler", "runtime", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "compileValid" }
+    },
+    {
+      "id": "runtime-customer-normalize",
+      "profiles": ["runtime", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "runtimeOutput",
+        "input": "runtime/customer_normalize_input.json",
+        "expectedOutput": "runtime/customer_normalize_output.json"
+      }
+    },
+    {
+      "id": "security-registry-trust",
+      "profiles": ["validator", "integrated-platform"],
+      "fixture": "registry/evil_dtcs_injection.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "securityProbe", "probeId": "registry-trust" }
+    },
+    {
+      "id": "security-duplicate-params",
+      "profiles": ["parser", "validator", "integrated-platform"],
+      "fixture": "invalid_rule_duplicate_params.json",
+      "format": "json",
+      "assertion": { "kind": "securityProbe", "probeId": "contract-integrity" }
+    }
+  ]
+}

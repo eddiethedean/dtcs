@@ -56,6 +56,7 @@ pub mod analysis;
 pub mod capability;
 pub mod compatibility;
 pub mod compile;
+pub mod conformance;
 pub mod diagnostics;
 pub mod lineage;
 pub mod metadata;
@@ -109,6 +110,14 @@ pub use registry::{
 };
 pub use runtime::{execute, ExecuteResult, RuntimeInputs, RuntimeOutputs, RuntimeValue};
 pub use validation::{validate, validate_with_registry, ValidationPhase};
+
+pub use conformance::{
+    declare as conformance_declare, declare_profile as conformance_declare_profile,
+    default_fixtures_dir as conformance_fixtures_dir, embedded_profiles as conformance_profiles,
+    manifest as conformance_manifest, run_all as conformance_run_all,
+    run_for_profiles as conformance_run, ConformanceProfile, ConformanceReport,
+    ImplementationCapabilityDeclaration, ImplementationClass,
+};
 
 /// Parse and validate a DTCS document in one step.
 #[must_use]

@@ -4,6 +4,7 @@
 
 | Version | Breaking or notable changes |
 |---------|----------------------------|
+| **0.10.0** | Conformance profiles, `dtcs conformance` CLI, Python `conformance_*` APIs, WASM/Node bindings, `uv publish` migration. |
 | **0.9.0** | New `match`, `compile`, `run` CLI and Python APIs. `runtime_execute` returns `{outputs, diagnostics}` envelope. |
 | **0.8.0** | Plan optimization APIs (`plan_optimize`, `plan_equivalent`). |
 | **0.7.0** | Transformation plan lowering (`plan_lower`, `plan_validate`). |
@@ -11,6 +12,26 @@
 | **0.2.0** | Extended validation (metadata, types, expressions, I/O interfaces). |
 
 For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/troubleshooting.md](docs/user/troubleshooting.md).
+
+## 0.10.0
+
+Phase 0.10 — Conformance & Ecosystem (Ch 23–24, Ch 26).
+
+### Features
+
+- New `conformance` module with eight implementation class profiles, capability declaration, offline test runner, and security checklist probes.
+- CLI: `dtcs conformance declare`, `dtcs conformance run --profile <name|all>`.
+- Python: `conformance_declare()`, `conformance_run()`.
+- WASM package `@eddiethedean/dtcs-wasm` (`parseDocument`, `validateContract`, `conformanceDeclare`).
+- Node package `@eddiethedean/dtcs` (thin WASM wrapper).
+- Documentation: [docs/user/conformance.md](docs/user/conformance.md), [docs/adoption/security-checklist.md](docs/adoption/security-checklist.md), [docs/api/python.md](docs/api/python.md).
+- Release workflow publishes Python packages via `uv publish`; attaches `dtcs-conformance-declaration.json` to GitHub releases.
+
+### Tests
+
+- `tests/conformance/manifest.json`, `tests/phase_0_10.rs`, CI conformance gate.
+
+**Release:** push tag `v0.10.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.9.0
 

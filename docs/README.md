@@ -21,6 +21,7 @@ Choose your path:
 | [json-output.md](user/json-output.md) | JSON output shapes for all commands |
 | [ci-integration.md](user/ci-integration.md) | CI gates and automation patterns |
 | [troubleshooting.md](user/troubleshooting.md) | Common installation and usage problems |
+| [conformance.md](user/conformance.md) | Conformance profiles, declare/run, and certification |
 | [faq.md](user/faq.md) | Frequently asked questions |
 
 ## Adoption
@@ -28,6 +29,13 @@ Choose your path:
 | Document | Description |
 |----------|-------------|
 | [overview.md](adoption/overview.md) | Maturity, scope, security summary, evaluation checklist |
+| [security-checklist.md](adoption/security-checklist.md) | Ch 24 security requirements and automated probes |
+
+## API reference
+
+| Document | Description |
+|----------|-------------|
+| [api/python.md](api/python.md) | Python package public API |
 
 ## Specification
 

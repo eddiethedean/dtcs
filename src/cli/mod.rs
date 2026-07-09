@@ -209,11 +209,40 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Conformance profiles and offline certification suite (Ch 23).
+    Conformance {
+        #[command(subcommand)]
+        /// Conformance subcommand.
+        command: ConformanceCommand,
+    },
     /// Inspect the identifier registry catalog.
     Registry {
         #[command(subcommand)]
         /// Registry subcommand.
         command: RegistryCommand,
+    },
+}
+
+/// Conformance certification commands (Ch 23).
+#[derive(Debug, Subcommand)]
+pub enum ConformanceCommand {
+    /// Emit the implementation capability declaration.
+    Declare {
+        /// Filter to a single profile identifier.
+        #[arg(long)]
+        profile: Option<String>,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Run the offline conformance test suite.
+    Run {
+        /// Profile to test (`all` runs every profile).
+        #[arg(long, default_value = "integrated-platform")]
+        profile: String,
+        /// Emit JSON output.
+        #[arg(long)]
+        json: bool,
     },
 }
 
@@ -737,7 +766,78 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             }
             Ok(0)
         }
+        Command::Conformance { command } => run_conformance(command),
         Command::Registry { command } => run_registry(command),
+    }
+}
+
+fn run_conformance(command: ConformanceCommand) -> miette::Result<i32> {
+    match command {
+        ConformanceCommand::Declare { profile, json } => {
+            let declaration = match profile.as_deref() {
+                Some(id) => crate::conformance::declare_profile(id)
+                    .ok_or_else(|| miette::miette!("unknown conformance profile: {id}"))?,
+                None => crate::conformance::declare(),
+            };
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&declaration)
+                        .map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                println!("implementation: {}", declaration.implementation_id);
+                println!("version: {}", declaration.implementation_version);
+                println!("spec: {}", declaration.dtcs_version);
+                println!("primary profile: {}", declaration.primary_profile);
+                for profile in &declaration.profiles {
+                    println!("  {} ({:?})", profile.id, profile.implementation_class);
+                }
+            }
+            Ok(0)
+        }
+        ConformanceCommand::Run { profile, json } => {
+            let fixtures = crate::conformance::default_fixtures_dir();
+            let report = if profile == "all" {
+                crate::conformance::run_all()
+            } else {
+                crate::conformance::run_for_profiles(Some(std::slice::from_ref(&profile)), fixtures.as_path())
+            };
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&report).map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                println!(
+                    "conformance {} ({})",
+                    if report.passed { "passed" } else { "failed" },
+                    report.implementation_version
+                );
+                for result in report
+                    .results
+                    .iter()
+                    .chain(report.security.iter())
+                    .filter(|r| !r.passed)
+                {
+                    println!(
+                        "  FAIL {} [{}]: {}",
+                        result.id,
+                        result.profile,
+                        result.message.as_deref().unwrap_or("failed")
+                    );
+                }
+                let passed = report
+                    .results
+                    .iter()
+                    .chain(report.security.iter())
+                    .filter(|r| r.passed)
+                    .count();
+                let total = report.results.len() + report.security.len();
+                println!("  {passed}/{total} checks passed");
+            }
+            Ok(if report.passed { 0 } else { 1 })
+        }
     }
 }
 

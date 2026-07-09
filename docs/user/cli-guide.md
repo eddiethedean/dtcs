@@ -20,6 +20,8 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | `lineage <path>` | Analyze dataset-level lineage |
 | `registry list` | List identifier registry entries |
 | `registry resolve <id>` | Resolve a registry identifier |
+| `conformance declare` | Emit implementation capability declaration (Ch 23) |
+| `conformance run` | Run offline conformance test suite |
 | `version` | Print tool and specification versions |
 
 All commands accept `--json` for structured output except where noted below.
@@ -273,6 +275,24 @@ Inspects the embedded `dtcs:` identifier catalog, including the starter standard
 |-----------|---------|
 | `0` | `list` succeeded, or `resolve` found the identifier |
 | `1` | Registry file invalid, or `resolve` did not find the identifier |
+
+## conformance
+
+```bash
+dtcs conformance declare
+dtcs conformance declare --profile integrated-platform --json
+dtcs conformance run --profile integrated-platform
+dtcs conformance run --profile all --json
+```
+
+Declares conformance profiles (Ch 23 §9) and runs the offline test suite (Ch 23 §8). Security checklist probes (Ch 24) are included in the run report.
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Declaration emitted, or all selected tests passed |
+| `1` | Unknown profile, or one or more conformance tests failed |
+
+See [conformance.md](conformance.md) for profile identifiers and report fields.
 
 ## version
 

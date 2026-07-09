@@ -96,10 +96,11 @@ Both Rust and Python packages install the same `dtcs` CLI.
 - [ ] Match plans against engine capabilities with `dtcs match examples/customer_normalize.dtcs.yaml`
 - [ ] Compile contracts to execution plans with `dtcs compile examples/customer_normalize.dtcs.yaml`
 - [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_normalize.dtcs.yaml --input tests/fixtures/runtime/customer_normalize_input.json`
-- [ ] Review [ROADMAP.md](../../ROADMAP.md) for planned conformance and multi-backend work
+- [ ] Run offline conformance certification: `dtcs conformance run --profile integrated-platform`
+- [ ] Review [security-checklist.md](security-checklist.md) for Ch 24 requirements
 - [ ] Read SPEC Chapters 1–3 for design principles and scope
 
-Conformance certification (Phase 0.10) is not yet available. The checklist above exercises the reference implementation through Phase 0.9; it does not replace a formal conformance program.
+Conformance certification (Phase 0.10) is available via `dtcs conformance declare` and `dtcs conformance run`. See [conformance.md](../user/conformance.md). External certification authority remains out of scope per Ch 23 §13.
 
 ## Getting started
 

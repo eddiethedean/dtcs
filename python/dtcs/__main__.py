@@ -15,6 +15,8 @@ from dtcs import (
     capability_reference_profile,
     compile_plan,
     compat_analyze,
+    conformance_declare,
+    conformance_run,
     evolve_analyze,
     inspect,
     is_valid,
@@ -275,6 +277,30 @@ def _build_parser() -> argparse.ArgumentParser:
     registry_resolve_parser.add_argument("--registry", type=Path, default=None)
     registry_resolve_parser.add_argument("--json", action="store_true")
 
+    conformance_parser = subparsers.add_parser(
+        "conformance",
+        help="Conformance profiles and offline certification suite",
+    )
+    conformance_sub = conformance_parser.add_subparsers(dest="conformance_command", required=True)
+
+    conformance_declare_parser = conformance_sub.add_parser(
+        "declare",
+        help="Emit implementation capability declaration",
+    )
+    conformance_declare_parser.add_argument("--profile", default=None)
+    conformance_declare_parser.add_argument("--json", action="store_true")
+
+    conformance_run_parser = conformance_sub.add_parser(
+        "run",
+        help="Run offline conformance tests",
+    )
+    conformance_run_parser.add_argument(
+        "--profile",
+        default="integrated-platform",
+        help="Profile id or 'all'",
+    )
+    conformance_run_parser.add_argument("--json", action="store_true")
+
     return parser
 
 
@@ -341,6 +367,47 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"compatibility: {compatibility}")
                 print(f"supported: {entry.get('supported')}")
             return 0
+
+    if args.command == "conformance":
+        if args.conformance_command == "declare":
+            try:
+                declaration = conformance_declare(args.profile)
+            except ValueError as error:
+                print(str(error), file=sys.stderr)
+                return 1
+            if args.json:
+                print(json.dumps(declaration, indent=2))
+            else:
+                print(f"implementation: {declaration.get('implementationId')}")
+                print(f"version: {declaration.get('implementationVersion')}")
+                print(f"spec: {declaration.get('dtcsVersion')}")
+                print(f"primary profile: {declaration.get('primaryProfile')}")
+                for profile in declaration.get("profiles", []):
+                    print(
+                        f"  {profile.get('id')} ({profile.get('implementationClass')})"
+                    )
+            return 0
+        if args.conformance_command == "run":
+            profile = args.profile
+            try:
+                report = conformance_run(None if profile == "all" else profile)
+            except ValueError as error:
+                print(str(error), file=sys.stderr)
+                return 1
+            if args.json:
+                print(json.dumps(report, indent=2))
+            else:
+                status = "passed" if report.get("passed") else "failed"
+                print(
+                    f"conformance {status} ({report.get('implementationVersion', '')})"
+                )
+                for result in (report.get("results") or []) + (report.get("security") or []):
+                    if not result.get("passed"):
+                        print(
+                            f"  FAIL {result.get('id')} [{result.get('profile')}]: "
+                            f"{result.get('message', 'failed')}"
+                        )
+            return 0 if report.get("passed") else 1
 
     if args.command == "analyze":
         registry_path = str(args.registry) if args.registry else None

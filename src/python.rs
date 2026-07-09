@@ -474,6 +474,32 @@ fn runtime_execute(
     value_to_py(py, &crate::runtime::execute(&plan, &inputs))
 }
 
+/// Emit the implementation capability declaration (Ch 23 §9).
+#[pyfunction]
+#[pyo3(signature = (profile=None))]
+fn conformance_declare(py: Python<'_>, profile: Option<&str>) -> PyResult<Py<PyAny>> {
+    let declaration = match profile {
+        Some(id) => crate::conformance::declare_profile(id)
+            .ok_or_else(|| PyValueError::new_err(format!("unknown conformance profile: {id}")))?,
+        None => crate::conformance::declare(),
+    };
+    value_to_py(py, &declaration)
+}
+
+/// Run the offline conformance test suite.
+#[pyfunction]
+#[pyo3(signature = (profile=None))]
+fn conformance_run(py: Python<'_>, profile: Option<&str>) -> PyResult<Py<PyAny>> {
+    let fixtures = crate::conformance::default_fixtures_dir();
+    let report = match profile {
+        Some(id) if id != "all" => {
+            crate::conformance::run_for_profiles(Some(&[id.to_string()]), fixtures.as_path())
+        }
+        _ => crate::conformance::run_all(),
+    };
+    value_to_py(py, &report)
+}
+
 /// Native extension module for the Python `dtcs` package.
 #[pymodule]
 fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
@@ -502,5 +528,7 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(compile_plan, m)?)?;
     m.add_function(wrap_pyfunction!(execution_validate, m)?)?;
     m.add_function(wrap_pyfunction!(runtime_execute, m)?)?;
+    m.add_function(wrap_pyfunction!(conformance_declare, m)?)?;
+    m.add_function(wrap_pyfunction!(conformance_run, m)?)?;
     Ok(())
 }

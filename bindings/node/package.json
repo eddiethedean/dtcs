@@ -1,0 +1,27 @@
+{
+  "name": "@eddiethedean/dtcs",
+  "version": "0.10.0",
+  "description": "Node.js bindings for DTCS (WebAssembly wrapper)",
+  "type": "module",
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "test": "node --test test/smoke.test.mjs"
+  },
+  "dependencies": {
+    "@eddiethedean/dtcs-wasm": "0.10.0"
+  },
+  "keywords": [
+    "dtcs",
+    "data-transformation"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddiethedean/dtcs.git",
+    "directory": "bindings/node"
+  }
+}

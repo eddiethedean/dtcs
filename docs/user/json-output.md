@@ -348,11 +348,58 @@ dtcs registry resolve dtcs:lowercase --json
 
 Success emits a single registry entry (same object shape as list items, may include a `definition` field). When the identifier is not found, the command exits non-zero and prints a diagnostic message (no JSON entry object).
 
+## conformance declare
+
+```json
+{
+  "implementationId": "dtcs:reference",
+  "implementationVersion": "0.10.0",
+  "dtcsVersion": "1.0.0-draft",
+  "primaryProfile": "integrated-platform",
+  "profiles": [
+    {
+      "id": "integrated-platform",
+      "implementationClass": "integratedPlatform",
+      "dtcsVersion": "1.0.0-draft",
+      "implementationVersion": "0.10.0",
+      "supportedRegistries": ["dtcs:builtin"],
+      "supportedExtensions": ["acme"],
+      "optionalCapabilities": ["planOptimization", "referenceRuntime"]
+    }
+  ]
+}
+```
+
+## conformance run
+
+```json
+{
+  "implementationId": "dtcs:reference",
+  "implementationVersion": "0.10.0",
+  "profiles": ["integrated-platform"],
+  "results": [
+    {
+      "id": "parse-valid-customer",
+      "profile": "integrated-platform",
+      "passed": true
+    }
+  ],
+  "security": [
+    {
+      "id": "registry-trust",
+      "profile": "security",
+      "passed": true
+    }
+  ],
+  "passed": true
+}
+```
+
 ## version
 
 ```json
 {
-  "crateVersion": "0.9.0",
+  "crateVersion": "0.10.0",
   "specVersion": "1.0.0-draft"
 }
 ```

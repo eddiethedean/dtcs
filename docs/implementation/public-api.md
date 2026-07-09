@@ -362,6 +362,22 @@ dtcs registry resolve acme:transform --registry vendor_catalog.yaml
 
 The Python package exposes the same subcommands via `python -m dtcs` or the `dtcs` console script.
 
+## Conformance (Phase 0.10)
+
+```rust
+use dtcs::{conformance_declare, conformance_run_all, ConformanceReport};
+
+let declaration = conformance_declare();
+assert_eq!(declaration.primary_profile, "integrated-platform");
+
+let report: ConformanceReport = conformance_run_all();
+assert!(report.is_valid());
+```
+
+CLI: `dtcs conformance declare`, `dtcs conformance run --profile all`.
+
+Python: `conformance_declare()`, `conformance_run()`.
+
 ## Type system (Phase 0.2)
 
 ```rust

@@ -54,6 +54,14 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
       - name: cargo test
         run: cargo test --locked
+      - name: conformance
+        run: |
+          cargo test --test phase_0_10 --locked
+          cargo run --bin dtcs -- conformance run --profile all
+      - name: wasm build
+        run: |
+          rustup target add wasm32-unknown-unknown
+          cargo build --manifest-path bindings/wasm/Cargo.toml --target wasm32-unknown-unknown --release
       - name: cargo build
         run: cargo build --locked --all-targets
       - name: cargo publish (dry run)

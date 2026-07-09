@@ -216,5 +216,79 @@ jobs:
           python-version: "3.12"
       - name: Publish Python package to PyPI
         run: |
-          pip install "maturin>=1,<2"
-          maturin upload --skip-existing --username __token__ --password "$MATURIN_PYPI_TOKEN" dist/*
+          pip install "uv>=0.5"
+          uv publish --token "$MATURIN_PYPI_TOKEN" dist/*
+
+  build-wasm:
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - name: Build WASM package
+        working-directory: bindings/wasm
+        run: |
+          rustup target add wasm32-unknown-unknown
+          npm run build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm-pkg
+          path: bindings/wasm/pkg/*
+          if-no-files-found: error
+
+  github-release:
+    needs:
+      - publish-crates-io
+      - publish-pypi
+      - build-wasm
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Generate conformance declaration
+        run: |
+          cargo run --bin dtcs -- conformance declare --json > dtcs-conformance-declaration.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkg
+          path: bindings/wasm/pkg
+      - name: Create GitHub release assets
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" || gh release create "${GITHUB_REF_NAME}" --generate-notes
+          gh release upload "${GITHUB_REF_NAME}" dtcs-conformance-declaration.json bindings/wasm/pkg/* --clobber
+
+  publish-npm:
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    env:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    if: ${{ env.NPM_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkg
+          path: bindings/wasm/pkg
+      - name: Publish WASM npm package
+        working-directory: bindings/wasm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+      - name: Publish Node npm package
+        working-directory: bindings/node
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

@@ -35,7 +35,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | **Complete** (`0.7.0`) |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | **Complete** (`0.8.0`) |
 | **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | **Complete** (`0.9.0`) |
-| **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | Planned |
+| **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Complete** |
 
 ## SPEC chapter index
 
@@ -489,9 +489,11 @@ Prove objective conformance across all declared implementation classes; align pr
 
 ### Exit criteria
 
-- [Ch 23 §14](SPEC.md#chapter-23----conformance): passes every declared profile offline
-- [Ch 24 §12](SPEC.md#chapter-24----security-considerations), [Ch 26 §13](SPEC.md#chapter-26----governance)
-- [Ch 2 §13](SPEC.md#chapter-2----core-concepts): full pipeline verified end-to-end
+- [x] [Ch 23 §14](SPEC.md#chapter-23----conformance): passes every declared profile offline
+- [x] [Ch 24 §12](SPEC.md#chapter-24----security-considerations), [Ch 26 §13](SPEC.md#chapter-26----governance)
+- [x] [Ch 2 §13](SPEC.md#chapter-2----core-concepts): full pipeline verified end-to-end
+
+- [x] Publish to crates.io and PyPI at `0.10.0` (tag `v0.10.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
 
 ---
 

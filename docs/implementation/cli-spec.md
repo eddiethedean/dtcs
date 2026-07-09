@@ -26,6 +26,8 @@ dtcs evolve <older> <newer> [--registry PATH] [--json]
 dtcs lineage <contract> [--impact INPUT] [--dependency OUTPUT] [--registry PATH] [--json]
 dtcs registry list [--registry PATH] [--json]
 dtcs registry resolve <id> [--registry PATH] [--json]
+dtcs conformance declare [--profile NAME] [--json]
+dtcs conformance run [--profile NAME|all] [--json]
 ```
 
 `validate` should return:

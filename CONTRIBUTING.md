@@ -69,7 +69,23 @@ The Rust reference crate lives in [src/](src/). Before implementing a module:
 
 ### Scope
 
-The reference crate through **0.9.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, starter standard libraries with registry-driven semantics validation, static semantic and expression analysis (Ch 7–8), transformation plan lowering (Ch 13), semantics-preserving plan optimization (Ch 13 §9), engine capability matching (Ch 14), compilation to execution plans (Ch 15), and reference in-memory runtime execution (Ch 16). See [docs/implementation/non-goals.md](docs/implementation/non-goals.md) for remaining out-of-scope work.
+The reference crate through **0.10.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, starter standard libraries with registry-driven semantics validation, static semantic and expression analysis (Ch 7–8), transformation plan lowering (Ch 13), semantics-preserving plan optimization (Ch 13 §9), engine capability matching (Ch 14), compilation to execution plans (Ch 15), reference in-memory runtime execution (Ch 16), conformance profiles and offline certification (Ch 23), and automated security checklist probes (Ch 24). See [docs/implementation/non-goals.md](docs/implementation/non-goals.md) for remaining out-of-scope work.
+
+### Conformance maintenance (Ch 26 §9)
+
+When changing observable behavior covered by conformance tests, update `src/conformance/manifest.json` and the mirrored `tests/conformance/manifest.json` together. Run `cargo test --test phase_0_10` and `dtcs conformance run --profile all` before release.
+
+### Registry governance (Ch 26 §7)
+
+Novel `dtcs:` registry entries require a specification change. Vendor catalogs merge only non-standard identifiers; builtin entries remain authoritative.
+
+### Extension review (Ch 26 §8)
+
+Extension namespaces declared in conformance profiles must match registry validation behavior. Document new optional capabilities in profile definitions under `src/conformance/profiles.rs`.
+
+### Change management (Ch 26 §5)
+
+Pull requests that affect normative behavior should cite the SPEC chapter and section. Include conformance fixture updates when exit criteria are affected.
 
 ### Code style
 
@@ -82,14 +98,14 @@ The reference crate through **0.9.0** implements parsing, the canonical object m
 Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a semver tag is pushed:
 
 ```bash
-# Ensure Cargo.toml and pyproject.toml are both 0.9.0 and CI is green
-git tag v0.9.0
-git push origin v0.9.0
+# Ensure Cargo.toml and pyproject.toml are both 0.10.0 and CI is green
+git tag v0.10.0
+git push origin v0.10.0
 ```
 
-The workflow verifies the tag matches `Cargo.toml` and `pyproject.toml`, runs checks, publishes to crates.io, builds multi-platform Python wheels, and uploads to PyPI.
+The workflow verifies the tag matches `Cargo.toml` and `pyproject.toml`, runs checks, publishes to crates.io, builds multi-platform Python wheels, publishes to PyPI via `uv publish`, builds WASM/npm packages when configured, and attaches `dtcs-conformance-declaration.json` to the GitHub release.
 
-Required repository secrets: `CARGO_REGISTRY_TOKEN`, `PYPI_API_TOKEN`.
+Required repository secrets: `CARGO_REGISTRY_TOKEN`, `PYPI_API_TOKEN`. Optional: `NPM_TOKEN` for `@eddiethedean/dtcs-wasm` and `@eddiethedean/dtcs`.
 
 Before tagging, confirm locally:
 
@@ -99,6 +115,8 @@ cargo clippy --all-targets -- -D warnings
 cargo fmt --all -- --check
 cargo publish --dry-run --locked
 maturin develop --no-default-features --features python --locked
+cargo test --test phase_0_10 --locked
+cargo run --bin dtcs -- conformance run --profile all
 pytest python/tests -v
 ```
 

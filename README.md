@@ -15,11 +15,11 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.9.0` — validation, analysis, registries, standard libraries, plan lowering, optimization, capability matching, compilation, and reference runtime |
+| **Reference implementation** | `0.10.0` — validation, analysis, registries, standard libraries, plan lowering, optimization, capability matching, compilation, reference runtime, and conformance certification |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
-**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage, lower validated contracts to transformation plans, optimize plans with semantics-preserving rewrites, match plans against engine capabilities, compile to execution plans, and run contracts in the reference in-memory runtime — including end-to-end execution of sample contracts like `customer_normalize.dtcs.yaml`.
+**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage, lower validated contracts to transformation plans, optimize plans with semantics-preserving rewrites, match plans against engine capabilities, compile to execution plans, run contracts in the reference in-memory runtime, and certify conformance across all eight implementation profiles — including end-to-end execution of sample contracts like `customer_normalize.dtcs.yaml`.
 
 [Documentation](docs/README.md) · [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
@@ -37,7 +37,9 @@ dtcs validate examples/customer_normalize.dtcs.yaml
 
 Both packages install the `dtcs` CLI on `PATH`:
 
-`validate` · `analyze` · `plan` · `optimize` · `match` · `compile` · `run` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `version`
+`validate` · `analyze` · `plan` · `optimize` · `match` · `compile` · `run` · `inspect` · `diagnostics` · `compat` · `evolve` · `lineage` · `registry` · `conformance` · `version`
+
+**Bindings:** Python (`pip install dtcs`), WASM (`@eddiethedean/dtcs-wasm`), Node (`@eddiethedean/dtcs`).
 
 **Develop from source** (requires Rust + [maturin](https://www.maturin.rs/)): see [CONTRIBUTING.md](CONTRIBUTING.md#contributor-quickstart).
 
@@ -70,6 +72,9 @@ dtcs lineage examples/analysis/lineage_multi.yaml --impact customers
 
 # Resolve a standard identifier
 dtcs registry resolve dtcs:lowercase
+
+# Run conformance certification
+dtcs conformance run --profile integrated-platform
 ```
 
 ```python

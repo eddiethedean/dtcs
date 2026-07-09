@@ -630,3 +630,21 @@ def test_cli_run_customer_normalize() -> None:
     assert output.returncode == 0, output.stderr
     payload = json.loads(output.stdout)
     assert payload["customer_clean"][0]["email"] == "alice@example.com"
+
+
+def test_conformance_declare() -> None:
+    declaration = dtcs.conformance_declare()
+    assert declaration["primaryProfile"] == "integrated-platform"
+    assert len(declaration["profiles"]) == 8
+
+
+def test_conformance_run_integrated_platform() -> None:
+    report = dtcs.conformance_run("integrated-platform")
+    assert report["passed"] is True
+
+
+def test_cli_conformance_run_all() -> None:
+    output = _python_dtcs("conformance", "run", "--profile", "all", "--json")
+    assert output.returncode == 0, output.stderr
+    payload = json.loads(output.stdout)
+    assert payload["passed"] is True

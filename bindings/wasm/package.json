@@ -1,0 +1,30 @@
+{
+  "name": "@eddiethedean/dtcs-wasm",
+  "version": "0.10.0",
+  "description": "WebAssembly bindings for the DTCS reference implementation",
+  "type": "module",
+  "files": [
+    "pkg",
+    "README.md"
+  ],
+  "main": "pkg/dtcs_wasm.js",
+  "types": "pkg/dtcs_wasm.d.ts",
+  "sideEffects": [
+    "pkg/dtcs_wasm.js"
+  ],
+  "scripts": {
+    "build": "wasm-pack build --target web --out-dir pkg",
+    "test": "node --test test/smoke.test.mjs"
+  },
+  "keywords": [
+    "dtcs",
+    "wasm",
+    "data-transformation"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddiethedean/dtcs.git",
+    "directory": "bindings/wasm"
+  }
+}

@@ -6,6 +6,8 @@ from importlib.metadata import PackageNotFoundError, version
 
 from dtcs._native import capability_match as _capability_match
 from dtcs._native import capability_reference_profile as _capability_reference_profile
+from dtcs._native import conformance_declare as _conformance_declare
+from dtcs._native import conformance_run as _conformance_run
 from dtcs._native import compat_analyze as _compat_analyze
 from dtcs._native import compile_plan as _compile_plan
 from dtcs._native import execution_validate as _execution_validate
@@ -181,6 +183,16 @@ def registry_load(path: str) -> dict:
     return _registry_load(path)
 
 
+def conformance_declare(profile: str | None = None) -> dict:
+    """Emit the implementation capability declaration (Ch 23 §9)."""
+    return _conformance_declare(profile)
+
+
+def conformance_run(profile: str | None = None) -> dict:
+    """Run the offline conformance test suite and return the report."""
+    return _conformance_run(profile)
+
+
 def is_valid(report: dict) -> bool:
     """Return True when a diagnostic report contains no error-level diagnostics."""
     return not any(
@@ -197,6 +209,8 @@ __all__ = [
     "capability_reference_profile",
     "compile_plan",
     "compat_analyze",
+    "conformance_declare",
+    "conformance_run",
     "evolve_analyze",
     "execution_validate",
     "inspect",

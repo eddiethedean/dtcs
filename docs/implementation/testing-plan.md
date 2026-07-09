@@ -95,6 +95,17 @@ Integration tests: [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs). Python test
 
 Integration tests: [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs). Manifest-driven compile goldens use [`tests/compile_expectations.json`](../../tests/compile_expectations.json); capability and runtime I/O expectations use [`tests/capability_expectations.json`](../../tests/capability_expectations.json).
 
+## Phase 0.10 fixture groups
+
+| Concern | Example fixtures / artifacts |
+|---------|------------------------------|
+| Conformance manifest | `tests/conformance/manifest.json`, embedded `src/conformance/manifest.json` |
+| Profile coverage | `valid_customer.yaml`, `missing_lineage.yaml`, `optimize_constant_fold.yaml` |
+| Security vectors | `registry/evil_dtcs_injection.yaml`, `invalid_rule_duplicate_params.json` |
+| Integrated Platform E2E | `examples/customer_normalize.dtcs.yaml`, runtime I/O fixtures |
+
+Integration tests: [`tests/phase_0_10.rs`](../../tests/phase_0_10.rs). CI runs `cargo test --test phase_0_10` and `dtcs conformance run --profile all`.
+
 ## Phase 0.2 fixture groups
 
 | Concern | Example fixtures |
