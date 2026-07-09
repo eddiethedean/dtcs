@@ -801,7 +801,10 @@ fn run_conformance(command: ConformanceCommand) -> miette::Result<i32> {
             let report = if profile == "all" {
                 crate::conformance::run_all()
             } else {
-                crate::conformance::run_for_profiles(Some(std::slice::from_ref(&profile)), fixtures.as_path())
+                crate::conformance::run_for_profiles(
+                    Some(std::slice::from_ref(&profile)),
+                    fixtures.as_path(),
+                )
             };
             if json {
                 println!(
