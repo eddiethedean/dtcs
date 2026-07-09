@@ -1,14 +1,16 @@
 //! Reference implementation of the Data Transformation Contract Standard (DTCS).
 //!
 //! [`SPEC.md`](../SPEC.md) at the repository root is the authoritative normative
-//! specification. This crate implements the pipeline through transformation plan optimization:
+//! specification. This crate implements the pipeline through reference runtime execution:
 //!
 //! ```text
 //! DTCS Document → Parser → Canonical Object Model → Validator → Diagnostics
 //!                                              ├→ Analyzer → Analysis reports
 //!                                              ├→ Registry (identifier resolution)
 //!                                              ├→ Planner → Transformation Plan
-//!                                              └→ Optimizer → Optimized Plan
+//!                                              ├→ Optimizer → Optimized Plan
+//!                                              ├→ Capability match → Compile → ExecutionPlan
+//!                                              └→ Runtime → Output datasets
 //! ```
 //!
 //! # Example

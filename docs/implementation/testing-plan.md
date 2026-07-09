@@ -65,12 +65,12 @@ Integration tests: [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs). Python test
 
 | Concern | Example fixtures |
 |---------|------------------|
-| Capability matching | `valid_customer.yaml`, unsupported `dtcs:` action plans |
-| Compilation | execution plans produced from `valid_customer.yaml` |
-| Runtime | `tests/fixtures/runtime/customer_normalize_input.json`, `customer_normalize_output.json` |
+| Capability matching | `valid_customer.yaml`, `plan_field_write_chain.yaml`, vendor action rejection |
+| Compilation | `tests/compile_expectations.json`, `tests/fixtures/execution_plans/*.exec.json` |
+| Runtime | `tests/fixtures/runtime/customer_normalize_input.json`, `plan_field_write_chain_input.json` |
 | End-to-end | `examples/customer_normalize.dtcs.yaml` |
 
-Integration tests: [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs).
+Integration tests: [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs). Manifest-driven compile goldens use [`tests/compile_expectations.json`](../../tests/compile_expectations.json); capability and runtime I/O expectations use [`tests/capability_expectations.json`](../../tests/capability_expectations.json).
 
 ## Phase 0.2 fixture groups
 

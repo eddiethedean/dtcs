@@ -11,6 +11,9 @@ from dtcs import (
     analyze,
     SPEC_VERSION,
     __version__,
+    capability_match,
+    capability_reference_profile,
+    compile_plan,
     compat_analyze,
     evolve_analyze,
     inspect,
@@ -22,6 +25,7 @@ from dtcs import (
     plan_topological_order,
     registry_list,
     registry_resolve,
+    runtime_execute,
     validate_result,
 )
 
@@ -75,6 +79,62 @@ def _load_valid_contract(
     return contract
 
 
+REFERENCE_PROFILE = "dtcs:reference"
+
+
+def _load_transformation_plan(
+    path: Path,
+    *,
+    from_plan: bool = False,
+    optimize: bool = False,
+    registry_path: str | None = None,
+) -> dict:
+    if from_plan:
+        try:
+            plan = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise SystemExit(str(error)) from error
+    else:
+        contract = _load_valid_contract(path, registry_path=registry_path)
+        try:
+            lower_result = plan_lower(contract, registry_path)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+        if not is_valid({"diagnostics": lower_result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": lower_result.get("diagnostics", [])},
+                json_output=False,
+                mode="diagnostics",
+            )
+            raise SystemExit(f"plan lowering failed for {path}")
+        plan = lower_result.get("plan")
+        if plan is None:
+            raise SystemExit(f"no plan produced for {path}")
+
+    if optimize:
+        try:
+            optimize_result = plan_optimize(plan, registry_path)
+        except ValueError as error:
+            raise SystemExit(str(error)) from error
+        if not is_valid({"diagnostics": optimize_result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": optimize_result.get("diagnostics", [])},
+                json_output=False,
+                mode="diagnostics",
+            )
+            raise SystemExit(f"plan optimization failed for {path}")
+        plan = optimize_result.get("plan")
+        if plan is None:
+            raise SystemExit(f"no optimized plan produced for {path}")
+    return plan
+
+
+def _load_capability_profile(profile: str) -> dict:
+    if profile == REFERENCE_PROFILE:
+        return capability_reference_profile()
+    raise SystemExit(f"unsupported capability profile '{profile}'")
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="dtcs",
@@ -114,6 +174,59 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Skip validation of the optimized plan",
     )
     optimize_parser.add_argument("--json", action="store_true")
+
+    match_parser = subparsers.add_parser(
+        "match",
+        help="Match a transformation plan against engine capabilities",
+    )
+    match_parser.add_argument("path", type=Path)
+    match_parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Treat path as serialized plan JSON instead of a contract",
+    )
+    match_parser.add_argument("--optimize", action="store_true")
+    match_parser.add_argument("--registry", type=Path, default=None)
+    match_parser.add_argument(
+        "--profile",
+        default=REFERENCE_PROFILE,
+        help="Engine profile identifier (default: dtcs:reference)",
+    )
+    match_parser.add_argument("--json", action="store_true")
+
+    compile_parser = subparsers.add_parser(
+        "compile",
+        help="Compile a transformation plan to an execution plan",
+    )
+    compile_parser.add_argument("path", type=Path)
+    compile_parser.add_argument(
+        "--plan",
+        action="store_true",
+        help="Treat path as serialized plan JSON instead of a contract",
+    )
+    compile_parser.add_argument("--optimize", action="store_true")
+    compile_parser.add_argument("--registry", type=Path, default=None)
+    compile_parser.add_argument(
+        "--profile",
+        default=REFERENCE_PROFILE,
+        help="Engine profile identifier (default: dtcs:reference)",
+    )
+    compile_parser.add_argument("--json", action="store_true")
+
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Execute a contract using the reference runtime",
+    )
+    run_parser.add_argument("path", type=Path)
+    run_parser.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+        help="JSON file with runtime inputs keyed by interface id",
+    )
+    run_parser.add_argument("--optimize", action="store_true")
+    run_parser.add_argument("--registry", type=Path, default=None)
+    run_parser.add_argument("--json", action="store_true")
 
     inspect_parser = subparsers.add_parser("inspect", help="Print a contract summary")
     inspect_parser.add_argument("path", type=Path)
@@ -342,6 +455,128 @@ def main(argv: list[str] | None = None) -> int:
             print(f"plan: {optimized.get('identity', {}).get('id', '')}")
             print(f"nodes: {len(optimized.get('nodes', []))}")
             print(f"transforms: {len(transforms)}")
+        return 0
+
+    if args.command == "match":
+        registry_path = str(args.registry) if args.registry else None
+        plan = _load_transformation_plan(
+            args.path,
+            from_plan=args.plan,
+            optimize=args.optimize,
+            registry_path=registry_path,
+        )
+        profile = _load_capability_profile(args.profile)
+        try:
+            report = capability_match(plan, profile)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        supported = report.get("supported", False)
+        if args.json:
+            print(json.dumps(report, indent=2))
+        elif supported:
+            print(f"supported: {plan.get('identity', {}).get('id', '')}")
+            print(f"engine: {profile.get('engineId', '')}")
+        else:
+            _render_report(
+                {"diagnostics": report.get("diagnostics", [])},
+                json_output=False,
+                mode="diagnostics",
+            )
+        return 0 if supported else 1
+
+    if args.command == "compile":
+        registry_path = str(args.registry) if args.registry else None
+        plan = _load_transformation_plan(
+            args.path,
+            from_plan=args.plan,
+            optimize=args.optimize,
+            registry_path=registry_path,
+        )
+        profile = _load_capability_profile(args.profile)
+        try:
+            result = capability_match(plan, profile)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not result.get("supported", False):
+            _render_report(
+                {"diagnostics": result.get("diagnostics", [])},
+                json_output=args.json,
+                mode="diagnostics",
+            )
+            return 1
+        try:
+            compile_result = compile_plan(plan)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not is_valid({"diagnostics": compile_result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": compile_result.get("diagnostics", [])},
+                json_output=args.json,
+                mode="diagnostics",
+            )
+            return 1
+        execution_plan = compile_result.get("plan")
+        if execution_plan is None:
+            print("no execution plan produced", file=sys.stderr)
+            return 1
+        if args.json:
+            print(json.dumps(execution_plan, indent=2))
+        else:
+            print(f"execution plan: {execution_plan.get('identity', {}).get('id', '')}")
+            print(f"target: {execution_plan.get('target', {}).get('engineId', '')}")
+            print(f"steps: {len(execution_plan.get('steps', []))}")
+        return 0
+
+    if args.command == "run":
+        registry_path = str(args.registry) if args.registry else None
+        plan = _load_transformation_plan(
+            args.path,
+            from_plan=False,
+            optimize=args.optimize,
+            registry_path=registry_path,
+        )
+        try:
+            compile_result = compile_plan(plan)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not is_valid({"diagnostics": compile_result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": compile_result.get("diagnostics", [])},
+                json_output=args.json,
+                mode="diagnostics",
+            )
+            return 1
+        execution_plan = compile_result.get("plan")
+        if execution_plan is None:
+            print("no execution plan produced", file=sys.stderr)
+            return 1
+        try:
+            inputs = json.loads(args.input.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        try:
+            execute_result = runtime_execute(execution_plan, inputs)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not is_valid({"diagnostics": execute_result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": execute_result.get("diagnostics", [])},
+                json_output=args.json,
+                mode="diagnostics",
+            )
+            return 1
+        outputs = execute_result.get("outputs")
+        if args.json:
+            print(json.dumps(outputs, indent=2))
+        else:
+            for interface_id, dataset in (outputs or {}).items():
+                print(f"{interface_id}: {len(dataset)} row(s)")
         return 0
 
     if args.command == "compat":

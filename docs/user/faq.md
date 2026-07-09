@@ -8,7 +8,7 @@ The Data Transformation Contract Standard (DTCS) is a vendor-neutral specificati
 
 ### What does the reference implementation do today?
 
-Through version 0.8.0, the reference tools can:
+Through version 0.9.0, the reference tools can:
 
 - Parse YAML/JSON into the Canonical Object Model
 - Validate contracts with structured diagnostics
@@ -22,8 +22,11 @@ Through version 0.8.0, the reference tools can:
 - Run static semantic and expression analysis (Ch 7–8)
 - Lower validated contracts to canonical transformation plans (Ch 13)
 - Optimize lowered plans with semantics-preserving rewrites (Ch 13 §9)
+- Match transformation plans against engine capability profiles (Ch 14)
+- Compile plans to execution plans using the reference backend (Ch 15)
+- Execute contracts end-to-end with the reference in-memory runtime (Ch 16)
 
-They do **not** execute transformations. See [non-goals.md](../implementation/non-goals.md).
+The reference runtime is suitable for evaluation and conformance testing — not production ETL. See [non-goals.md](../implementation/non-goals.md).
 
 ### Is DTCS production-ready?
 
@@ -42,8 +45,8 @@ Pre-built wheels are published for common platforms. If pip tries to compile fro
 ### How do I install a specific version?
 
 ```bash
-pip install dtcs==0.8.0
-cargo install dtcs --version 0.8.0
+pip install dtcs==0.9.0
+cargo install dtcs --version 0.9.0
 ```
 
 ## Contracts

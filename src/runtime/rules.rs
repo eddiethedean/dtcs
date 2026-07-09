@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
+use regex::Regex;
 use serde_json::Value;
 
 use crate::model::Rule;
@@ -54,7 +55,8 @@ pub fn evaluate_rule(
             match value {
                 RuntimeValue::Null => Ok(()),
                 RuntimeValue::String(s) => {
-                    let re = regex_lite(pattern.as_str())?;
+                    let re = Regex::new(&pattern)
+                        .map_err(|e| format!("invalid regex pattern '{pattern}': {e}"))?;
                     if re.is_match(s) {
                         Ok(())
                     } else {
@@ -108,40 +110,6 @@ fn param_string(parameters: &IndexMap<String, Value>, name: &str) -> Result<Stri
 
 fn value_as_integer(value: &Value) -> Option<i64> {
     value.as_i64().or_else(|| value.as_u64().map(|v| v as i64))
-}
-
-fn regex_lite(pattern: &str) -> Result<RegexLite, String> {
-    RegexLite::compile(pattern)
-}
-
-/// Minimal regex matcher supporting a subset of patterns for stdlib conformance.
-struct RegexLite {
-    pattern: String,
-}
-
-impl RegexLite {
-    fn compile(pattern: &str) -> Result<Self, String> {
-        if pattern.is_empty() {
-            return Err("empty regex pattern".into());
-        }
-        Ok(Self {
-            pattern: pattern.to_string(),
-        })
-    }
-
-    fn is_match(&self, text: &str) -> bool {
-        if self.pattern.starts_with('^') && self.pattern.ends_with('$') && self.pattern.len() > 2 {
-            let inner = &self.pattern[1..self.pattern.len() - 1];
-            return text == inner;
-        }
-        if self.pattern.starts_with('^') {
-            return text.starts_with(&self.pattern[1..]);
-        }
-        if self.pattern.ends_with('$') {
-            return text.ends_with(&self.pattern[..self.pattern.len() - 1]);
-        }
-        text.contains(self.pattern.as_str())
-    }
 }
 
 /// Resolve a rule target value from workspaces.

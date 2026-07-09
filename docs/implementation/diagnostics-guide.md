@@ -87,6 +87,14 @@ Defined in [`src/diagnostics/codes.rs`](../../src/diagnostics/codes.rs):
 - `dtcs:unresolved-plan-reference` (Phase 0.7)
 - `dtcs:invalid-optimization` (Phase 0.8) — optimized or input plan failed validation after optimization
 - `dtcs:optimization-skipped` (Phase 0.8, information) — a rewrite was conservatively skipped (for example when a type guard would not hold)
+- `dtcs:unsupported-capability` (Phase 0.9)
+- `dtcs:invalid-capability` (Phase 0.9)
+- `dtcs:compilation-failed` (Phase 0.9)
+- `dtcs:invalid-execution-plan` (Phase 0.9)
+- `dtcs:invalid-runtime-input` (Phase 0.9)
+- `dtcs:precondition-violation` (Phase 0.9)
+- `dtcs:postcondition-violation` (Phase 0.9)
+- `dtcs:runtime-error` (Phase 0.9)
 
 ## Validation semantics
 

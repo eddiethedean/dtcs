@@ -1,0 +1,117 @@
+{
+  "target": {
+    "engineId": "dtcs:reference",
+    "engineVersion": "0.9.0",
+    "capabilityVersion": "1.0.0"
+  },
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "customer.normalize",
+    "name": "Normalize Customer",
+    "version": "0.2.0"
+  },
+  "inputs": [
+    {
+      "id": "customer_raw",
+      "schema": {
+        "fields": [
+          {
+            "name": "customer_id",
+            "type": "string",
+            "nullable": false
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "customer_clean",
+      "schema": {
+        "fields": [
+          {
+            "name": "customer_id",
+            "type": "string",
+            "nullable": false
+          },
+          {
+            "name": "email",
+            "type": "string",
+            "nullable": true
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "customer_id_required",
+      "kind": {
+        "kind": "rule",
+        "id": "customer_id_required",
+        "rule": "dtcs:not_null",
+        "target": "customer_raw.customer_id",
+        "phase": "postcondition"
+      },
+      "objectRef": "rules.customer_id_required"
+    },
+    {
+      "id": "normalize_email",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "normalize_email",
+        "action": "dtcs:lowercase",
+        "target": "customer_raw.email"
+      },
+      "objectRef": "semanticActions.normalize_email"
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_0",
+      "kind": {
+        "kind": "applyAction",
+        "node_id": "normalize_email",
+        "action_id": "dtcs:lowercase",
+        "target": "customer_raw.email"
+      }
+    },
+    {
+      "id": "step_1",
+      "kind": {
+        "kind": "materializeOutput",
+        "output_id": "customer_clean",
+        "input_ids": [
+          "customer_raw"
+        ]
+      }
+    },
+    {
+      "id": "step_2",
+      "kind": {
+        "kind": "validateRules",
+        "phase": "postcondition",
+        "rule_ids": [
+          "customer_id_required"
+        ]
+      }
+    }
+  ],
+  "guarantees": {},
+  "lineage": {
+    "mappings": [
+      {
+        "output": "customer_clean",
+        "inputs": [
+          "customer_raw"
+        ]
+      }
+    ]
+  }
+}

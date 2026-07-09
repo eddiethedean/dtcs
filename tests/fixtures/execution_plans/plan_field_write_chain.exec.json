@@ -1,0 +1,125 @@
+{
+  "target": {
+    "engineId": "dtcs:reference",
+    "engineVersion": "0.9.0",
+    "capabilityVersion": "1.0.0"
+  },
+  "identity": {
+    "dtcsVersion": "1.0.0",
+    "id": "plan.field.write.chain",
+    "name": "Plan field write chain",
+    "version": "0.1.0"
+  },
+  "inputs": [
+    {
+      "id": "in",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      },
+      "optional": false
+    }
+  ],
+  "outputs": [
+    {
+      "id": "out",
+      "schema": {
+        "fields": [
+          {
+            "name": "value",
+            "type": "string",
+            "nullable": false
+          }
+        ]
+      }
+    }
+  ],
+  "nodes": [
+    {
+      "id": "lower_value",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "lower_value",
+        "action": "dtcs:lowercase",
+        "target": "out.value"
+      },
+      "objectRef": "semanticActions.lower_value"
+    },
+    {
+      "id": "read_value",
+      "kind": {
+        "kind": "expression",
+        "id": "read_value",
+        "expr": "out.value",
+        "type": "string"
+      },
+      "objectRef": "expressions.read_value"
+    },
+    {
+      "id": "trim_value",
+      "kind": {
+        "kind": "semanticAction",
+        "id": "trim_value",
+        "action": "dtcs:trim",
+        "target": "out.value"
+      },
+      "objectRef": "semanticActions.trim_value"
+    }
+  ],
+  "steps": [
+    {
+      "id": "step_0",
+      "kind": {
+        "kind": "materializeOutput",
+        "output_id": "out",
+        "input_ids": [
+          "in"
+        ]
+      }
+    },
+    {
+      "id": "step_1",
+      "kind": {
+        "kind": "applyAction",
+        "node_id": "trim_value",
+        "action_id": "dtcs:trim",
+        "target": "out.value"
+      }
+    },
+    {
+      "id": "step_2",
+      "kind": {
+        "kind": "applyAction",
+        "node_id": "lower_value",
+        "action_id": "dtcs:lowercase",
+        "target": "out.value"
+      }
+    }
+  ],
+  "guarantees": {
+    "semantics": {
+      "ordering": {
+        "mode": "explicit",
+        "order": [
+          "trim_value",
+          "lower_value"
+        ]
+      }
+    }
+  },
+  "lineage": {
+    "mappings": [
+      {
+        "output": "out",
+        "inputs": [
+          "in"
+        ]
+      }
+    ]
+  }
+}

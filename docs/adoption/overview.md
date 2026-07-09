@@ -31,10 +31,12 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Static semantic analysis | Complete (Phase 0.6, `0.6.0`) |
 | Transformation plan lowering | Complete (Phase 0.7, `0.7.0`) |
 | Plan optimization | Complete (Phase 0.8, `0.8.0`) |
-| Execution / runtime | Reference in-memory runtime (Phase 0.9) |
+| Capability matching | Complete (Phase 0.9, `0.9.0`) |
+| Compilation | Complete (Phase 0.9, `0.9.0`) |
+| Reference runtime | Complete (Phase 0.9, `0.9.0`) |
 | Conformance certification (Ch 23) | Not started (Phase 0.10) |
 
-*Released reference implementation: `0.8.0`.*
+*Released reference implementation: `0.9.0`.*
 
 See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 
@@ -48,12 +50,15 @@ See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 6. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
 7. **Plan lowering** — produce canonical transformation plans from validated contracts (`dtcs plan`)
 8. **Plan optimization** — apply semantics-preserving rewrites to lowered plans (`dtcs optimize`)
-9. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
+9. **Capability matching** — verify a plan against an engine profile (`dtcs match`)
+10. **Compilation** — produce execution plans from transformation plans (`dtcs compile`)
+11. **Reference execution** — run contracts end-to-end with sample inputs (`dtcs run`)
+12. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
 
-- ETL execution (Spark, Polars, SQL compilation)
-- Runtime engines
+- Production ETL execution (Spark, Polars, SQL compilation)
+- Multi-backend compilers beyond the reference profile
 - WASM/Node bindings
 - Conformance profiles and certification suites
 
@@ -88,7 +93,7 @@ Both Rust and Python packages install the same `dtcs` CLI.
 - [ ] Review diagnostic output for schema and lineage gaps
 - [ ] Compare current and proposed contract versions with `dtcs compat`
 - [ ] Trace lineage for critical inputs with `dtcs lineage --impact`
-- [ ] Review [ROADMAP.md](../../ROADMAP.md) for planned execution/runtime features
+- [ ] Review [ROADMAP.md](../../ROADMAP.md) for planned conformance and multi-backend work
 - [ ] Read SPEC Chapters 1–3 for design principles and scope
 
 ## Relationship to other standards

@@ -8,6 +8,13 @@
       "expected_output": "runtime/customer_normalize_output.json"
     },
     {
+      "file": "plan_field_write_chain.yaml",
+      "match_supported": true,
+      "compile_valid": true,
+      "runtime_fixture": "runtime/plan_field_write_chain_input.json",
+      "expected_output": "runtime/plan_field_write_chain_output.json"
+    },
+    {
       "file": "stdlib_action_uppercase_valid.yaml",
       "match_supported": true,
       "compile_valid": true

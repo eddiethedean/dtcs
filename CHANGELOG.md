@@ -20,6 +20,16 @@ Phase 0.9 — Execution pipeline (Ch 14–16).
 
 - Phase 0.9 integration tests, `tests/capability_expectations.json`, and runtime fixtures under `tests/fixtures/runtime/`.
 
+### Bug fixes (0.9.0 hardening)
+
+- Reference compiler emits input-interface steps before `MaterializeOutput`, then output-interface steps — fixes output-targeted actions (e.g. `plan_field_write_chain.yaml`).
+- Omit no-op `EvaluateExpression` execution steps until expression write targets exist in COM.
+- Capability matching collects all plan identifiers (including vendor `acme:*`), failing at match time for unsupported vendor actions.
+- CLI `compile --profile` wired to `compile_with_capability`.
+- Builtin contract alignment: `dtcs:concat` requires ≥2 arguments; `dtcs:length` rejects null; `dtcs:regex_match` uses the `regex` crate.
+- Python CLI parity: `match`, `compile`, and `run` subcommands.
+- Compile golden tests (`tests/compile_expectations.json`, `tests/fixtures/execution_plans/*.exec.json`).
+
 **Release:** push tag `v0.9.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.8.0

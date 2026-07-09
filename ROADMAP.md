@@ -411,7 +411,7 @@ Produce semantically equivalent optimized plans (plan → plan only, never plan 
 
 ## Phase 0.9 — Execution Pipeline
 
-**Target:** `0.9.x` · **Tier:** IV · **Prerequisite:** 0.7 (0.8 recommended)
+**Target:** `0.9.x` · **Tier:** IV · **Prerequisite:** 0.7 (0.8 recommended) · **Status:** Complete (`0.9.0`)
 
 **Implements:** Compiler, Runtime · **SPEC:** [Ch 14](SPEC.md#chapter-14----engine-capability-model)–[16](SPEC.md#chapter-16----runtime)
 
@@ -445,6 +445,7 @@ Ship in three milestones within the phase:
 | Surface | Entry point |
 |---------|-------------|
 | Rust | `capability::match_plan`, `compile::compile`, `runtime::execute` |
+| Python | `capability_match`, `compile_plan`, `runtime_execute` |
 | CLI | `dtcs match`, `dtcs compile`, `dtcs run` |
 
 ### Exit criteria

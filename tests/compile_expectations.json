@@ -1,0 +1,14 @@
+{
+  "fixtures": [
+    {
+      "file": "valid_customer.yaml",
+      "compile_valid": true,
+      "golden": "execution_plans/valid_customer.exec.json"
+    },
+    {
+      "file": "plan_field_write_chain.yaml",
+      "compile_valid": true,
+      "golden": "execution_plans/plan_field_write_chain.exec.json"
+    }
+  ]
+}

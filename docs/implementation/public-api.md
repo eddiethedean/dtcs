@@ -241,6 +241,13 @@ use dtcs::{parse_validate_and_run, DocumentFormat, RuntimeInputs};
 let result = parse_validate_and_run(yaml_bytes, DocumentFormat::Yaml, &inputs);
 ```
 
+```rust
+use dtcs::{parse_validate_and_compile, discover_capabilities, DocumentFormat};
+
+let compile_result = parse_validate_and_compile(yaml_bytes, DocumentFormat::Yaml);
+let profiles = discover_capabilities();
+```
+
 ## Registry (Phase 0.4–0.5)
 
 The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,
@@ -307,6 +314,11 @@ summary = dtcs.inspect(contract)
 | `plan_validate` | Validate a transformation plan |
 | `plan_optimize` | Optimize a transformation plan (`validate=False` to skip validation) |
 | `plan_equivalent` | Compare two plans for semantic equivalence |
+| `capability_reference_profile` | Embedded `dtcs:reference` engine capability profile |
+| `capability_match` | Match a transformation plan against a capability profile |
+| `compile_plan` | Compile a transformation plan to an execution plan |
+| `execution_validate` | Validate an execution plan |
+| `runtime_execute` | Execute an execution plan with runtime inputs |
 | `version_validate` | Ch 25 versioning block validation |
 | `registry_list` | List registry entries (optional vendor catalog path) |
 | `registry_resolve` | Resolve an identifier to a registry entry or `None` |
@@ -325,6 +337,9 @@ dtcs analyze contract.yaml --json
 dtcs plan contract.yaml --json
 dtcs optimize contract.yaml --json
 dtcs optimize plan.json --plan --json
+dtcs match contract.yaml --json
+dtcs compile contract.yaml --json
+dtcs run contract.yaml --input inputs.json --json
 dtcs inspect contract.yaml
 dtcs inspect contract.yaml --json
 dtcs diagnostics contract.yaml --json

@@ -71,6 +71,26 @@ dtcs optimize examples/customer_normalize.dtcs.yaml --json
 
 By default the path is a DTCS contract (lowered internally). Pass `--plan` when the input is serialized plan JSON from `dtcs plan --json`.
 
+## Run a contract end-to-end
+
+Execute the reference runtime with sample inputs:
+
+```bash
+dtcs run examples/customer_normalize.dtcs.yaml \
+  --input tests/fixtures/runtime/customer_normalize_input.json
+dtcs run examples/customer_normalize.dtcs.yaml \
+  --input tests/fixtures/runtime/customer_normalize_input.json --json
+```
+
+Human-readable output lists output interface row counts. With `--json`, the full output datasets are printed.
+
+You can also match and compile independently:
+
+```bash
+dtcs match examples/customer_normalize.dtcs.yaml
+dtcs compile examples/customer_normalize.dtcs.yaml --json
+```
+
 ## Inspect a contract
 
 ```bash
@@ -135,6 +155,15 @@ print(summary)
 entry = dtcs.registry_resolve("dtcs:lowercase")
 assert entry is not None
 assert entry["category"] == "semanticAction"
+
+plan = dtcs.plan_lower(contract)["plan"]
+match = dtcs.capability_match(plan)
+assert match["supported"]
+
+compiled = dtcs.compile_plan(plan)
+inputs = {"customer_raw": [{"customer_id": "1", "email": "ALICE@EXAMPLE.COM"}]}
+outputs = dtcs.runtime_execute(compiled["plan"], inputs)
+assert dtcs.is_valid(outputs)
 ```
 
 Contract dicts returned by `parse` and `parse_file` use **camelCase** keys (`dtcsVersion`, `semanticActions`, etc.).

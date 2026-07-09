@@ -203,11 +203,46 @@ On success, emits an optimization result envelope:
 
 When `--plan` is set, the input path is serialized plan JSON rather than a contract file.
 
+## match
+
+Success emits a capability match report:
+
+```json
+{
+  "supported": true,
+  "diagnostics": [],
+  "gaps": []
+}
+```
+
+Failure emits diagnostics in the same shape as `diagnostics --json`.
+
+## compile
+
+Success emits an execution plan document (same shape as the Rust `ExecutionPlan` type). Failure emits diagnostics.
+
+## run
+
+Success emits output datasets keyed by output interface id:
+
+```json
+{
+  "customer_clean": [
+    {
+      "customer_id": "1",
+      "email": "alice@example.com"
+    }
+  ]
+}
+```
+
+Failure emits diagnostics.
+
 ## version
 
 ```json
 {
-  "crateVersion": "0.8.0",
+  "crateVersion": "0.9.0",
   "specVersion": "1.0.0-draft"
 }
 ```

@@ -22,7 +22,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             }
         }
         "dtcs:concat" => {
-            if args.is_empty() {
+            if args.len() < 2 {
                 return Err("dtcs:concat requires at least two arguments".into());
             }
             let mut out = String::new();
@@ -86,7 +86,9 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         "dtcs:length" => {
             let value = args.first().ok_or("dtcs:length requires one argument")?;
             let len = match value {
-                RuntimeValue::Null => return Ok(RuntimeValue::Null),
+                RuntimeValue::Null => {
+                    return Err("dtcs:length does not accept null".into());
+                }
                 RuntimeValue::String(s) => s.chars().count() as i64,
                 RuntimeValue::Binary(b) => b.len() as i64,
                 other => return Err(format!("dtcs:length unsupported type {other:?}")),

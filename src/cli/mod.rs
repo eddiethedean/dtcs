@@ -490,12 +490,14 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             plan: from_plan,
             optimize,
             registry,
-            profile: _profile,
+            profile,
             json,
         } => {
             let transformation_plan =
                 load_transformation_plan(&path, from_plan, optimize, registry.as_ref(), json)?;
-            let compile_result = crate::compile::compile(&transformation_plan);
+            let capability = load_capability_profile(&profile)?;
+            let compile_result =
+                crate::compile::compile_with_capability(&transformation_plan, &capability);
             if !compile_result.is_valid() {
                 let report = DiagnosticReport {
                     diagnostics: compile_result.diagnostics,

@@ -73,6 +73,7 @@ dtcs registry resolve dtcs:lowercase
 ```
 
 ```python
+import json
 import dtcs
 
 report = dtcs.parse_and_validate(
@@ -83,6 +84,11 @@ assert dtcs.is_valid(report)
 plan = dtcs.plan_lower(dtcs.parse_file("examples/customer_normalize.dtcs.yaml")["contract"])
 optimized = dtcs.plan_optimize(plan["plan"])
 assert dtcs.plan_equivalent(plan["plan"], optimized["plan"])
+
+compiled = dtcs.compile_plan(plan["plan"])
+inputs = json.loads(open("tests/fixtures/runtime/customer_normalize_input.json").read())
+outputs = dtcs.runtime_execute(compiled["plan"], inputs)
+assert outputs["customer_clean"][0]["email"] == "alice@example.com"
 ```
 
 Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full walkthrough. For normative definitions, see [SPEC.md](SPEC.md) — start with [Chapter 3 (COM)](SPEC.md#chapter-3----canonical-object-model) and [Chapter 9 (Validation)](SPEC.md#chapter-9----validation).

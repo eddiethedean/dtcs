@@ -577,3 +577,56 @@ def test_contract_from_py_preserves_non_nan_dump_errors() -> None:
     }
     with pytest.raises(TypeError, match="not JSON serializable"):
         dtcs.validate(contract)
+
+
+RUNTIME_INPUT = FIXTURES / "runtime" / "customer_normalize_input.json"
+RUNTIME_OUTPUT = FIXTURES / "runtime" / "customer_normalize_output.json"
+
+
+def test_capability_match_reference_profile() -> None:
+    contract = dtcs.parse_file(str(EXAMPLE))["contract"]
+    plan = dtcs.plan_lower(contract)["plan"]
+    report = dtcs.capability_match(plan)
+    assert report["supported"] is True
+
+
+def test_compile_plan_customer_normalize() -> None:
+    contract = dtcs.parse_file(str(EXAMPLE))["contract"]
+    plan = dtcs.plan_lower(contract)["plan"]
+    result = dtcs.compile_plan(plan)
+    assert dtcs.is_valid({"diagnostics": result.get("diagnostics", [])})
+    execution_plan = result["plan"]
+    assert execution_plan["target"]["engineId"] == "dtcs:reference"
+    assert execution_plan["steps"]
+
+
+def test_runtime_execute_customer_normalize() -> None:
+    contract = dtcs.parse_file(str(EXAMPLE))["contract"]
+    plan = dtcs.plan_lower(contract)["plan"]
+    execution_plan = dtcs.compile_plan(plan)["plan"]
+    inputs = json.loads(RUNTIME_INPUT.read_text(encoding="utf-8"))
+    result = dtcs.runtime_execute(execution_plan, inputs)
+    assert dtcs.is_valid({"diagnostics": result.get("diagnostics", [])})
+    expected = json.loads(RUNTIME_OUTPUT.read_text(encoding="utf-8"))
+    assert result["outputs"] == expected
+
+
+def test_cli_match_succeeds_on_example() -> None:
+    output = _python_dtcs("match", str(EXAMPLE))
+    assert output.returncode == 0, output.stderr
+    assert "supported" in output.stdout
+
+
+def test_cli_compile_json_output() -> None:
+    output = _python_dtcs("compile", str(EXAMPLE), "--json")
+    assert output.returncode == 0, output.stderr
+    payload = json.loads(output.stdout)
+    assert payload["identity"]["id"] == "customer.normalize"
+    assert payload["steps"]
+
+
+def test_cli_run_customer_normalize() -> None:
+    output = _python_dtcs("run", str(EXAMPLE), "--input", str(RUNTIME_INPUT), "--json")
+    assert output.returncode == 0, output.stderr
+    payload = json.loads(output.stdout)
+    assert payload["customer_clean"][0]["email"] == "alice@example.com"

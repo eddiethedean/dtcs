@@ -37,9 +37,7 @@ impl PlanRequirements {
         }
 
         for function in &plan.functions {
-            if function.function.starts_with("dtcs:") {
-                req.functions.insert(function.function.clone());
-            }
+            req.functions.insert(function.function.clone());
             if let Some(type_name) = &function.type_name {
                 collect_type_name(type_name, &mut req.logical_types);
             }
@@ -48,14 +46,10 @@ impl PlanRequirements {
         for node in &plan.nodes {
             match &node.kind {
                 PlanNodeKind::SemanticAction(action) => {
-                    if action.action.starts_with("dtcs:") {
-                        req.semantic_actions.insert(action.action.clone());
-                    }
+                    req.semantic_actions.insert(action.action.clone());
                 }
                 PlanNodeKind::Rule(rule) => {
-                    if rule.rule.starts_with("dtcs:") {
-                        req.rules.insert(rule.rule.clone());
-                    }
+                    req.rules.insert(rule.rule.clone());
                 }
                 PlanNodeKind::Expression(expression) => {
                     if let Some(type_name) = &expression.type_name {
@@ -191,7 +185,7 @@ fn collect_expr_requirements(ast: &expr::ast::Expr, req: &mut PlanRequirements) 
             collect_expr_requirements(right, req);
         }
         expr::ast::Expr::Call { callee, args, .. } => {
-            if callee.starts_with("dtcs:") {
+            if callee.contains(':') {
                 req.functions.insert(callee.clone());
             }
             for arg in args {

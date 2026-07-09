@@ -55,6 +55,23 @@ fn load_capability_manifest() -> CapabilityManifest {
     serde_json::from_str(&fs::read_to_string(path).expect("read manifest")).expect("parse")
 }
 
+#[derive(serde::Deserialize)]
+struct CompileManifest {
+    fixtures: Vec<CompileManifestEntry>,
+}
+
+#[derive(serde::Deserialize)]
+struct CompileManifestEntry {
+    file: String,
+    compile_valid: bool,
+    golden: Option<String>,
+}
+
+fn load_compile_manifest() -> CompileManifest {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/compile_expectations.json");
+    serde_json::from_str(&fs::read_to_string(path).expect("read manifest")).expect("parse")
+}
+
 #[test]
 fn reference_profile_lists_stdlib_entries() {
     let profile = capability::reference_profile();
@@ -155,11 +172,50 @@ fn compile_rejects_unsupported_vendor_action_plan() {
         .find(|node| matches!(node.kind, plan::PlanNodeKind::SemanticAction(_)))
         .expect("semantic action node");
     if let plan::PlanNodeKind::SemanticAction(action) = &mut action_node.kind {
-        action.action = "dtcs:nonexistent_action".into();
+        action.action = "acme:normalize_email".into();
     }
     let profile = capability::reference_profile();
     let match_report = capability::match_plan(&plan, &profile);
     assert!(!match_report.supported);
+    assert!(
+        match_report
+            .diagnostics
+            .iter()
+            .any(|d| d.id == dtcs::codes::UNSUPPORTED_CAPABILITY),
+        "{:?}",
+        match_report.diagnostics
+    );
+}
+
+#[test]
+fn compile_manifest_goldens() {
+    for entry in load_compile_manifest().fixtures {
+        let plan = load_plan(&entry.file);
+        let compile_result = compile::compile(&plan);
+        assert_eq!(
+            compile_result.is_valid(),
+            entry.compile_valid,
+            "{}: {:?}",
+            entry.file,
+            compile_result.diagnostics
+        );
+        if entry.compile_valid {
+            let golden_path = entry.golden.expect("golden path");
+            let golden = fs::read_to_string(fixture(&golden_path)).expect("read golden");
+            let expected: serde_json::Value = serde_json::from_str(&golden).expect("parse golden");
+            let actual =
+                serde_json::to_value(compile_result.plan).expect("serialize execution plan");
+            assert_eq!(actual, expected, "{}", entry.file);
+        }
+    }
+}
+
+#[test]
+fn capability_match_accepts_reference_stdlib_actions() {
+    let plan = load_plan("valid_customer.yaml");
+    let profile = capability::reference_profile();
+    let match_report = capability::match_plan(&plan, &profile);
+    assert!(match_report.supported, "{:?}", match_report.diagnostics);
 }
 
 #[test]
@@ -202,10 +258,11 @@ fn cli_match_and_compile_customer() {
 
 #[test]
 fn runtime_builtin_functions_and_rules() {
+    use dtcs::runtime::actions::apply_action;
     use dtcs::runtime::functions::call_function;
     use dtcs::runtime::rules::evaluate_rule;
 
-    let cases = [
+    let function_cases = [
         (
             "dtcs:lower",
             vec![RuntimeValue::String("ABC".into())],
@@ -234,13 +291,72 @@ fn runtime_builtin_functions_and_rules() {
             vec![RuntimeValue::Null, RuntimeValue::String("x".into())],
             RuntimeValue::String("x".into()),
         ),
+        (
+            "dtcs:substr",
+            vec![
+                RuntimeValue::String("hello".into()),
+                RuntimeValue::Integer(1),
+                RuntimeValue::Integer(4),
+            ],
+            RuntimeValue::String("ell".into()),
+        ),
+        (
+            "dtcs:replace",
+            vec![
+                RuntimeValue::String("foo-bar".into()),
+                RuntimeValue::String("-".into()),
+                RuntimeValue::String("_".into()),
+            ],
+            RuntimeValue::String("foo_bar".into()),
+        ),
+        (
+            "dtcs:to_string",
+            vec![RuntimeValue::Integer(42)],
+            RuntimeValue::String("42".into()),
+        ),
+        (
+            "dtcs:to_integer",
+            vec![RuntimeValue::String("42".into())],
+            RuntimeValue::Integer(42),
+        ),
+        (
+            "dtcs:to_decimal",
+            vec![RuntimeValue::String("3.5".into())],
+            RuntimeValue::Decimal(3.5),
+        ),
     ];
-    for (callee, args, expected) in cases {
+    for (callee, args, expected) in function_cases {
         let actual = call_function(callee, &args).expect(callee);
         assert_eq!(actual, expected, "{callee}");
     }
+    assert!(call_function("dtcs:concat", &[RuntimeValue::String("a".into())]).is_err());
+    assert!(call_function("dtcs:length", &[RuntimeValue::Null]).is_err());
 
-    let rule = dtcs::Rule {
+    let action_cases = [
+        (
+            "dtcs:trim",
+            RuntimeValue::String("  hi  ".into()),
+            RuntimeValue::String("hi".into()),
+        ),
+        (
+            "dtcs:capitalize",
+            RuntimeValue::String("hello".into()),
+            RuntimeValue::String("Hello".into()),
+        ),
+        (
+            "dtcs:hash_sha256",
+            RuntimeValue::String("test".into()),
+            RuntimeValue::String(
+                "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08".into(),
+            ),
+        ),
+    ];
+    for (action_id, input, expected) in action_cases {
+        let actual = apply_action(action_id, &input).expect(action_id);
+        assert_eq!(actual, expected, "{action_id}");
+    }
+
+    let not_null = dtcs::Rule {
         id: "r1".into(),
         rule: "dtcs:not_null".into(),
         target: "in.value".into(),
@@ -249,10 +365,87 @@ fn runtime_builtin_functions_and_rules() {
         metadata: None,
     };
     evaluate_rule(
-        &rule,
+        &not_null,
         &RuntimeValue::String("ok".into()),
         &Default::default(),
     )
     .expect("not_null passes");
-    assert!(evaluate_rule(&rule, &RuntimeValue::Null, &Default::default()).is_err());
+    assert!(evaluate_rule(&not_null, &RuntimeValue::Null, &Default::default()).is_err());
+
+    let min_length = dtcs::Rule {
+        id: "r2".into(),
+        rule: "dtcs:min_length".into(),
+        target: "in.value".into(),
+        phase: dtcs::RulePhase::Postcondition,
+        parameters: indexmap::indexmap! { "min".into() => serde_json::json!(3) },
+        metadata: None,
+    };
+    evaluate_rule(
+        &min_length,
+        &RuntimeValue::String("abcd".into()),
+        &min_length.parameters,
+    )
+    .expect("min_length passes");
+    assert!(evaluate_rule(
+        &min_length,
+        &RuntimeValue::String("ab".into()),
+        &min_length.parameters
+    )
+    .is_err());
+
+    let max_length = dtcs::Rule {
+        id: "r3".into(),
+        rule: "dtcs:max_length".into(),
+        target: "in.value".into(),
+        phase: dtcs::RulePhase::Postcondition,
+        parameters: indexmap::indexmap! { "max".into() => serde_json::json!(5) },
+        metadata: None,
+    };
+    evaluate_rule(
+        &max_length,
+        &RuntimeValue::String("abc".into()),
+        &max_length.parameters,
+    )
+    .expect("max_length passes");
+    assert!(evaluate_rule(
+        &max_length,
+        &RuntimeValue::String("abcdef".into()),
+        &max_length.parameters
+    )
+    .is_err());
+
+    let range = dtcs::Rule {
+        id: "r4".into(),
+        rule: "dtcs:range".into(),
+        target: "in.value".into(),
+        phase: dtcs::RulePhase::Postcondition,
+        parameters: indexmap::indexmap! {
+            "min".into() => serde_json::json!(1),
+            "max".into() => serde_json::json!(10),
+        },
+        metadata: None,
+    };
+    evaluate_rule(&range, &RuntimeValue::Integer(5), &range.parameters).expect("range passes");
+    assert!(evaluate_rule(&range, &RuntimeValue::Integer(11), &range.parameters).is_err());
+
+    let regex_match = dtcs::Rule {
+        id: "r5".into(),
+        rule: "dtcs:regex_match".into(),
+        target: "in.value".into(),
+        phase: dtcs::RulePhase::Postcondition,
+        parameters: indexmap::indexmap! { "pattern".into() => serde_json::json!("^[a-z]+$") },
+        metadata: None,
+    };
+    evaluate_rule(
+        &regex_match,
+        &RuntimeValue::String("abc".into()),
+        &regex_match.parameters,
+    )
+    .expect("regex_match passes");
+    assert!(evaluate_rule(
+        &regex_match,
+        &RuntimeValue::String("abc1".into()),
+        &regex_match.parameters
+    )
+    .is_err());
 }

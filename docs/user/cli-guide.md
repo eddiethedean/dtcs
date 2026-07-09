@@ -14,6 +14,9 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | `evolve <older> <newer>` | Analyze evolution between two revisions |
 | `plan <path>` | Lower a validated contract to a transformation plan |
 | `optimize <path>` | Optimize a transformation plan (contract or serialized plan JSON) |
+| `match <path>` | Match a transformation plan against engine capabilities |
+| `compile <path>` | Compile a transformation plan to an execution plan |
+| `run <path>` | Execute a contract end-to-end using the reference runtime |
 | `lineage <path>` | Analyze dataset-level lineage |
 | `registry list` | List identifier registry entries |
 | `registry resolve <id>` | Resolve a registry identifier |
@@ -31,6 +34,9 @@ Optional `--registry <path>` merges a vendor catalog (YAML/JSON) with the embedd
 | `analyze` | yes | yes |
 | `plan` | yes | yes |
 | `optimize` | yes | yes |
+| `match` | yes | yes |
+| `compile` | yes | yes |
+| `run` | yes | yes |
 | `compat` | yes | yes |
 | `evolve` | yes | yes |
 | `lineage` | yes | yes |
@@ -111,6 +117,73 @@ Lowers a validated contract to a plan (unless `--plan` is set), then applies sem
 |-----------|---------|
 | `0` | Optimization succeeded |
 | `1` | Validation, lowering, or optimization failed |
+
+## match
+
+```bash
+dtcs match contract.yaml
+dtcs match contract.yaml --profile dtcs:reference
+dtcs match plan.json --plan --json
+```
+
+Lowers a validated contract to a plan (unless `--plan` is set), then matches it against an engine capability profile (SPEC Chapter 14).
+
+| Flag | Effect |
+|------|--------|
+| `--plan` | Treat `path` as serialized plan JSON instead of a contract |
+| `--optimize` | Optimize the plan before matching |
+| `--profile` | Engine profile identifier (default: `dtcs:reference`) |
+| `--registry` | Merge a vendor catalog for lowering |
+| `--json` | Emit a capability match report |
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Plan is supported by the selected profile |
+| `1` | Validation, lowering, or capability match failed |
+
+## compile
+
+```bash
+dtcs compile contract.yaml
+dtcs compile contract.yaml --profile dtcs:reference --json
+dtcs compile plan.json --plan
+```
+
+Compiles a transformation plan to an execution plan (SPEC Chapter 15). Requires capability match success for the selected profile.
+
+| Flag | Effect |
+|------|--------|
+| `--plan` | Treat `path` as serialized plan JSON instead of a contract |
+| `--optimize` | Optimize the plan before compilation |
+| `--profile` | Engine profile identifier (default: `dtcs:reference`) |
+| `--registry` | Merge a vendor catalog for lowering |
+| `--json` | Emit the execution plan document |
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Compilation succeeded |
+| `1` | Validation, lowering, match, or compilation failed |
+
+## run
+
+```bash
+dtcs run contract.yaml --input tests/fixtures/runtime/customer_normalize_input.json
+dtcs run contract.yaml --input inputs.json --json
+```
+
+Validates and lowers a contract, compiles it, and executes it with the reference in-memory runtime (SPEC Chapter 16). The `--input` file maps interface ids to row arrays.
+
+| Flag | Effect |
+|------|--------|
+| `--input` | JSON file with runtime inputs keyed by interface id (required) |
+| `--optimize` | Optimize the plan before compilation |
+| `--registry` | Merge a vendor catalog for lowering |
+| `--json` | Emit output datasets as JSON |
+
+| Exit code | Meaning |
+|-----------|---------|
+| `0` | Execution succeeded |
+| `1` | Validation, compilation, or execution failed |
 
 ## inspect
 
