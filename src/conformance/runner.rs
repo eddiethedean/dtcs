@@ -164,19 +164,18 @@ fn run_test_case(
             if codes.is_empty() {
                 pass_result(test.id.clone(), profile_id)
             } else {
-                let ids: Vec<_> = report.diagnostics.iter().map(|d| d.id.as_str()).collect();
-                let missing: Vec<_> = codes
-                    .iter()
-                    .filter(|code| !ids.contains(&code.as_str()))
-                    .cloned()
-                    .collect();
-                if missing.is_empty() {
+                let mut actual: Vec<String> =
+                    report.diagnostics.iter().map(|d| d.id.clone()).collect();
+                actual.sort();
+                let mut expected = codes.clone();
+                expected.sort();
+                if actual == expected {
                     pass_result(test.id.clone(), profile_id)
                 } else {
                     fail_result(
                         test.id.clone(),
                         profile_id,
-                        format!("missing diagnostic codes: {missing:?}; got {ids:?}"),
+                        format!("diagnostic code mismatch: expected {expected:?}, got {actual:?}"),
                     )
                 }
             }

@@ -1,0 +1,35 @@
+dtcsVersion: "1.0.0"
+id: "runtime.precondition.fail"
+name: "Runtime precondition failure"
+version: "0.1.0"
+
+inputs:
+  - id: "source"
+    preconditions:
+      - rule: "source_min_length"
+    schema:
+      fields:
+        - name: "label"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result"
+    schema:
+      fields:
+        - name: "label"
+          type: "string"
+          nullable: false
+
+rules:
+  - id: "source_min_length"
+    rule: "dtcs:min_length"
+    target: "source.label"
+    phase: precondition
+    parameters:
+      min: 3
+
+lineage:
+  mappings:
+    - output: "result"
+      inputs: ["source"]

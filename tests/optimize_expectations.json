@@ -5,56 +5,57 @@
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_constant_fold.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_constant_fold_input.json"
     },
     {
       "file": "optimize_algebraic.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_algebraic.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_algebraic_input.json"
     },
     {
       "file": "optimize_action_fusion.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_action_fusion.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_action_fusion_input.json",
+      "expected_output": "runtime/optimize_action_fusion_output.json"
     },
     {
       "file": "optimize_function_inline.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_function_inline.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_function_inline_input.json"
     },
     {
       "file": "optimize_rule_dedup.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_rule_dedup.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_rule_dedup_input.json"
     },
     {
       "file": "optimize_dead_expr.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_dead_expr.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_dead_expr_input.json"
     },
     {
       "file": "optimize_rule_dedup_params.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_rule_dedup_params.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_rule_dedup_params_input.json"
     },
     {
       "file": "optimize_dead_after_fold.yaml",
       "optimize_valid": true,
       "equivalent": true,
       "golden": "plans_optimized/optimize_dead_after_fold.plan.json",
-      "transforms_min": 1
+      "runtime_input": "runtime/optimize_dead_after_fold_input.json"
     }
   ]
 }

@@ -1,11 +1,14 @@
 //! Manifest-driven fixture expectations (mirrors Python parametrization).
 
-use std::collections::HashSet;
+mod common;
+
 use std::fs;
 use std::path::PathBuf;
 
 use dtcs::{parse, parse_and_validate, DocumentFormat, ParseResult};
 use serde::Deserialize;
+
+use common::assert_exact_diagnostic_codes;
 
 #[derive(Debug, Deserialize)]
 struct ManifestEntry {
@@ -77,15 +80,8 @@ fn manifest_fixture_expectations() {
             } else {
                 result.report
             };
-            let actual: HashSet<_> = report.diagnostics.iter().map(|d| d.id.as_str()).collect();
-            for code in expected_codes {
-                assert!(
-                    actual.contains(code.as_str()),
-                    "{} missing diagnostic code {code}; got {:?}",
-                    entry.file,
-                    actual
-                );
-            }
+            let expected: Vec<&str> = expected_codes.iter().map(String::as_str).collect();
+            assert_exact_diagnostic_codes(&report.diagnostics, &expected);
         }
     }
 }

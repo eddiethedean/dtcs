@@ -59,6 +59,51 @@ fn integrated_platform_conformance_passes() {
 }
 
 #[test]
+fn conformance_manifest_cases_pass_individually() {
+    let report = run_all();
+    assert!(report.is_valid(), "conformance suite failed: {report:#?}");
+
+    let required_ids = [
+        "parse-valid-customer",
+        "validate-invalid-type",
+        "validate-invalid-policy-uri",
+        "runtime-field-write-chain",
+        "security-diagnostics-stability",
+        "security-trusted-extensions",
+    ];
+    for test_id in required_ids {
+        let matches: Vec<_> = report
+            .results
+            .iter()
+            .filter(|result| result.id == test_id)
+            .collect();
+        assert!(
+            !matches.is_empty(),
+            "missing conformance results for {test_id}"
+        );
+        assert!(
+            matches.iter().all(|result| result.passed),
+            "{test_id} failed: {matches:?}"
+        );
+    }
+
+    for probe_id in [
+        "contract-integrity",
+        "registry-trust",
+        "diagnostics-stability",
+        "trusted-extensions",
+        "no-network-surface",
+    ] {
+        let probe = report
+            .security
+            .iter()
+            .find(|result| result.id == probe_id)
+            .unwrap_or_else(|| panic!("missing security probe {probe_id}"));
+        assert!(probe.passed, "{probe_id} failed: {:?}", probe.message);
+    }
+}
+
+#[test]
 fn full_conformance_suite_passes() {
     let report = run_all();
     assert!(report.is_valid(), "conformance suite failed: {report:#?}");

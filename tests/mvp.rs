@@ -295,24 +295,36 @@ fn cli_validate_succeeds_on_example() {
     let path =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("examples/customer_normalize.dtcs.yaml");
     let output = dtcs_bin()
-        .arg("validate")
+        .args(["validate", "--json"])
         .arg(&path)
         .output()
         .expect("run cli");
     assert!(output.status.success());
-    assert!(String::from_utf8_lossy(&output.stdout).contains("valid"));
+    let payload: serde_json::Value = serde_json::from_slice(&output.stdout).expect("validate json");
+    assert_eq!(payload.get("valid").and_then(|v| v.as_bool()), Some(true));
+    let diagnostics = payload
+        .get("diagnostics")
+        .and_then(|v| v.as_array())
+        .expect("diagnostics array");
+    assert!(
+        diagnostics
+            .iter()
+            .all(|entry| entry.get("severity").and_then(|v| v.as_str()) != Some("error")),
+        "unexpected error diagnostics: {diagnostics:?}"
+    );
 }
 
 #[test]
 fn cli_validate_succeeds_on_phase_0_2_fixture() {
     let path = fixture("valid_metadata.yaml");
     let output = dtcs_bin()
-        .arg("validate")
+        .args(["validate", "--json"])
         .arg(&path)
         .output()
         .expect("run cli");
     assert!(output.status.success());
-    assert!(String::from_utf8_lossy(&output.stdout).contains("valid"));
+    let payload: serde_json::Value = serde_json::from_slice(&output.stdout).expect("validate json");
+    assert_eq!(payload.get("valid").and_then(|v| v.as_bool()), Some(true));
 }
 
 #[test]

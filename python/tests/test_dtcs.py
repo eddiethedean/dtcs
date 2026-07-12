@@ -186,6 +186,14 @@ def test_diagnostics_are_deterministic() -> None:
     assert first["diagnostics"] == second["diagnostics"]
 
 
+def _diagnostic_code_multiset(report: dict) -> list[str]:
+    return sorted(diagnostic["id"] for diagnostic in report.get("diagnostics", []))
+
+
+def _assert_exact_diagnostic_codes(report: dict, expected: list[str]) -> None:
+    assert _diagnostic_code_multiset(report) == sorted(expected)
+
+
 @pytest.mark.parametrize("entry", _load_manifest(), ids=lambda entry: entry["file"])
 def test_fixture_expectations(entry: dict) -> None:
     name = entry["file"]
@@ -200,9 +208,7 @@ def test_fixture_expectations(entry: dict) -> None:
         report = result["report"]
     assert dtcs.is_valid(report) is entry["validate_valid"]
     if codes := entry.get("codes"):
-        ids = {diagnostic["id"] for diagnostic in report["diagnostics"]}
-        for code in codes:
-            assert code in ids
+        _assert_exact_diagnostic_codes(report, codes)
 
 
 @pytest.mark.parametrize("entry", _load_plan_manifest(), ids=lambda entry: entry["file"])
@@ -257,8 +263,20 @@ def test_optimize_expectations(entry: dict) -> None:
         return
     if entry.get("equivalent"):
         assert dtcs.plan_equivalent(plan_result["plan"], optimized["plan"])
-    if transforms_min := entry.get("transforms_min"):
-        assert len(optimized.get("transforms") or []) >= transforms_min
+    if runtime_input := entry.get("runtime_input"):
+        inputs = json.loads((FIXTURES / runtime_input).read_text(encoding="utf-8"))
+        original_compiled = dtcs.compile_plan(plan_result["plan"])
+        assert dtcs.is_valid({"diagnostics": original_compiled.get("diagnostics", [])})
+        original_run = dtcs.runtime_execute(original_compiled["plan"], inputs)
+        assert dtcs.is_valid({"diagnostics": original_run.get("diagnostics", [])})
+        optimized_compiled = dtcs.compile_plan(optimized["plan"])
+        assert dtcs.is_valid({"diagnostics": optimized_compiled.get("diagnostics", [])})
+        optimized_run = dtcs.runtime_execute(optimized_compiled["plan"], inputs)
+        assert dtcs.is_valid({"diagnostics": optimized_run.get("diagnostics", [])})
+        assert original_run["outputs"] == optimized_run["outputs"]
+        if expected_output := entry.get("expected_output"):
+            expected = json.loads((FIXTURES / expected_output).read_text(encoding="utf-8"))
+            assert optimized_run["outputs"] == expected
     if golden := entry.get("golden"):
         expected = json.loads((FIXTURES / golden).read_text(encoding="utf-8"))
         assert optimized["plan"] == expected

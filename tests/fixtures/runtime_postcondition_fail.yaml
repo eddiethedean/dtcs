@@ -1,0 +1,40 @@
+dtcsVersion: "1.0.0"
+id: "runtime.postcondition.fail"
+name: "Runtime postcondition failure"
+version: "0.1.0"
+
+inputs:
+  - id: "source"
+    schema:
+      fields:
+        - name: "label"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "result"
+    postconditions:
+      - rule: "label_min_length"
+    schema:
+      fields:
+        - name: "label"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "trim_label"
+    action: "dtcs:trim"
+    target: "result.label"
+
+rules:
+  - id: "label_min_length"
+    rule: "dtcs:min_length"
+    target: "result.label"
+    phase: postcondition
+    parameters:
+      min: 1
+
+lineage:
+  mappings:
+    - output: "result"
+      inputs: ["source"]

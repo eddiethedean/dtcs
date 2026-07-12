@@ -1,14 +1,18 @@
 //! Phase 0.9 integration tests — capability matching, compilation, and runtime.
 
+mod common;
+
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
 use dtcs::{
-    capability, compile, parse, plan, runtime, validate, DocumentFormat, RuntimeInputs,
-    RuntimeValue,
+    capability, codes, compile, optimize, parse, plan, runtime, validate, DocumentFormat,
+    RuntimeInputs, RuntimeValue,
 };
+
+use common::assert_exact_diagnostic_codes;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -177,14 +181,7 @@ fn compile_rejects_unsupported_vendor_action_plan() {
     let profile = capability::reference_profile();
     let match_report = capability::match_plan(&plan, &profile);
     assert!(!match_report.supported);
-    assert!(
-        match_report
-            .diagnostics
-            .iter()
-            .any(|d| d.id == dtcs::codes::UNSUPPORTED_CAPABILITY),
-        "{:?}",
-        match_report.diagnostics
-    );
+    assert_exact_diagnostic_codes(&match_report.diagnostics, &[codes::UNSUPPORTED_CAPABILITY]);
 }
 
 #[test]
@@ -226,6 +223,7 @@ fn cli_run_customer_normalize() {
         .arg("examples/customer_normalize.dtcs.yaml")
         .arg("--input")
         .arg("tests/fixtures/runtime/customer_normalize_input.json")
+        .arg("--json")
         .current_dir(env!("CARGO_MANIFEST_DIR"))
         .output()
         .expect("run dtcs run");
@@ -234,8 +232,107 @@ fn cli_run_customer_normalize() {
         "stderr: {}",
         String::from_utf8_lossy(&output.stderr)
     );
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(stdout.contains("customer_clean"));
+    let payload: serde_json::Value = serde_json::from_slice(&output.stdout).expect("run json");
+    let outputs = payload.as_object().expect("outputs object");
+    assert!(outputs.contains_key("customer_clean"));
+    let rows = outputs["customer_clean"].as_array().expect("rows");
+    assert_eq!(rows[0]["email"], "alice@example.com");
+}
+
+fn load_runtime_inputs(relative: &str) -> RuntimeInputs {
+    serde_json::from_str(&fs::read_to_string(fixture(relative)).expect("read runtime input"))
+        .expect("parse runtime inputs")
+}
+
+fn execute_validated_contract(name: &str, inputs: &RuntimeInputs) -> runtime::ExecuteResult {
+    let content = fs::read(fixture(name)).expect("read fixture");
+    let contract = parse(&content, DocumentFormat::Yaml)
+        .into_contract()
+        .expect("contract");
+    let validation = validate(&contract);
+    assert!(
+        validation.is_valid(),
+        "{name}: {:?}",
+        validation.diagnostics
+    );
+    let lowered = plan::lower(&contract, None, None);
+    assert!(lowered.is_valid(), "{name}: {:?}", lowered.diagnostics);
+    let plan = lowered.plan.expect("plan");
+    let compiled = compile::compile(&plan);
+    assert!(compiled.is_valid(), "{name}: {:?}", compiled.diagnostics);
+    runtime::execute(compiled.plan.as_ref().expect("execution plan"), inputs)
+}
+
+#[test]
+fn runtime_precondition_violation_reports_exact_code() {
+    let inputs = load_runtime_inputs("runtime/precondition_rule_fail_input.json");
+    let result = execute_validated_contract("runtime_precondition_fail.yaml", &inputs);
+    assert!(!result.is_valid());
+    assert_exact_diagnostic_codes(&result.diagnostics, &[codes::PRECONDITION_VIOLATION]);
+}
+
+#[test]
+fn runtime_postcondition_violation_reports_exact_code() {
+    let inputs = load_runtime_inputs("runtime/postcondition_fail_input.json");
+    let result = execute_validated_contract("runtime_postcondition_fail.yaml", &inputs);
+    assert!(!result.is_valid());
+    assert_exact_diagnostic_codes(&result.diagnostics, &[codes::POSTCONDITION_VIOLATION]);
+}
+
+#[test]
+fn runtime_invalid_input_reports_exact_code_for_null_field() {
+    let inputs = load_runtime_inputs("runtime/invalid_runtime_input_null_field.json");
+    let result = execute_validated_contract("input_precondition.yaml", &inputs);
+    assert!(!result.is_valid());
+    assert_exact_diagnostic_codes(&result.diagnostics, &[codes::INVALID_RUNTIME_INPUT]);
+}
+
+#[test]
+fn compile_rejects_cyclic_plan_with_exact_diagnostics() {
+    let mut plan = load_plan("valid_customer.yaml");
+    plan.dependencies.push(plan::PlanDependency {
+        from: "normalize_email".into(),
+        to: "normalize_email".into(),
+        reason: plan::DependencyReason::FieldRead,
+    });
+    let result = compile::compile(&plan);
+    assert!(!result.is_valid());
+    assert_exact_diagnostic_codes(&result.diagnostics, &[codes::CYCLIC_DEPENDENCY]);
+}
+
+#[test]
+fn lineage_preserved_through_optimize_compile_and_run() {
+    let contract = load_valid_contract("lineage_multi.yaml");
+    let original = plan::lower(&contract, None, None).plan.expect("plan");
+    let optimized = optimize(&original).plan.expect("optimized");
+    assert_eq!(original.lineage, optimized.lineage);
+
+    let compiled = compile::compile(&optimized);
+    assert!(compiled.is_valid(), "{:?}", compiled.diagnostics);
+    let execution_plan = compiled.plan.expect("execution plan");
+    assert_eq!(execution_plan.lineage, optimized.lineage);
+
+    let inputs: RuntimeInputs = BTreeMap::from([
+        (
+            "customers".into(),
+            vec![BTreeMap::from([(
+                "id".into(),
+                RuntimeValue::String("c1".into()),
+            )])],
+        ),
+        (
+            "orders".into(),
+            vec![BTreeMap::from([(
+                "customer_id".into(),
+                RuntimeValue::String("c1".into()),
+            )])],
+        ),
+    ]);
+    let result = runtime::execute(&execution_plan, &inputs);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let outputs = result.outputs.expect("outputs");
+    assert!(outputs.contains_key("customer_summary"));
+    assert!(outputs.contains_key("order_enriched"));
 }
 
 #[test]
@@ -329,8 +426,13 @@ fn runtime_builtin_functions_and_rules() {
         let actual = call_function(callee, &args).expect(callee);
         assert_eq!(actual, expected, "{callee}");
     }
-    assert!(call_function("dtcs:concat", &[RuntimeValue::String("a".into())]).is_err());
-    assert!(call_function("dtcs:length", &[RuntimeValue::Null]).is_err());
+
+    let concat_err = call_function("dtcs:concat", &[RuntimeValue::String("a".into())])
+        .expect_err("concat arity");
+    assert!(concat_err.contains("dtcs:concat") || concat_err.contains("argument"));
+
+    let length_err = call_function("dtcs:length", &[RuntimeValue::Null]).expect_err("length type");
+    assert!(length_err.contains("dtcs:length") || length_err.contains("string"));
 
     let action_cases = [
         (

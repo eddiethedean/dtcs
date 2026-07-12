@@ -1,10 +1,14 @@
 //! Phase 0.8 integration tests — transformation plan optimization.
 
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
 
-use dtcs::{analysis, equivalent, optimize, parse, plan, validate, DocumentFormat};
+use dtcs::{
+    analysis, compile, equivalent, optimize, parse, plan, runtime, validate, DocumentFormat,
+    RuntimeInputs, RuntimeOutputs, RuntimeValue,
+};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -44,7 +48,22 @@ struct OptimizeManifestEntry {
     optimize_valid: bool,
     equivalent: bool,
     golden: Option<String>,
-    transforms_min: Option<usize>,
+    runtime_input: Option<String>,
+    expected_output: Option<String>,
+}
+
+fn load_runtime_inputs(relative: &str) -> RuntimeInputs {
+    let path = fixture(relative);
+    serde_json::from_str(&fs::read_to_string(path).expect("read runtime input")).expect("parse")
+}
+
+fn execute_plan(plan: &plan::TransformationPlan, inputs: &RuntimeInputs) -> RuntimeOutputs {
+    let compiled = compile::compile(plan);
+    assert!(compiled.is_valid(), "{:?}", compiled.diagnostics);
+    let execution_plan = compiled.plan.expect("execution plan");
+    let result = runtime::execute(&execution_plan, inputs);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    result.outputs.expect("outputs")
 }
 
 fn load_optimize_manifest() -> OptimizeManifest {
@@ -237,6 +256,39 @@ fn optimize_twice_is_stable() {
 }
 
 #[test]
+fn optimize_action_fusion_preserves_lowercasing_behavior() {
+    let original = lower_valid_plan("optimize_action_fusion.yaml");
+    let optimized = optimize(&original).plan.expect("optimized plan");
+    let inputs = load_runtime_inputs("runtime/optimize_action_fusion_input.json");
+    let outputs = execute_plan(&optimized, &inputs);
+    let email = outputs
+        .get("out")
+        .and_then(|rows| rows.first())
+        .and_then(|row| row.get("email"));
+    assert_eq!(
+        email,
+        Some(&RuntimeValue::String("upper@email.com".into())),
+        "fusion must not remove required lowercase semantics"
+    );
+}
+
+#[test]
+fn optimize_manifest_goldens_are_change_detectors_not_semantic_oracle() {
+    // Golden JSON under tests/fixtures/plans_optimized/ records plan shape only.
+    // Semantic correctness is verified via runtime I/O equivalence in optimize_manifest_golden_files.
+    let manifest = load_optimize_manifest();
+    assert_eq!(manifest.fixtures.len(), 8);
+    for entry in manifest.fixtures {
+        assert!(entry.golden.is_some(), "{} missing golden", entry.file);
+        assert!(
+            entry.runtime_input.is_some(),
+            "{} missing runtime input",
+            entry.file
+        );
+    }
+}
+
+#[test]
 fn optimize_manifest_golden_files() {
     let manifest = load_optimize_manifest();
     for entry in manifest.fixtures {
@@ -260,12 +312,27 @@ fn optimize_manifest_golden_files() {
                 entry.file
             );
         }
-        if let Some(min) = entry.transforms_min {
-            assert!(
-                result.transforms.len() >= min,
-                "{} expected at least {min} transforms",
+        if let Some(runtime_input) = &entry.runtime_input {
+            let inputs = load_runtime_inputs(runtime_input);
+            let original_outputs = execute_plan(&original, &inputs);
+            let optimized_outputs = execute_plan(&optimized, &inputs);
+            assert_eq!(
+                original_outputs, optimized_outputs,
+                "{} optimize changed runtime behavior",
                 entry.file
             );
+            if let Some(expected_output) = &entry.expected_output {
+                let expected: BTreeMap<String, Vec<BTreeMap<String, RuntimeValue>>> =
+                    serde_json::from_str(
+                        &fs::read_to_string(fixture(expected_output)).expect("read expected"),
+                    )
+                    .expect("parse expected output");
+                assert_eq!(
+                    optimized_outputs, expected,
+                    "{} unexpected optimized runtime output",
+                    entry.file
+                );
+            }
         }
         if let Some(golden) = entry.golden {
             let golden_path = fixture(&golden);
@@ -327,7 +394,10 @@ fn cli_optimize_contract_json() {
     );
     let payload: serde_json::Value = serde_json::from_slice(&output.stdout).expect("json");
     assert!(payload.get("plan").is_some());
-    assert!(payload["transforms"]
-        .as_array()
-        .is_some_and(|t| !t.is_empty()));
+    let transforms = payload["transforms"].as_array().expect("transforms array");
+    assert!(!transforms.is_empty());
+    assert_eq!(
+        payload["plan"]["nodes"].as_array().map(|n| n.len()),
+        Some(0)
+    );
 }

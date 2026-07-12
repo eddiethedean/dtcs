@@ -29,7 +29,27 @@
       "format": "yaml",
       "assertion": {
         "kind": "validateInvalid",
-        "codes": ["dtcs:missing-lineage"]
+        "codes": ["dtcs:ambiguous-reference", "dtcs:missing-lineage"]
+      }
+    },
+    {
+      "id": "validate-invalid-type",
+      "profiles": ["validator", "integrated-platform"],
+      "fixture": "invalid_type.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "validateInvalid",
+        "codes": ["dtcs:ambiguous-reference", "dtcs:invalid-type", "dtcs:missing-lineage"]
+      }
+    },
+    {
+      "id": "validate-invalid-policy-uri",
+      "profiles": ["validator", "integrated-platform"],
+      "fixture": "invalid_metadata_policy_uri.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "validateInvalid",
+        "codes": ["dtcs:ambiguous-reference", "dtcs:invalid-metadata"]
       }
     },
     {
@@ -40,9 +60,16 @@
       "assertion": { "kind": "planValid" }
     },
     {
-      "id": "optimize-equivalent-customer",
+      "id": "optimize-equivalent-constant-fold",
       "profiles": ["optimizer", "integrated-platform"],
       "fixture": "optimize_constant_fold.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "optimizeEquivalent" }
+    },
+    {
+      "id": "optimize-equivalent-action-fusion",
+      "profiles": ["optimizer", "integrated-platform"],
+      "fixture": "optimize_action_fusion.yaml",
       "format": "yaml",
       "assertion": { "kind": "optimizeEquivalent" }
     },
@@ -72,6 +99,17 @@
       }
     },
     {
+      "id": "runtime-field-write-chain",
+      "profiles": ["runtime", "integrated-platform"],
+      "fixture": "plan_field_write_chain.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "runtimeOutput",
+        "input": "runtime/plan_field_write_chain_input.json",
+        "expectedOutput": "runtime/plan_field_write_chain_output.json"
+      }
+    },
+    {
       "id": "security-registry-trust",
       "profiles": ["validator", "integrated-platform"],
       "fixture": "registry/evil_dtcs_injection.yaml",
@@ -84,6 +122,20 @@
       "fixture": "invalid_rule_duplicate_params.json",
       "format": "json",
       "assertion": { "kind": "securityProbe", "probeId": "contract-integrity" }
+    },
+    {
+      "id": "security-diagnostics-stability",
+      "profiles": ["validator", "integrated-platform"],
+      "fixture": "missing_lineage.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "securityProbe", "probeId": "diagnostics-stability" }
+    },
+    {
+      "id": "security-trusted-extensions",
+      "profiles": ["validator", "integrated-platform"],
+      "fixture": "registry/vendor_catalog.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "securityProbe", "probeId": "trusted-extensions" }
     }
   ]
 }
