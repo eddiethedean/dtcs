@@ -1,6 +1,11 @@
 # Rust
 /target/
 **/*.rs.bk
+bindings/wasm/target/
+
+# Node / WASM build artifacts
+node_modules/
+bindings/wasm/pkg/
 
 # Editor and OS
 .DS_Store

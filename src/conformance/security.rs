@@ -1,6 +1,6 @@
 //! Security checklist probes (SPEC Chapter 24).
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::diagnostics::codes;
 use crate::model::ExtensionCompatibility;
@@ -152,16 +152,72 @@ fn probe_diagnostics_stability(fixtures_dir: &Path) -> ConformanceTestResult {
 }
 
 fn probe_no_network_surface() -> ConformanceTestResult {
-    // Reference implementation performs no network I/O in validator or runtime paths.
+    const FORBIDDEN: &[&str] = &["reqwest", "ureq", "hyper::", "tokio::net", "std::net::"];
+    let roots = [
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/runtime"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/validation"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/parser"),
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src/conformance"),
+    ];
+    for root in roots {
+        if !root.is_dir() {
+            continue;
+        }
+        for entry in walkdir_rs(&root) {
+            if !entry.ends_with(".rs") {
+                continue;
+            }
+            let content = match std::fs::read_to_string(&entry) {
+                Ok(content) => content,
+                Err(err) => {
+                    return fail(
+                        "no-network-surface",
+                        format!("read {}: {err}", entry.display()),
+                    );
+                }
+            };
+            for pattern in FORBIDDEN {
+                if content.contains(pattern) {
+                    return fail(
+                        "no-network-surface",
+                        format!(
+                            "forbidden network pattern '{pattern}' found in {}",
+                            entry.display()
+                        ),
+                    );
+                }
+            }
+        }
+    }
     ConformanceTestResult {
         id: "no-network-surface".into(),
         profile: "security".into(),
         passed: true,
         message: Some(
-            "reference validator and runtime perform no network I/O (manual review for deployments)"
+            "core parser/validation/runtime/conformance sources contain no network client imports"
                 .into(),
         ),
     }
+}
+
+fn walkdir_rs(root: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let entries = match std::fs::read_dir(&dir) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push(path);
+            } else {
+                files.push(path);
+            }
+        }
+    }
+    files
 }
 
 fn pass(probe_id: &str) -> ConformanceTestResult {

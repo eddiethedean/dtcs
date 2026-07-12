@@ -2,6 +2,8 @@
 
 Tests should be written against `SPEC.md`.
 
+See [test-verification-report.md](test-verification-report.md) for the latest verification pass, confidence rating, and known gaps.
+
 ## How to add a test
 
 1. **Choose a fixture** — add a YAML or JSON file under [`tests/fixtures/`](../../tests/fixtures/) (or reuse an existing one).

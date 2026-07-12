@@ -4,6 +4,7 @@
 
 | Version | Breaking or notable changes |
 |---------|----------------------------|
+| **0.10.1** | Test suite verification (P2/P3): plan behavioral oracles, format equivalence, determinism, `RuntimeInvalid` conformance, binding smoke parity, automated security probe. |
 | **0.10.0** | Conformance profiles, `dtcs conformance` CLI, Python `conformance_*` APIs, WASM/Node bindings, `uv publish` migration. |
 | **0.9.0** | New `match`, `compile`, `run` CLI and Python APIs. `runtime_execute` returns `{outputs, diagnostics}` envelope. |
 | **0.8.0** | Plan optimization APIs (`plan_optimize`, `plan_equivalent`). |
@@ -12,6 +13,21 @@
 | **0.2.0** | Extended validation (metadata, types, expressions, I/O interfaces). |
 
 For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/troubleshooting.md](docs/user/troubleshooting.md).
+
+## 0.10.1
+
+Patch release — test suite verification and confidence improvements (no breaking API changes).
+
+### Tests & quality
+
+- Plan golden structural invariants and behavioral oracles; exact plan-failure diagnostic multisets.
+- Four YAML/JSON format-equivalence pairs (Rust + Python).
+- Determinism double-run fixture; impure-side-effects analysis coverage.
+- Conformance `RuntimeInvalid` assertion; runtime pre/postcondition failure cases.
+- WASM/Node binding validate + diagnostic smoke tests in CI.
+- Automated `no-network-surface` security probe; optional `cargo-mutants` workflow.
+
+**Release:** push tag `v0.10.1` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.10.0
 

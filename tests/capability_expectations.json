@@ -15,9 +15,10 @@
       "expected_output": "runtime/plan_field_write_chain_output.json"
     },
     {
-      "file": "stdlib_action_uppercase_valid.yaml",
-      "match_supported": true,
-      "compile_valid": true
+      "file": "valid_customer.yaml",
+      "match_supported": false,
+      "compile_valid": false,
+      "mutate_unsupported_action": true
     }
   ]
 }

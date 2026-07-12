@@ -1,6 +1,6 @@
 {
   "name": "@eddiethedean/dtcs",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "Node.js bindings for DTCS (WebAssembly wrapper)",
   "type": "module",
   "files": [
@@ -12,7 +12,7 @@
     "test": "node --test test/smoke.test.mjs"
   },
   "dependencies": {
-    "@eddiethedean/dtcs-wasm": "0.10.0"
+    "@eddiethedean/dtcs-wasm": "0.10.1"
   },
   "keywords": [
     "dtcs",

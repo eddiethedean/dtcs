@@ -1,0 +1,33 @@
+dtcsVersion: "1.0.0"
+id: "deterministic.double.run"
+name: "Deterministic double run"
+version: "0.1.0"
+
+semantics:
+  deterministic: true
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "trim_value"
+    action: "dtcs:trim"
+    target: "out.value"
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

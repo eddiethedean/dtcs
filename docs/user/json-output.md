@@ -353,7 +353,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.10.0",
+  "implementationVersion": "0.10.1",
   "dtcsVersion": "1.0.0-draft",
   "primaryProfile": "integrated-platform",
   "profiles": [
@@ -361,7 +361,7 @@ Success emits a single registry entry (same object shape as list items, may incl
       "id": "integrated-platform",
       "implementationClass": "integratedPlatform",
       "dtcsVersion": "1.0.0-draft",
-      "implementationVersion": "0.10.0",
+      "implementationVersion": "0.10.1",
       "supportedRegistries": ["dtcs:builtin"],
       "supportedExtensions": ["acme"],
       "optionalCapabilities": ["planOptimization", "referenceRuntime"]
@@ -375,7 +375,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.10.0",
+  "implementationVersion": "0.10.1",
   "profiles": ["integrated-platform"],
   "results": [
     {
@@ -399,7 +399,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 
 ```json
 {
-  "crateVersion": "0.10.0",
+  "crateVersion": "0.10.1",
   "specVersion": "1.0.0-draft"
 }
 ```

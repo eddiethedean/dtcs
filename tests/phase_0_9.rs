@@ -52,6 +52,8 @@ struct CapabilityManifestEntry {
     compile_valid: bool,
     runtime_fixture: Option<String>,
     expected_output: Option<String>,
+    #[serde(default)]
+    mutate_unsupported_action: bool,
 }
 
 fn load_capability_manifest() -> CapabilityManifest {
@@ -100,7 +102,17 @@ fn reference_profile_lists_stdlib_entries() {
 #[test]
 fn capability_manifest_fixtures() {
     for entry in load_capability_manifest().fixtures {
-        let plan = load_plan(&entry.file);
+        let mut plan = load_plan(&entry.file);
+        if entry.mutate_unsupported_action {
+            let action_node = plan
+                .nodes
+                .iter_mut()
+                .find(|node| matches!(node.kind, plan::PlanNodeKind::SemanticAction(_)))
+                .expect("semantic action node");
+            if let plan::PlanNodeKind::SemanticAction(action) = &mut action_node.kind {
+                action.action = "acme:normalize_email".into();
+            }
+        }
         let profile = capability::reference_profile();
         let match_report = capability::match_plan(&plan, &profile);
         assert_eq!(
@@ -108,6 +120,12 @@ fn capability_manifest_fixtures() {
             "{}: {:?}",
             entry.file, match_report.diagnostics
         );
+        if !entry.match_supported {
+            assert_exact_diagnostic_codes(
+                &match_report.diagnostics,
+                &[codes::UNSUPPORTED_CAPABILITY],
+            );
+        }
 
         let compile_result = compile::compile(&plan);
         assert_eq!(

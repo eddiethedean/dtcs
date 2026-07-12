@@ -124,6 +124,14 @@ pub enum ConformanceAssertion {
         #[serde(rename = "expectedOutput")]
         expected_output: String,
     },
+    /// Runtime execution fails with expected diagnostic codes.
+    RuntimeInvalid {
+        /// Runtime input fixture path relative to tests/fixtures.
+        input: String,
+        /// Expected runtime diagnostic codes.
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        codes: Vec<String>,
+    },
     /// Security probe identifier.
     SecurityProbe {
         /// Probe id from security checklist.

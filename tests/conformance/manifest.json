@@ -131,6 +131,39 @@
       "assertion": { "kind": "securityProbe", "probeId": "diagnostics-stability" }
     },
     {
+      "id": "runtime-deterministic-double-run",
+      "profiles": ["runtime", "integrated-platform"],
+      "fixture": "deterministic_double_run.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "runtimeOutput",
+        "input": "runtime/deterministic_double_run_input.json",
+        "expectedOutput": "runtime/deterministic_double_run_output.json"
+      }
+    },
+    {
+      "id": "runtime-precondition-fail",
+      "profiles": ["runtime", "integrated-platform"],
+      "fixture": "runtime_precondition_fail.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "runtimeInvalid",
+        "input": "runtime/precondition_rule_fail_input.json",
+        "codes": ["dtcs:precondition-violation"]
+      }
+    },
+    {
+      "id": "runtime-postcondition-fail",
+      "profiles": ["runtime", "integrated-platform"],
+      "fixture": "runtime_postcondition_fail.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "runtimeInvalid",
+        "input": "runtime/postcondition_fail_input.json",
+        "codes": ["dtcs:postcondition-violation"]
+      }
+    },
+    {
       "id": "security-trusted-extensions",
       "profiles": ["validator", "integrated-platform"],
       "fixture": "registry/vendor_catalog.yaml",

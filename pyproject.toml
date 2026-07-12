@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "dtcs"
-version = "0.10.0"
+version = "0.10.1"
 description = "Reference implementation of the Data Transformation Contract Standard (DTCS)"
 readme = "README.md"
 license = { text = "Apache-2.0" }

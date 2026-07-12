@@ -1,4 +1,9 @@
 //! Phase 0.2 integration tests — metadata, types, and interfaces.
+//!
+//! Exact invalid diagnostic codes for shared fixtures are enforced by
+//! `tests/manifest.rs` and `phase_0_2_invalid_fixture_codes_match_manifest`.
+
+mod common;
 
 use std::fs;
 use std::path::PathBuf;
@@ -7,6 +12,8 @@ use dtcs::{
     codes, metadata, parse, parse_logical_type, type_compatible, DocumentFormat, LogicalType,
     ParseResult, TypeCompatibility,
 };
+
+use common::assert_fixture_validation_codes;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -444,9 +451,53 @@ fn rejects_lowercase_nullable_target() {
 
 #[test]
 fn rejects_expression_nullable_field() {
-    let report = parse_fixture("expression_nullable_field.yaml").validate();
-    assert!(report
-        .diagnostics
-        .iter()
-        .any(|d| d.id == codes::INVALID_TYPE));
+    let contract = parse_fixture("expression_nullable_field.yaml")
+        .into_contract()
+        .expect("contract");
+    assert_fixture_validation_codes(
+        "expression_nullable_field.yaml",
+        &contract.validate().diagnostics,
+    );
+}
+
+#[test]
+fn phase_0_2_invalid_fixture_codes_match_manifest() {
+    const FIXTURES: &[&str] = &[
+        "invalid_metadata_timestamp.yaml",
+        "invalid_metadata_identity_conflict.yaml",
+        "all_inputs_optional.yaml",
+        "invalid_precondition_rule.yaml",
+        "invalid_precondition_phase.yaml",
+        "invalid_map_arity.yaml",
+        "invalid_conversion_lossy.yaml",
+        "invalid_type_trailing_garbage.yaml",
+        "invalid_metadata_restricted.yaml",
+        "invalid_metadata_custom_key.yaml",
+        "invalid_io_extension.yaml",
+        "invalid_postcondition_rule.yaml",
+        "invalid_postcondition_phase.yaml",
+        "invalid_metadata_impossible_date.yaml",
+        "invalid_http_rule.yaml",
+        "invalid_http_action.yaml",
+        "invalid_http_type.yaml",
+        "invalid_metadata_impossible_time.yaml",
+        "invalid_misplaced_postcondition.yaml",
+        "expression_missing_type.yaml",
+        "expression_type_mismatch.yaml",
+        "function_missing_return_type.yaml",
+        "expression_invalid_operator.yaml",
+        "expression_unresolved_field.yaml",
+        "duplicate_io_id.yaml",
+        "expression_narrowing_decimal.yaml",
+        "invalid_function_namespace.yaml",
+        "invalid_dtcs_function.yaml",
+        "function_optional_param_order.yaml",
+        "function_call_arity.yaml",
+        "lowercase_nullable_target.yaml",
+        "expression_nullable_field.yaml",
+    ];
+    for file in FIXTURES {
+        let contract = parse_fixture(file).into_contract().expect("contract");
+        assert_fixture_validation_codes(file, &contract.validate().diagnostics);
+    }
 }

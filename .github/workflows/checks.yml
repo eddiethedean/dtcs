@@ -62,6 +62,16 @@ jobs:
         run: |
           rustup target add wasm32-unknown-unknown
           cargo build --manifest-path bindings/wasm/Cargo.toml --target wasm32-unknown-unknown --release
+      - name: wasm bindings test
+        run: |
+          cd bindings/wasm
+          npm install --no-save wasm-pack@0.13.1 2>/dev/null || true
+          npx wasm-pack build --target web --out-dir pkg || npm run build
+          npm test
+      - name: node bindings test
+        run: |
+          cd bindings/wasm && npx wasm-pack build --target web --out-dir pkg
+          cd ../node && npm install --no-save file:../wasm && npm test
       - name: cargo build
         run: cargo build --locked --all-targets
       - name: cargo publish (dry run)

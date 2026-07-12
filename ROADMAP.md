@@ -494,6 +494,7 @@ Prove objective conformance across all declared implementation classes; align pr
 - [x] [Ch 2 §13](SPEC.md#chapter-2----core-concepts): full pipeline verified end-to-end
 
 - [x] Publish to crates.io and PyPI at `0.10.0` (tag `v0.10.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
+- [ ] Publish patch `0.10.1` — test suite verification (tag `v0.10.1` triggers release workflow)
 
 ---
 

@@ -63,6 +63,47 @@ def test_parse_valid_json_fixture() -> None:
     assert contract["id"] == "json.example"
 
 
+YAML_JSON_PAIRS = [
+    ("valid_minimal.yaml", "valid_minimal.json"),
+    ("valid_metadata.yaml", "valid_metadata.json"),
+    ("plan_field_write_chain.yaml", "plan_field_write_chain.json"),
+    ("lineage_multi.yaml", "lineage_multi.json"),
+]
+
+
+def _diagnostic_code_multiset(report: dict) -> list[str]:
+    return sorted(d["id"] for d in report.get("diagnostics", []))
+
+
+@pytest.mark.parametrize("yaml_name,json_name", YAML_JSON_PAIRS)
+def test_yaml_json_equivalence_validate(yaml_name: str, json_name: str) -> None:
+    yaml_contract = dtcs.parse(_fixture(yaml_name), "yaml")["contract"]
+    json_contract = dtcs.parse(_fixture(json_name), "json")["contract"]
+    assert yaml_contract["id"] == json_contract["id"]
+    yaml_report = dtcs.validate(yaml_contract)
+    json_report = dtcs.validate(json_contract)
+    assert dtcs.is_valid(yaml_report) == dtcs.is_valid(json_report)
+    assert _diagnostic_code_multiset(yaml_report) == _diagnostic_code_multiset(json_report)
+
+
+@pytest.mark.parametrize("yaml_name,json_name", YAML_JSON_PAIRS)
+def test_yaml_json_equivalence_plan(yaml_name: str, json_name: str) -> None:
+    yaml_contract = dtcs.parse(_fixture(yaml_name), "yaml")["contract"]
+    json_contract = dtcs.parse(_fixture(json_name), "json")["contract"]
+    yaml_plan = dtcs.plan_lower(yaml_contract)["plan"]
+    json_plan = dtcs.plan_lower(json_contract)["plan"]
+    assert dtcs.plan_equivalent(yaml_plan, json_plan)
+
+
+@pytest.mark.parametrize("yaml_name,json_name", YAML_JSON_PAIRS)
+def test_yaml_json_equivalence_optimize(yaml_name: str, json_name: str) -> None:
+    yaml_contract = dtcs.parse(_fixture(yaml_name), "yaml")["contract"]
+    json_contract = dtcs.parse(_fixture(json_name), "json")["contract"]
+    yaml_optimized = dtcs.plan_optimize(dtcs.plan_lower(yaml_contract)["plan"])["plan"]
+    json_optimized = dtcs.plan_optimize(dtcs.plan_lower(json_contract)["plan"])["plan"]
+    assert dtcs.plan_equivalent(yaml_optimized, json_optimized)
+
+
 def test_parse_and_validate_repo_example() -> None:
     content = EXAMPLE.read_bytes()
     report = dtcs.parse_and_validate(content, "yaml")

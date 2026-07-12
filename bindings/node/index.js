@@ -13,7 +13,7 @@ import { dirname, join } from "node:path";
 const require = createRequire(import.meta.url);
 const wasmPath = require.resolve("@eddiethedean/dtcs-wasm/pkg/dtcs_wasm_bg.wasm");
 const wasmBytes = readFileSync(wasmPath);
-initSync(wasmBytes);
+initSync({ module: wasmBytes });
 
 export { conformanceDeclare, parseDocument, specVersion, validateContract };
 

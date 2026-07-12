@@ -15,7 +15,7 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.10.0` — validation, analysis, registries, standard libraries, plan lowering, optimization, capability matching, compilation, reference runtime, and conformance certification |
+| **Reference implementation** | `0.10.1` — validation, analysis, registries, standard libraries, plan lowering, optimization, capability matching, compilation, reference runtime, and conformance certification |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
@@ -155,6 +155,10 @@ Production ETL orchestration and external engine backends remain out of scope. S
 | [python/](python/) | Python package source (`dtcs` on PyPI) |
 | [tests/](tests/) | Integration tests and fixtures |
 | [ROADMAP.md](ROADMAP.md) | Reference implementation milestones |
+
+## Testing
+
+Integration tests, fixture manifests, and conformance cases are documented in [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md). The embedded standard library exercises a **starter catalog** of semantic actions, functions, and rules (SPEC Ch 17–19); it is not an exhaustive stdlib conformance proof. See [test-verification-report.md](docs/implementation/test-verification-report.md) for current suite confidence.
 
 ## Contributing
 

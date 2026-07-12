@@ -1,7 +1,7 @@
 {
   "target": {
     "engineId": "dtcs:reference",
-    "engineVersion": "0.10.0",
+    "engineVersion": "0.10.1",
     "capabilityVersion": "1.0.0"
   },
   "identity": {

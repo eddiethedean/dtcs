@@ -1,129 +1,93 @@
 # DTCS Test Suite Verification Report
 
 Date: 2026-07-12  
-Scope: P0 + P1 (attached plan)
+Scope: P0 + P1 + P2 + P3 (finish plan)
 
 ## Executive Summary
 
-**Overall confidence: Moderate**
+**Overall confidence: High**
 
-The suite now validates behavior against SPEC-derived expectations in the highest-risk areas: exact diagnostic multisets, optimizer runtime preservation, runtime failure codes, YAML↔JSON equivalence, expanded conformance coverage, and analysis/runtime negative paths. Confidence is not **High** because plan goldens (40+) and optimize goldens remain implementation-dumped change detectors, Node/WASM binding coverage is still thin, and full Ch 17–19 stdlib catalog honesty is documented but not exhaustively proven.
+The suite now validates behavior against SPEC-derived expectations across diagnostics, optimizer runtime preservation, plan structural/behavioral oracles, runtime failure codes, YAML↔JSON equivalence (4 pairs), determinism double-run, expanded conformance coverage (20 cases + `RuntimeInvalid`), capability compile negatives, binding validate/diagnostic parity, and an automated `no-network-surface` security probe. Mutation testing runs in a non-blocking CI job.
 
 Verification commands executed successfully:
 
-- `cargo fmt --all -- --check` (after auto-format)
+- `cargo fmt --all -- --check`
 - `cargo clippy --all-targets -- -D warnings`
-- `cargo test --locked` (207 integration + 8 unit tests)
-- `pytest python/tests -v` (220 passed)
+- `cargo test --locked`
+- `pytest python/tests -v` (232 passed)
+- `bindings/wasm` and `bindings/node` smoke tests (`npm test`)
 - `./scripts/check-docs.sh`
 
 ---
 
-## Incorrect Tests
+## P0+P1 (landed in `768b09d`)
 
-No tests were found that **asserted wrong SPEC behavior**. The primary issue was **under-specified oracles** (subset diagnostic checks, vacuous `transforms_min`, circular `equivalent()` as sole optimizer proof) that allowed incorrect implementations to pass.
-
-**Shared hallucination surfaced:** 56/67 invalid fixtures listed only a primary diagnostic code while the validator correctly emitted cascaded codes (`dtcs:ambiguous-reference`, `dtcs:missing-lineage`, etc.). Tests and expectations agreed on the subset but both understated real behavior.
+Exact diagnostic multisets, optimizer runtime I/O parity, runtime failure integration tests, initial YAML↔JSON pair, conformance expansion, and Python mirror updates. See git history for full file list.
 
 ---
 
-## Weak Tests (addressed)
+## P2 Additions
 
-| Area | Weakness | Fix |
-|------|----------|-----|
-| `fixture_expectations.json` + manifest | Code subset checks | Exact sorted multiset for all 68 invalid fixtures |
-| `optimize_expectations.json` | `transforms_min: 1`, goldens as oracle | Runtime I/O before/after optimize; expected output for fusion |
-| `phase_0_8` | `equivalent()` only | `execute_plan` on original vs optimized for all 8 fixtures |
-| `phase_0_9` | `is_err()` without messages | Error substring checks; exact runtime codes |
-| `phase_0_6` | 2 analysis tests | 5 tests with finding kinds / exact codes |
-| `phase_0_10` / conformance | Non-empty report only | Per-case IDs + all 5 security probes |
-| `mvp` CLI | `contains("valid")` | `--json` with `valid` + no error-severity diagnostics |
-| Python mirror | Subset codes, weak optimize | Exact multiset + runtime I/O equivalence |
+| Area | Change |
+|------|--------|
+| Plan goldens | Exact plan-failure codes (3 fixtures); structural invariants for all 40 valid goldens; behavioral oracles (runtime I/O, lineage counts, rule steps, node ids) on 10+ fixtures |
+| Format equivalence | 4 YAML/JSON pairs through validate/plan/optimize (`format_equivalence.rs` + Python parametrized tests) |
+| Determinism | `deterministic_double_run.yaml` double-run byte-equal outputs; `impure_side_effects_invalid.yaml` analysis finding |
+| Conformance | `RuntimeInvalid` assertion kind; `runtime-precondition-fail`, `runtime-postcondition-fail`, `runtime-deterministic-double-run`, `optimize-equivalent-action-fusion` |
+| Capability | Manifest-driven unsupported-action negative (`mutate_unsupported_action`) |
+| Phase dedup | Consolidated manifest exact-code tests in `phase_0_2`, `phase_0_3`, `phase_0_4` |
 
----
-
-## Tests Rewritten
-
-1. **`tests/manifest.rs`** — exact diagnostic multiset via `tests/common/mod.rs`
-2. **`tests/optimize_expectations.json` + `phase_0_8.rs`** — runtime inputs per fixture; adversarial fusion output assertion
-3. **`tests/phase_0_6.rs`** — full analysis fixture matrix
-4. **`tests/phase_0_9.rs`** — runtime pre/post/invalid-input integration; lineage chain; CLI JSON run
-5. **`tests/phase_0_10.rs`** — individual conformance case assertions
-6. **`python/tests/test_dtcs.py`** — exact codes + optimize runtime parity
-7. **`tests/mvp.rs`** — validate CLI JSON assertions
-8. **`src/conformance/runner.rs`** — exact multiset for `validateInvalid`
+Plan goldens remain byte-identical change detectors; structural invariants and behavioral oracles are the independent semantic layer (same pattern as optimize goldens in `phase_0_8`).
 
 ---
 
-## Tests Added
+## P3 Additions
 
-| Test / fixture | Why it increases confidence |
-|----------------|----------------------------|
-| `tests/format_equivalence.rs` | SPEC Ch 3: YAML↔JSON COM/plan/optimize parity |
-| `runtime_precondition_fail.yaml` + test | Exact `dtcs:precondition-violation` |
-| `runtime_postcondition_fail.yaml` + test | Exact `dtcs:postcondition-violation` |
-| `invalid_metadata_policy_uri.yaml` | Audit leftover: invalid governance policy URI |
-| `valid_minimal.yaml` | Paired with JSON for format equivalence |
-| Optimize runtime inputs (8 JSON files) | Independent optimizer oracle via execution |
-| `optimize_action_fusion_preserves_lowercasing_behavior` | Adversarial: broken fusion would leave uppercase email |
-| Conformance: invalid type, policy URI, field-write runtime, security probes | Broader Ch 23–24 coverage |
-| `compile_rejects_cyclic_plan_with_exact_diagnostics` | Exact `dtcs:cyclic-dependency` |
-| `lineage_preserved_through_optimize_compile_and_run` | Ch 10 lineage through pipeline |
-| `bindings/node/test/smoke.test.mjs` | Restores broken Node test script |
-
----
-
-## Tests Removed
-
-None. Redundant subset checks were **tightened**, not deleted, to preserve fixture coverage while strengthening oracles.
-
----
-
-## Missing Coverage (highest priority remaining)
-
-1. **Plan goldens (40 files)** — still byte-identical to implementation output; need SPEC-derived spot audits or property tests
-2. **Determinism/purity declared semantics** — no fixtures with `deterministic:` / `pure:` flags + double-run checks
-3. **Full Ch 17–19 stdlib** — starter set only; do not claim full catalog conformance
-4. **WASM/Node depth** — smoke tests only; no plan/optimize/run binding parity
-5. **Mutation testing** — no automated mutator in CI
-6. **`no-network-surface` probe** — still a hardcoded pass (documented manual review)
-
----
-
-## AI Failure Patterns Found
-
-| Pattern | Evidence | Mitigation applied |
-|---------|----------|-------------------|
-| Shared hallucination | Diagnostic subsets matched incomplete expectations | Exact multisets from independent CLI oracle pass |
-| Circular validation | `equivalent()` + dumped optimize goldens | Runtime I/O equivalence layer |
-| Assertion weakness | `transforms_min: 1`, `contains("valid")`, `is_err()` | Structured JSON + exact codes |
-| Copy-paste manifests | Rust/Python subset mirrors | Both updated to exact multiset |
-| False confidence | Profile fan-out on 11 conformance cases | 17 cases + per-id assertions |
-| Thin negative runtime | Codes existed, no integration tests | 3 runtime failure integration tests |
+| Area | Change |
+|------|--------|
+| Bindings | WASM + Node smoke: `validateContract`, exact `missing_lineage` codes, 8 conformance profiles; wired in CI |
+| Security | `no-network-surface` scans `src/runtime`, `src/validation`, `src/parser`, `src/conformance` for forbidden network imports |
+| Mutation | `.github/workflows/mutation.yml` — scoped `cargo-mutants` on validation/optimize/runtime (non-blocking) |
 
 ---
 
 ## Confidence Assessment
 
-| Layer | Before | After |
-|-------|--------|-------|
-| Validation diagnostics | Low (subset) | **Moderate–High** (exact multiset) |
-| Optimizer semantics | Low (circular) | **Moderate** (runtime I/O + fusion adversarial) |
-| Runtime failures | Low | **Moderate** (3 exact-code integration tests) |
-| Format equivalence | None | **Moderate** (minimal YAML/JSON pair) |
-| Conformance | Low (smoke) | **Moderate** (17 cases, security probes wired) |
-| Analysis | Low (2 tests) | **Moderate** (5 fixture-level tests) |
-| Overall | Low–Moderate | **Moderate** |
+| Layer | Rating |
+|-------|--------|
+| Validation diagnostics | **High** (exact multiset, manifest-driven) |
+| Optimizer semantics | **High** (runtime I/O on all 8 fixtures + adversarial fusion) |
+| Plan semantics | **High** (invariants + 10+ behavioral oracles; goldens as change detectors) |
+| Runtime failures | **High** (integration + conformance `RuntimeInvalid`) |
+| Format equivalence | **High** (4 pairs, Rust + Python) |
+| Conformance | **High** (20 cases, per-id assertions, security probes automated) |
+| Analysis / determinism | **Moderate–High** (impure analysis; double-run fixture) |
+| Bindings | **Moderate** (validate + diagnostic smoke; not full plan/optimize/run parity) |
+| Stdlib catalog | **Moderate** (starter catalog only — see README) |
+| **Overall** | **High** |
 
-The suite would now fail if: extra wrong diagnostics appear, optimize changes runtime output, pre/postconditions stop enforcing, invalid policy URIs validate, or conformance cases regress individually.
+The suite would now fail if: diagnostic multisets drift, optimize changes runtime output, plan invariants break, pre/postconditions stop enforcing, format pairs diverge, conformance cases regress, bindings lose validate/diagnostic parity, or network client code appears in core paths.
 
 ---
 
-## Files touched (summary)
+## Remaining gaps (documented, not blocking High)
 
-- `tests/fixture_expectations.json` — exact codes for all invalid fixtures
-- `tests/common/mod.rs`, `tests/manifest.rs`, `tests/format_equivalence.rs`
-- `tests/phase_0_{6,8,9,10}.rs`, `tests/mvp.rs`
-- `tests/optimize_expectations.json`, `tests/conformance/manifest.json`, `src/conformance/manifest.json`, `src/conformance/runner.rs`
-- New fixtures: policy URI, runtime failures, valid_minimal.yaml, optimize runtime I/O
-- `python/tests/test_dtcs.py`, `bindings/node/test/smoke.test.mjs`
+1. **Full Ch 17–19 stdlib** — starter catalog only; ROADMAP/README state this explicitly
+2. **Binding depth** — smoke parity only; no plan/optimize/run through WASM/Node
+3. **Mutation gate** — job is informational until mutant kill rate stabilizes
+4. **Phase-specific subset checks** — some remain where they assert extra behavior (message substrings, registry merge logic) beyond manifest codes
+
+---
+
+## Key files
+
+- `tests/plan_expectations.json`, `tests/phase_0_7.rs` — plan oracles
+- `tests/format_equivalence.rs`, `python/tests/test_dtcs.py` — format pairs
+- `tests/determinism.rs` — double-run + impure analysis
+- `tests/conformance/manifest.json`, `src/conformance/model.rs`, `src/conformance/runner.rs` — `RuntimeInvalid`
+- `tests/capability_expectations.json`, `tests/phase_0_9.rs` — capability negative
+- `src/conformance/security.rs` — automated network probe
+- `bindings/wasm/test/smoke.test.mjs`, `bindings/node/test/smoke.test.mjs`
+- `.github/workflows/mutation.yml`, `.github/workflows/checks.yml`
+
+See also [testing-plan.md](testing-plan.md) for how to add tests.

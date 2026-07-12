@@ -3,7 +3,9 @@
     {
       "file": "valid_customer.yaml",
       "plan_valid": true,
-      "golden": "plans/valid_customer.plan.json"
+      "golden": "plans/valid_customer.plan.json",
+      "runtime_input": "runtime/customer_normalize_input.json",
+      "expected_output": "runtime/customer_normalize_output.json"
     },
     {
       "file": "valid_minimal.json",
@@ -28,7 +30,8 @@
     {
       "file": "input_precondition.yaml",
       "plan_valid": true,
-      "golden": "plans/input_precondition.plan.json"
+      "golden": "plans/input_precondition.plan.json",
+      "expect_precondition_rule_steps": true
     },
     {
       "file": "map_type_valid.yaml",
@@ -64,7 +67,8 @@
       "file": "analysis_duplicate_action_target.yaml",
       "plan_valid": false,
       "codes": [
-        "dtcs:invalid-plan"
+        "dtcs:invalid-plan",
+        "dtcs:invalid-semantics"
       ]
     },
     {
@@ -80,7 +84,8 @@
     {
       "file": "expression_precedence_multiply.yaml",
       "plan_valid": true,
-      "golden": "plans/expression_precedence_multiply.plan.json"
+      "golden": "plans/expression_precedence_multiply.plan.json",
+      "expect_node_id": "sum_then_multiply"
     },
     {
       "file": "expression_precedence_compare.yaml",
@@ -95,7 +100,8 @@
     {
       "file": "lineage_multi.yaml",
       "plan_valid": true,
-      "golden": "plans/lineage_multi.plan.json"
+      "golden": "plans/lineage_multi.plan.json",
+      "expect_lineage_mappings": 2
     },
     {
       "file": "stdlib_action_uppercase_valid.yaml",
@@ -110,7 +116,8 @@
     {
       "file": "stdlib_action_trim_valid.yaml",
       "plan_valid": true,
-      "golden": "plans/stdlib_action_trim_valid.plan.json"
+      "golden": "plans/stdlib_action_trim_valid.plan.json",
+      "expect_semantic_action_id": "trim_text"
     },
     {
       "file": "stdlib_action_normalize_whitespace_valid.yaml",
@@ -195,29 +202,37 @@
     {
       "file": "plan_explicit_ordering.yaml",
       "plan_valid": true,
-      "golden": "plans/plan_explicit_ordering.plan.json"
+      "golden": "plans/plan_explicit_ordering.plan.json",
+      "expect_semantic_action_id": "trim_value"
     },
     {
       "file": "plan_field_write_chain.yaml",
       "plan_valid": true,
-      "golden": "plans/plan_field_write_chain.plan.json"
+      "golden": "plans/plan_field_write_chain.plan.json",
+      "runtime_input": "runtime/plan_field_write_chain_input.json",
+      "expected_output": "runtime/plan_field_write_chain_output.json"
     },
     {
       "file": "plan_rule_phase_scoped.yaml",
       "plan_valid": true,
-      "golden": "plans/plan_rule_phase_scoped.plan.json"
+      "golden": "plans/plan_rule_phase_scoped.plan.json",
+      "expect_node_id": "pre_a"
     },
     {
       "file": "plan_incomplete_explicit_order.yaml",
       "plan_valid": false,
       "codes": [
-        "dtcs:invalid-plan"
+        "dtcs:invalid-plan",
+        "dtcs:invalid-semantics"
       ]
     },
     {
       "file": "plan_unknown_order_id.yaml",
       "plan_valid": false,
       "codes": [
+        "dtcs:invalid-plan",
+        "dtcs:invalid-semantics",
+        "dtcs:invalid-semantics",
         "dtcs:unresolved-plan-reference"
       ]
     }

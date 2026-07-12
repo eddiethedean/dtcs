@@ -1,4 +1,9 @@
 //! Phase 0.3 integration tests — compatibility, evolution, versioning, lineage analysis.
+//!
+//! Exact invalid diagnostic codes for shared fixtures are enforced by
+//! `tests/manifest.rs` and `phase_0_3_invalid_fixture_codes_match_manifest`.
+
+mod common;
 
 use std::fs;
 use std::path::PathBuf;
@@ -7,6 +12,8 @@ use dtcs::{
     analyze_compatibility, analyze_evolution, codes, parse, ComparisonScope, CompatibilityLevel,
     DocumentFormat,
 };
+
+use common::assert_fixture_validation_codes;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -226,4 +233,13 @@ fn lineage_warns_when_declared_input_has_no_graph_edge() {
     assert!(report.diagnostics.iter().any(|d| {
         d.id == codes::UNRESOLVED_REFERENCE && d.message.contains("has no lineage graph edge")
     }));
+}
+
+#[test]
+fn phase_0_3_invalid_fixture_codes_match_manifest() {
+    const FIXTURES: &[&str] = &["invalid_version.yaml", "version_conflict.yaml"];
+    for file in FIXTURES {
+        let contract = load_contract(&fixture(file));
+        assert_fixture_validation_codes(file, &contract.validate().diagnostics);
+    }
 }

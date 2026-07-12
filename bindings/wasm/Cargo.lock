@@ -108,7 +108,7 @@ dependencies = [
 
 [[package]]
 name = "dtcs"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "indexmap",
  "miette",
@@ -122,7 +122,7 @@ dependencies = [
 
 [[package]]
 name = "dtcs-wasm"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "dtcs",
  "serde",

@@ -1,0 +1,28 @@
+dtcsVersion: "1.0.0"
+id: "impure.side.effects.invalid"
+name: "Impure without side effects"
+version: "0.1.0"
+
+semantics:
+  pure: false
+
+inputs:
+  - id: "in"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "out"
+    schema:
+      fields:
+        - name: "value"
+          type: "string"
+          nullable: false
+
+lineage:
+  mappings:
+    - output: "out"
+      inputs: ["in"]

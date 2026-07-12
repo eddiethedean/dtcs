@@ -1,4 +1,9 @@
 //! Phase 0.4 — Registries & Extensibility integration tests.
+//!
+//! Exact invalid diagnostic codes for shared fixtures are enforced by
+//! `tests/manifest.rs` and `phase_0_4_invalid_fixture_codes_match_manifest`.
+
+mod common;
 
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -9,6 +14,8 @@ use dtcs::{
     default_registry, load_registry, parse, parse_and_validate, resolve_registry, validate,
     validate_with_registry, DocumentFormat, ExtensionCompatibility, RegistryCategory,
 };
+
+use common::assert_fixture_validation_codes;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -428,4 +435,15 @@ fn integer_parameter_accepts_valid_u64() {
         .insert("min".into(), serde_json::json!(42u64));
     let report = validate(&contract);
     assert!(report.is_valid(), "{:?}", report.diagnostics);
+}
+
+#[test]
+fn phase_0_4_invalid_fixture_codes_match_manifest() {
+    const FIXTURES: &[&str] = &["invalid_semantic_action.yaml", "invalid_rule.yaml"];
+    for file in FIXTURES {
+        let contract = parse(&read(&fixture(file)), DocumentFormat::Yaml)
+            .into_contract()
+            .expect("contract");
+        assert_fixture_validation_codes(file, &contract.validate().diagnostics);
+    }
 }

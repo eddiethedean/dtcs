@@ -1,0 +1,32 @@
+name: Mutation testing
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  cargo-mutants:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-mutants-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install cargo-mutants
+        run: cargo install cargo-mutants --locked
+      - name: Run scoped mutation tests
+        run: |
+          cargo mutants --no-shuffle \
+            --file src/validation \
+            --file src/plan/optimize \
+            --file src/runtime/reference.rs \
+            --timeout 120

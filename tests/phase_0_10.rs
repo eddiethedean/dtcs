@@ -68,6 +68,10 @@ fn conformance_manifest_cases_pass_individually() {
         "validate-invalid-type",
         "validate-invalid-policy-uri",
         "runtime-field-write-chain",
+        "runtime-deterministic-double-run",
+        "runtime-precondition-fail",
+        "runtime-postcondition-fail",
+        "optimize-equivalent-action-fusion",
         "security-diagnostics-stability",
         "security-trusted-extensions",
     ];

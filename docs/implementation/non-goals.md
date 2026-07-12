@@ -10,7 +10,7 @@ Do not implement these yet:
 
 The reference crate should remain a correct spec core based on [`SPEC.md`](../../SPEC.md).
 
-## In scope through 0.10.0
+## In scope through 0.10.1
 
 - Parse YAML and JSON into the Canonical Object Model
 - Seven-phase validation with structured diagnostics

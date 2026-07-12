@@ -345,6 +345,67 @@ fn run_test_case(
                 )
             }
         }
+        ConformanceAssertion::RuntimeInvalid { input, codes } => {
+            let plan = match load_plan(&content, format) {
+                Ok(plan) => plan,
+                Err(message) => {
+                    return fail_result(test.id.clone(), profile_id, message);
+                }
+            };
+            let compile_result = compile::compile(&plan);
+            let Some(execution_plan) = compile_result.plan else {
+                return fail_result(
+                    test.id.clone(),
+                    profile_id,
+                    format!("compile failed: {:?}", compile_result.diagnostics),
+                );
+            };
+            let input_path = fixtures_dir.join(input);
+            let inputs: RuntimeInputs = match std::fs::read_to_string(&input_path)
+                .map_err(|e| e.to_string())
+                .and_then(|text| serde_json::from_str(&text).map_err(|e| e.to_string()))
+            {
+                Ok(inputs) => inputs,
+                Err(message) => {
+                    return fail_result(
+                        test.id.clone(),
+                        profile_id,
+                        format!("read runtime input: {message}"),
+                    );
+                }
+            };
+            let execute_result = execute(&execution_plan, &inputs);
+            if execute_result.is_valid() {
+                return fail_result(
+                    test.id.clone(),
+                    profile_id,
+                    format!("expected runtime failure: {:?}", execute_result.outputs),
+                );
+            }
+            if codes.is_empty() {
+                pass_result(test.id.clone(), profile_id)
+            } else {
+                let mut actual: Vec<String> = execute_result
+                    .diagnostics
+                    .iter()
+                    .map(|d| d.id.clone())
+                    .collect();
+                actual.sort();
+                let mut expected = codes.clone();
+                expected.sort();
+                if actual == expected {
+                    pass_result(test.id.clone(), profile_id)
+                } else {
+                    fail_result(
+                        test.id.clone(),
+                        profile_id,
+                        format!(
+                            "runtime diagnostic mismatch: expected {expected:?}, got {actual:?}"
+                        ),
+                    )
+                }
+            }
+        }
         ConformanceAssertion::SecurityProbe { .. } => unreachable!("handled above"),
     }
 }
