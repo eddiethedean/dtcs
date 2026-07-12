@@ -284,9 +284,19 @@ jobs:
         working-directory: bindings/wasm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "NPM_TOKEN not configured; skipping npm publish"
+            exit 0
+          fi
+          npm publish --access public
       - name: Publish Node npm package
         working-directory: bindings/node
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --access public
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "NPM_TOKEN not configured; skipping npm publish"
+            exit 0
+          fi
+          npm publish --access public
