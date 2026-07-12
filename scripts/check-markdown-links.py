@@ -16,7 +16,10 @@ def main() -> int:
     errors: list[str] = []
 
     for md in sorted(ROOT.rglob("*.md")):
-        if any(part in {".git", "target", ".venv"} for part in md.parts):
+        if any(
+            part in {".git", "target", ".venv", "node_modules", "pkg"}
+            for part in md.parts
+        ):
             continue
 
         text = md.read_text(encoding="utf-8")

@@ -58,6 +58,8 @@ jobs:
         run: |
           cargo test --test phase_0_10 --locked
           cargo run --bin dtcs -- conformance run --profile all
+      - name: documentation
+        run: ./scripts/check-docs.sh
       - name: wasm build
         run: |
           rustup target add wasm32-unknown-unknown
@@ -76,5 +78,3 @@ jobs:
         run: cargo build --locked --all-targets
       - name: cargo publish (dry run)
         run: cargo publish --dry-run --locked --allow-dirty
-      - name: documentation
-        run: ./scripts/check-docs.sh

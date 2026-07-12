@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "v*.*.*"
+  workflow_dispatch:
 
 env:
   CARGO_TERM_COLOR: always
@@ -269,9 +270,7 @@ jobs:
   publish-npm:
     needs: build-wasm
     runs-on: ubuntu-latest
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-    if: ${{ env.NPM_TOKEN != '' }}
+    if: ${{ secrets.NPM_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
