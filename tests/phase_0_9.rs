@@ -481,8 +481,12 @@ fn runtime_builtin_functions_and_rules() {
         rule: "dtcs:not_null".into(),
         target: "in.value".into(),
         phase: dtcs::RulePhase::Postcondition,
+        scope: None,
+        allow_indeterminate: false,
+        deterministic: true,
         parameters: Default::default(),
         metadata: None,
+        extensions: Default::default(),
     };
     evaluate_rule(
         &not_null,
@@ -497,8 +501,12 @@ fn runtime_builtin_functions_and_rules() {
         rule: "dtcs:min_length".into(),
         target: "in.value".into(),
         phase: dtcs::RulePhase::Postcondition,
+        scope: None,
+        allow_indeterminate: false,
+        deterministic: true,
         parameters: indexmap::indexmap! { "min".into() => serde_json::json!(3) },
         metadata: None,
+        extensions: Default::default(),
     };
     evaluate_rule(
         &min_length,
@@ -518,8 +526,12 @@ fn runtime_builtin_functions_and_rules() {
         rule: "dtcs:max_length".into(),
         target: "in.value".into(),
         phase: dtcs::RulePhase::Postcondition,
+        scope: None,
+        allow_indeterminate: false,
+        deterministic: true,
         parameters: indexmap::indexmap! { "max".into() => serde_json::json!(5) },
         metadata: None,
+        extensions: Default::default(),
     };
     evaluate_rule(
         &max_length,
@@ -539,11 +551,15 @@ fn runtime_builtin_functions_and_rules() {
         rule: "dtcs:range".into(),
         target: "in.value".into(),
         phase: dtcs::RulePhase::Postcondition,
+        scope: None,
+        allow_indeterminate: false,
+        deterministic: true,
         parameters: indexmap::indexmap! {
             "min".into() => serde_json::json!(1),
             "max".into() => serde_json::json!(10),
         },
         metadata: None,
+        extensions: Default::default(),
     };
     evaluate_rule(&range, &RuntimeValue::Integer(5), &range.parameters).expect("range passes");
     assert!(evaluate_rule(&range, &RuntimeValue::Integer(11), &range.parameters).is_err());
@@ -553,8 +569,12 @@ fn runtime_builtin_functions_and_rules() {
         rule: "dtcs:regex_match".into(),
         target: "in.value".into(),
         phase: dtcs::RulePhase::Postcondition,
+        scope: None,
+        allow_indeterminate: false,
+        deterministic: true,
         parameters: indexmap::indexmap! { "pattern".into() => serde_json::json!("^[a-z]+$") },
         metadata: None,
+        extensions: Default::default(),
     };
     evaluate_rule(
         &regex_match,

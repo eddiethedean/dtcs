@@ -16,6 +16,71 @@ pub(crate) fn validate_extensions(
     registry: &RegistryDocument,
 ) {
     validate_extension_keys(ctx, contract, registry);
+    for action in &contract.semantic_actions {
+        validate_nested_extensions(
+            ctx,
+            registry,
+            &action.extensions,
+            &format!("semanticActions.{}", action.id),
+        );
+    }
+    for function in &contract.functions {
+        validate_nested_extensions(
+            ctx,
+            registry,
+            &function.extensions,
+            &format!("functions.{}", function.id),
+        );
+    }
+    for expression in &contract.expressions {
+        validate_nested_extensions(
+            ctx,
+            registry,
+            &expression.extensions,
+            &format!("expressions.{}", expression.id),
+        );
+    }
+    for rule in &contract.rules {
+        validate_nested_extensions(
+            ctx,
+            registry,
+            &rule.extensions,
+            &format!("rules.{}", rule.id),
+        );
+    }
+}
+
+fn validate_nested_extensions(
+    ctx: &mut ValidationContext,
+    registry: &RegistryDocument,
+    extensions: &indexmap::IndexMap<String, serde_json::Value>,
+    object_ref_prefix: &str,
+) {
+    for key in extensions.keys() {
+        if !is_namespaced_identifier(key) {
+            ctx.error(
+                codes::UNKNOWN_FIELD,
+                DiagnosticCategory::Structure,
+                format!("unknown field '{key}' on {object_ref_prefix}"),
+                Some(&format!("{object_ref_prefix}.{key}")),
+                Some("Use vendor:fieldName for nested extensions"),
+            );
+            continue;
+        }
+        if !is_vendor_namespaced_identifier(key) {
+            ctx.error(
+                codes::INVALID_EXTENSION,
+                DiagnosticCategory::Structure,
+                format!("extension key '{key}' must use a vendor namespace"),
+                Some(&format!("{object_ref_prefix}.{key}")),
+                Some("Use vendor:fieldName for nested extensions; dtcs: is reserved"),
+            );
+            continue;
+        }
+        if let Some(entry) = registry::resolve(registry, key) {
+            check_mandatory_support(ctx, key, entry);
+        }
+    }
 }
 
 /// Validates extension and unknown top-level fields captured by serde flatten.

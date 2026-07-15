@@ -83,14 +83,18 @@
         "output": "customer_summary",
         "inputs": [
           "customers"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       },
       {
         "output": "order_enriched",
         "inputs": [
           "orders",
           "customers"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

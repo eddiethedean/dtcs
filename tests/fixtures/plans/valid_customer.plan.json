@@ -90,7 +90,9 @@
         "output": "customer_clean",
         "inputs": [
           "customer_raw"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

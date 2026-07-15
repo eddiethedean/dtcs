@@ -8,8 +8,24 @@ use indexmap::IndexMap;
 use regex::Regex;
 use serde_json::Value;
 
-use crate::model::Rule;
-use crate::runtime::model::{parse_qualified_field_with_interfaces, RuntimeValue};
+use crate::model::{Rule, RuleOutcome};
+use crate::runtime::model::{
+    lookup_field, parse_qualified_field_with_interfaces, FieldLookup, RuntimeValue,
+};
+
+/// Evaluate a rule against a workspace value, returning a typed outcome.
+pub fn evaluate_rule_outcome(
+    rule: &Rule,
+    value: &RuntimeValue,
+    parameters: &IndexMap<String, Value>,
+) -> Result<RuleOutcome, String> {
+    match evaluate_rule(rule, value, parameters) {
+        Ok(()) => Ok(RuleOutcome::Satisfied),
+        Err(message) if message.contains("indeterminate") => Ok(RuleOutcome::Indeterminate),
+        Err(message) if message.contains("violated") => Ok(RuleOutcome::Violated),
+        Err(message) => Err(message),
+    }
+}
 
 /// Evaluate a rule against a workspace value.
 pub fn evaluate_rule(
@@ -21,6 +37,9 @@ pub fn evaluate_rule(
         "dtcs:not_null" => {
             if value.is_null() {
                 return Err(format!("rule '{}' violated: value is null", rule.id));
+            }
+            if value.is_invalid() {
+                return Err(format!("rule '{}' violated: value is invalid", rule.id));
             }
             Ok(())
         }
@@ -86,6 +105,41 @@ pub fn evaluate_rule(
                     check_range(&rule.id, *v as i64, min, max)
                 }
                 other => Err(format!("dtcs:range requires numeric value, got {other:?}")),
+            }
+        }
+        "dtcs:one_of" => {
+            let values = parameters
+                .get("values")
+                .and_then(Value::as_array)
+                .ok_or_else(|| "missing values parameter".to_string())?;
+            match value {
+                RuntimeValue::Null => Err(format!("rule '{}' violated: value is null", rule.id)),
+                RuntimeValue::String(s) => {
+                    if values.iter().any(|v| v.as_str() == Some(s.as_str())) {
+                        Ok(())
+                    } else {
+                        Err(format!(
+                            "rule '{}' violated: value not in allowed set",
+                            rule.id
+                        ))
+                    }
+                }
+                other => Err(format!("dtcs:one_of requires string, got {other:?}")),
+            }
+        }
+        "dtcs:equals" => {
+            let expected = param_string(parameters, "value")?;
+            match value {
+                RuntimeValue::Null if rule.allow_indeterminate => {
+                    Err(format!("rule '{}' indeterminate: value is null", rule.id))
+                }
+                RuntimeValue::Null => Err(format!("rule '{}' violated: value is null", rule.id)),
+                RuntimeValue::String(s) if s == &expected => Ok(()),
+                RuntimeValue::String(_) => Err(format!(
+                    "rule '{}' violated: value does not equal expected",
+                    rule.id
+                )),
+                other => Err(format!("dtcs:equals requires string, got {other:?}")),
             }
         }
         other => Err(format!("unsupported rule '{other}'")),
@@ -162,10 +216,11 @@ pub fn resolve_target(
     let row = rows
         .get(row_index)
         .ok_or_else(|| format!("row index {row_index} out of range"))?;
-    row.get(&qualified.field_name).cloned().ok_or_else(|| {
-        format!(
+    match lookup_field(row, &qualified.field_name) {
+        FieldLookup::Missing => Err(format!(
             "missing field '{}' on interface '{}'",
             qualified.field_name, qualified.interface_id
-        )
-    })
+        )),
+        FieldLookup::Present(value) => Ok(value),
+    }
 }

@@ -9,39 +9,109 @@ entries:
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":false}
+      {"kind":"semanticAction","category":"transformation","targetType":"string","targetNullableAllowed":false,"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"reject"}
   dtcs:capitalize:
     name: "Capitalize"
     category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+      {"kind":"semanticAction","category":"transformation","targetType":"string","targetNullableAllowed":true,"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"propagate"}
   dtcs:uppercase:
     name: "Uppercase"
     category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":false}
+      {"kind":"semanticAction","category":"transformation","targetType":"string","targetNullableAllowed":false,"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"reject"}
   dtcs:trim:
     name: "Trim"
     category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+      {"kind":"semanticAction","category":"transformation","targetType":"string","targetNullableAllowed":true,"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"propagate"}
   dtcs:hash_sha256:
     name: "Hash SHA-256"
     category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+      {"kind":"semanticAction","category":"transformation","targetType":"string","targetNullableAllowed":true,"deterministic":true,"lineageBehavior":"derive","nullBehavior":"propagate"}
   dtcs:normalize_whitespace:
     name: "Normalize Whitespace"
     category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","targetType":"string","targetNullableAllowed":true}
+      {"kind":"semanticAction","category":"transformation","targetType":"string","targetNullableAllowed":true,"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"propagate"}
+  dtcs:project:
+    name: "Project"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["fields"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
+  dtcs:select:
+    name: "Select"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"selection","targetKind":"dataset","parameters":["field","equals"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined"}
+  dtcs:filter:
+    name: "Filter"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"filtering","targetKind":"dataset","parameters":["field","equals"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined"}
+  dtcs:aggregate:
+    name: "Aggregate"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"aggregation","targetKind":"dataset","parameters":["groupBy","valueField","op"],"deterministic":true,"lineageBehavior":"aggregate","nullBehavior":"defined"}
+  dtcs:group:
+    name: "Group"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"grouping","targetKind":"dataset","parameters":["groupBy","valueField","op"],"deterministic":true,"lineageBehavior":"aggregate","nullBehavior":"defined"}
+  dtcs:join:
+    name: "Join"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"joining","targetKind":"dataset","parameters":["right","leftKey","rightKey"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+  dtcs:sort:
+    name: "Sort"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"sorting","targetKind":"dataset","parameters":["field","descending"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
+  dtcs:union:
+    name: "Union"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"union","targetKind":"dataset","parameters":["other"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+  dtcs:partition:
+    name: "Partition"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"partitioning","targetKind":"dataset","parameters":["field"],"deterministic":true,"lineageBehavior":"partition","nullBehavior":"defined"}
+  dtcs:derive:
+    name: "Derive"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"transformation","targetKind":"lineage","deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}

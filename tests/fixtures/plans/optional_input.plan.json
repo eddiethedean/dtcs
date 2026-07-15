@@ -67,7 +67,9 @@
         "inputs": [
           "required",
           "enrichment"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

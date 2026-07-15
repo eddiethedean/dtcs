@@ -60,6 +60,8 @@ pub fn plan_as_contract(plan: &TransformationPlan) -> crate::model::Transformati
         functions: plan.functions.clone(),
         rules,
         lineage: plan.lineage.clone(),
+        guarantees: None,
+        compatibility: None,
         versioning: plan.versioning.clone(),
         semantics: plan.guarantees.semantics.clone(),
         extensions: plan.extensions.clone(),

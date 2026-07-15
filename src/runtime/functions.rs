@@ -108,13 +108,20 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         "dtcs:to_string" => {
             let value = args.first().ok_or("dtcs:to_string requires one argument")?;
             Ok(RuntimeValue::String(match value {
-                RuntimeValue::Null => return Ok(RuntimeValue::Null),
-                RuntimeValue::String(s) => s.clone(),
+                RuntimeValue::Null | RuntimeValue::Missing(_) => return Ok(RuntimeValue::Null),
+                RuntimeValue::Invalid(_) => return Ok(RuntimeValue::Null),
+                RuntimeValue::String(s)
+                | RuntimeValue::Binary(s)
+                | RuntimeValue::Date(s)
+                | RuntimeValue::Time(s)
+                | RuntimeValue::DateTime(s)
+                | RuntimeValue::Duration(s) => s.clone(),
                 RuntimeValue::Boolean(b) => b.to_string(),
                 RuntimeValue::Integer(i) => i.to_string(),
                 RuntimeValue::Decimal(d) => d.to_string(),
-                RuntimeValue::Binary(b) => b.clone(),
-                other => return Err(format!("dtcs:to_string unsupported type {other:?}")),
+                RuntimeValue::List(_) | RuntimeValue::Map(_) => {
+                    return Err("dtcs:to_string unsupported for collections".into())
+                }
             }))
         }
         "dtcs:to_integer" => {
@@ -151,6 +158,68 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                     .map_err(|_| "dtcs:to_decimal parse failed".to_string()),
                 other => Err(format!("dtcs:to_decimal unsupported type {other:?}")),
             }
+        }
+        "dtcs:abs" => {
+            let value = args.first().ok_or("dtcs:abs requires one argument")?;
+            match value {
+                RuntimeValue::Null => Ok(RuntimeValue::Null),
+                RuntimeValue::Integer(i) => Ok(RuntimeValue::Integer(i.abs())),
+                RuntimeValue::Decimal(d) => Ok(RuntimeValue::Decimal(d.abs())),
+                other => Err(format!("dtcs:abs requires numeric, got {other:?}")),
+            }
+        }
+        "dtcs:min" => {
+            if args.len() < 2 {
+                return Err("dtcs:min requires at least two arguments".into());
+            }
+            let mut best: Option<f64> = None;
+            for arg in args {
+                if arg.is_null() {
+                    return Ok(RuntimeValue::Null);
+                }
+                let Some(v) = arg.as_decimal() else {
+                    return Err(format!("dtcs:min requires numeric, got {arg:?}"));
+                };
+                best = Some(best.map_or(v, |b| b.min(v)));
+            }
+            Ok(RuntimeValue::Decimal(best.unwrap()))
+        }
+        "dtcs:max" => {
+            if args.len() < 2 {
+                return Err("dtcs:max requires at least two arguments".into());
+            }
+            let mut best: Option<f64> = None;
+            for arg in args {
+                if arg.is_null() {
+                    return Ok(RuntimeValue::Null);
+                }
+                let Some(v) = arg.as_decimal() else {
+                    return Err(format!("dtcs:max requires numeric, got {arg:?}"));
+                };
+                best = Some(best.map_or(v, |b| b.max(v)));
+            }
+            Ok(RuntimeValue::Decimal(best.unwrap()))
+        }
+        "dtcs:contains" => {
+            let haystack = args.first().ok_or("dtcs:contains requires two arguments")?;
+            let needle = args.get(1).ok_or("dtcs:contains requires two arguments")?;
+            match (haystack, needle) {
+                (RuntimeValue::Null, _) | (_, RuntimeValue::Null) => Ok(RuntimeValue::Null),
+                (RuntimeValue::String(h), RuntimeValue::String(n)) => {
+                    Ok(RuntimeValue::Boolean(h.contains(n.as_str())))
+                }
+                _ => Err("dtcs:contains requires string arguments".into()),
+            }
+        }
+        "dtcs:is_null" => {
+            let value = args.first().ok_or("dtcs:is_null requires one argument")?;
+            Ok(RuntimeValue::Boolean(value.is_null()))
+        }
+        "dtcs:is_missing" => {
+            let value = args
+                .first()
+                .ok_or("dtcs:is_missing requires one argument")?;
+            Ok(RuntimeValue::Boolean(value.is_missing()))
         }
         other => Err(format!("unsupported function '{other}'")),
     }

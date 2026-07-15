@@ -10,7 +10,7 @@ Do not implement these yet:
 
 The reference crate should remain a correct spec core based on [`SPEC.md`](../../SPEC.md).
 
-## In scope through 0.10.1
+## In scope through 0.11.0
 
 - Parse YAML and JSON into the Canonical Object Model
 - Seven-phase validation with structured diagnostics
@@ -33,6 +33,7 @@ The reference crate should remain a correct spec core based on [`SPEC.md`](../..
 - Compilation to execution plans and reference in-memory runtime (Phase 0.9)
 - Conformance profiles, offline test suite, and security checklist automation (Phase 0.10)
 - WASM and Node bindings for parse, validate, and conformance declare (Phase 0.10)
+- SPEC completeness COM/runtime/stdlib deepening (Phase 0.11)
 - CLI (`validate`, `analyze`, `plan`, `optimize`, `match`, `compile`, `run`, `inspect`, `diagnostics`, `version`, `compat`, `evolve`, `lineage`, `registry`, `conformance`)
 - Python bindings via maturin
 

@@ -180,8 +180,13 @@ fn build_guarantees(contract: &TransformationContract) -> PlanGuarantees {
             });
         }
     }
+    let semantics = contract
+        .guarantees
+        .as_ref()
+        .and_then(|g| g.semantics.clone())
+        .or_else(|| contract.semantics.clone());
     PlanGuarantees {
-        semantics: contract.semantics.clone(),
+        semantics,
         input_preconditions,
         output_postconditions,
     }

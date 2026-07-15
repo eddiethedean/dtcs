@@ -1,7 +1,7 @@
 {
   "target": {
     "engineId": "dtcs:reference",
-    "engineVersion": "0.10.1",
+    "engineVersion": "0.11.0",
     "capabilityVersion": "1.0.0"
   },
   "identity": {
@@ -118,7 +118,9 @@
         "output": "out",
         "inputs": [
           "in"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   }

@@ -22,6 +22,7 @@ Do not implement multi-backend compilers or production ETL orchestration without
 ## Related documents
 
 - [project-goal.md](project-goal.md)
+- [spec-completeness.md](spec-completeness.md)
 - [architecture.md](architecture.md)
 - [crate-layout.md](crate-layout.md)
 - [public-api.md](public-api.md)

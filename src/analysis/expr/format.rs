@@ -83,5 +83,7 @@ fn binary_op_str(op: BinaryOp) -> &'static str {
         BinaryOp::Gte => ">=",
         BinaryOp::And => "&&",
         BinaryOp::Or => "||",
+        BinaryOp::In => "in",
+        BinaryOp::Contains => "contains",
     }
 }

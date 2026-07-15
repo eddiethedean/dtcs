@@ -54,7 +54,9 @@
         "output": "aggregated",
         "inputs": [
           "events"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

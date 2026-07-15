@@ -205,6 +205,7 @@ fn infer_binary_type(
         BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
             infer_arithmetic_type(op, left, right)
         }
+        BinaryOp::In | BinaryOp::Contains => Ok(LogicalType::Primitive("boolean".into())),
         BinaryOp::And | BinaryOp::Or => {
             let left_name = primitive_name(left)?;
             let right_name = primitive_name(right)?;

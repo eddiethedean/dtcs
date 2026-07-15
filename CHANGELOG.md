@@ -4,6 +4,7 @@
 
 | Version | Breaking or notable changes |
 |---------|----------------------------|
+| **0.11.0** | **Lineage:** mapping `operation` defaults to `dtcs:derive`; `flow` enum (`preserved`\|`derived`\|`aggregated`\|`filtered`\|`partitioned`\|`discarded`). **Actions:** SemanticAction `parameters` map required for dataset operators (`fields`, join keys, etc.). **COM:** first-class `guarantees` and `compatibility` fields; nested extension preservation. **Null semantics:** runtime distinguishes null vs missing (`{"$dtcs":"missing"}`) vs invalid (`{"$dtcs":"invalid", reason?}`). **Stdlib:** full Ch 17–19 catalog (dataset ops + `abs`/`min`/`max`/`contains`/`is_null`/`is_missing` + `one_of`/`equals`). |
 | **0.10.1** | Test suite verification (P2/P3): plan behavioral oracles, format equivalence, determinism, `RuntimeInvalid` conformance, binding smoke parity, automated security probe. |
 | **0.10.0** | Conformance profiles, `dtcs conformance` CLI, Python `conformance_*` APIs, WASM/Node bindings, `uv publish` migration. |
 | **0.9.0** | New `match`, `compile`, `run` CLI and Python APIs. `runtime_execute` returns `{outputs, diagnostics}` envelope. |
@@ -13,6 +14,26 @@
 | **0.2.0** | Extended validation (metadata, types, expressions, I/O interfaces). |
 
 For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/troubleshooting.md](docs/user/troubleshooting.md).
+
+## 0.11.0
+
+Phase 0.11 — SPEC Completeness (full Ch 17–19 catalog, COM deepening, normative Appendix A).
+
+### Features
+
+- Full standard-library catalog: dataset Semantic Actions (`project`, `select`, `filter`, `aggregate`, `group`, `join`, `sort`, `union`, `partition`, `derive`) plus field transforms; functions `abs`, `min`, `max`, `contains`, `is_null`, `is_missing`; rules `one_of`, `equals`.
+- SemanticAction `parameters` map threaded through validation, planning, compilation, and reference runtime.
+- Lineage mappings: optional `id`, `operation` (default `dtcs:derive`), `flow` enum.
+- Contract COM: `guarantees` and `compatibility` declaration fields; nested extension preservation.
+- Runtime null/missing/invalid value tokens; function `nullBehavior` (`propagate` / `defined`).
+- Expanded `dtcs:reference` capability profile covering the full catalog.
+- Normative [SPEC Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative); completeness matrix at [docs/implementation/spec-completeness.md](docs/implementation/spec-completeness.md).
+
+### Migration notes
+
+Contracts and fixtures that omit lineage `operation` now deserialize with `dtcs:derive`. Authors of dataset operators must supply the documented `parameters`. Consumers of runtime JSON must treat `{"$dtcs":"missing"}` and `{"$dtcs":"invalid"}` as distinct from JSON `null`.
+
+**Release:** push tag `v0.11.0` to publish to crates.io and PyPI (see [CONTRIBUTING.md](CONTRIBUTING.md#releasing)).
 
 ## 0.10.1
 

@@ -1,4 +1,4 @@
-//! Rule model.
+//! Rule model (SPEC Chapter 19).
 
 use std::fmt;
 
@@ -33,6 +33,55 @@ impl RulePhase {
     }
 }
 
+/// Rule evaluation scope (SPEC Chapter 19 §6).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum RuleScope {
+    /// Applies to the transformation contract.
+    Contract,
+    /// Applies to an input interface or field.
+    #[default]
+    Input,
+    /// Applies to an output interface or field.
+    Output,
+    /// Applies to an expression.
+    Expression,
+    /// Applies to a semantic action.
+    SemanticAction,
+    /// Applies to a transformation plan.
+    Plan,
+    /// Applies to an execution plan.
+    ExecutionPlan,
+}
+
+impl RuleScope {
+    /// Serialized scope name.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Contract => "contract",
+            Self::Input => "input",
+            Self::Output => "output",
+            Self::Expression => "expression",
+            Self::SemanticAction => "semanticAction",
+            Self::Plan => "plan",
+            Self::ExecutionPlan => "executionPlan",
+        }
+    }
+}
+
+/// Rule evaluation outcome (SPEC Chapter 19 §7).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum RuleOutcome {
+    /// Rule holds.
+    Satisfied,
+    /// Rule does not hold.
+    Violated,
+    /// Outcome cannot be determined (explicitly permitted).
+    Indeterminate,
+}
+
 /// A declarative invariant rule.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -45,6 +94,15 @@ pub struct Rule {
     pub target: String,
     /// Evaluation phase.
     pub phase: RulePhase,
+    /// Evaluation scope (SPEC Chapter 19 §6). Defaults from target when omitted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scope: Option<RuleScope>,
+    /// Whether indeterminate outcomes are permitted.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub allow_indeterminate: bool,
+    /// Whether the rule is deterministic. Defaults to true.
+    #[serde(default = "default_true", skip_serializing_if = "Clone::clone")]
+    pub deterministic: bool,
     /// Rule parameters (for example `min` for `dtcs:min_length`).
     #[serde(
         default,
@@ -55,6 +113,13 @@ pub struct Rule {
     /// Object metadata (SPEC Chapter 5 §3).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub metadata: Option<Metadata>,
+    /// Vendor extension fields preserved verbatim (SPEC Chapter 21 §8).
+    #[serde(default, flatten)]
+    pub extensions: IndexMap<String, Value>,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 fn deserialize_unique_parameters<'de, D>(

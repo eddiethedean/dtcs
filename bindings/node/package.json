@@ -1,6 +1,6 @@
 {
   "name": "@eddiethedean/dtcs",
-  "version": "0.10.1",
+  "version": "0.11.0",
   "description": "Node.js bindings for DTCS (WebAssembly wrapper)",
   "type": "module",
   "files": [

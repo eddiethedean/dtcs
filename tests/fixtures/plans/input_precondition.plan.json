@@ -101,7 +101,9 @@
         "output": "result",
         "inputs": [
           "source"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

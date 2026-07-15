@@ -155,6 +155,7 @@ fn evaluate_binary(
             }
             _ => None,
         },
+        BinaryOp::In | BinaryOp::Contains => None,
     }
 }
 

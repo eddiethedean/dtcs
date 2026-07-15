@@ -7,11 +7,11 @@ use crate::diagnostics::{codes, runtime_error, DiagnosticCategory};
 use crate::model::RulePhase;
 use crate::plan::{plan_as_contract, TransformationPlan};
 
-use super::actions::apply_action_to_rows;
+use super::actions::{apply_action_to_rows, apply_dataset_action, is_dataset_action};
 use super::expr::evaluate_expr;
 use super::lineage::materialize_output;
 use super::model::{Dataset, RuntimeInputs, RuntimeOutputs};
-use super::rules::{evaluate_rule, resolve_target};
+use super::rules::resolve_target;
 use super::runtime_trait::Runtime;
 use super::validate::validate_inputs;
 use super::ExecuteResult;
@@ -140,14 +140,36 @@ fn execute_step(
                 }
                 for row_index in 0..row_count {
                     let value = resolve_target(workspaces, &rule.target, row_index)?;
-                    evaluate_rule(rule, &value, &rule.parameters)?;
+                    match crate::runtime::rules::evaluate_rule_outcome(
+                        rule,
+                        &value,
+                        &rule.parameters,
+                    )? {
+                        crate::model::RuleOutcome::Satisfied => {}
+                        crate::model::RuleOutcome::Indeterminate if rule.allow_indeterminate => {}
+                        crate::model::RuleOutcome::Indeterminate => {
+                            return Err(format!(
+                                "rule '{}' returned indeterminate outcome",
+                                rule.id
+                            ));
+                        }
+                        crate::model::RuleOutcome::Violated => {
+                            return Err(format!("rule '{}' violated", rule.id));
+                        }
+                    }
                 }
             }
             Ok(())
         }
         ExecutionStepKind::ApplyAction {
-            action_id, target, ..
+            action_id,
+            target,
+            parameters,
+            ..
         } => {
+            if is_dataset_action(action_id) {
+                return apply_dataset_action(action_id, target, parameters, workspaces);
+            }
             let interface_ids: Vec<String> = workspaces.keys().cloned().collect();
             let qualified =
                 super::model::parse_qualified_field_with_interfaces(target, &interface_ids)

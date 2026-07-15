@@ -38,3 +38,17 @@ entries:
     status: "standard"
     definition: |
       {"kind":"rule","phases":["precondition","execution","postcondition"],"targetType":"integer","targetNullableAllowed":true,"parameters":[{"name":"min","type":"integer","optional":true},{"name":"max","type":"integer","optional":true}]}
+  dtcs:one_of:
+    name: "One Of"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetNullableAllowed":true,"allowIndeterminate":false,"deterministic":true,"scopes":["input","output"],"parameters":[{"name":"values","type":"list<string>","optional":false}]}
+  dtcs:equals:
+    name: "Equals"
+    category: "rule"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"rule","phases":["precondition","execution","postcondition"],"targetNullableAllowed":true,"allowIndeterminate":true,"deterministic":true,"scopes":["input","output"],"parameters":[{"name":"value","type":"string","optional":false}]}

@@ -216,5 +216,7 @@ fn binary_op_name(op: BinaryOp) -> &'static str {
         BinaryOp::Gte => "gte",
         BinaryOp::And => "and",
         BinaryOp::Or => "or",
+        BinaryOp::In => "in",
+        BinaryOp::Contains => "contains",
     }
 }

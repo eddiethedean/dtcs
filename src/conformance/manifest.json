@@ -23,6 +23,45 @@
       "assertion": { "kind": "validateValid" }
     },
     {
+      "id": "analyze-valid-customer",
+      "profiles": ["analyzer", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": { "kind": "analyzeValid" }
+    },
+    {
+      "id": "compat-identical-customer",
+      "profiles": ["analyzer", "integrated-platform"],
+      "fixture": "valid_customer.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "compatLevel",
+        "comparisonFixture": "valid_customer.yaml",
+        "level": "identical"
+      }
+    },
+    {
+      "id": "compat-backward",
+      "profiles": ["analyzer", "integrated-platform"],
+      "fixture": "compatibility/backward_old.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "compatLevel",
+        "comparisonFixture": "compatibility/backward_new.yaml",
+        "level": "backwardCompatible"
+      }
+    },
+    {
+      "id": "evolve-revisions",
+      "profiles": ["analyzer", "integrated-platform"],
+      "fixture": "compatibility/evolution/rev1.yaml",
+      "format": "yaml",
+      "assertion": {
+        "kind": "evolveValid",
+        "comparisonFixture": "compatibility/evolution/rev2.yaml"
+      }
+    },
+    {
       "id": "validate-invalid-missing-lineage",
       "profiles": ["validator", "integrated-platform"],
       "fixture": "missing_lineage.yaml",

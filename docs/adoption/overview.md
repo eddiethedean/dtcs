@@ -18,7 +18,7 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 | Component | Status |
 |-----------|--------|
-| Specification | Draft (`1.0.0-draft`, 26 chapters) |
+| Specification | Draft (`1.0.0-draft`, 26 chapters + Appendix A catalog) |
 | Parser (YAML/JSON) | Complete |
 | Seven-phase validation | Complete |
 | Metadata validation | Complete |
@@ -26,25 +26,27 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Compatibility analysis | Complete (five classification levels) |
 | Evolution analysis | Complete |
 | Versioning validation (Ch 25) | Complete |
-| Lineage analysis (dataset-level) | Complete |
-| Identifier registry & extensibility | Complete (Phase 0.4, `0.4.0`) |
-| Static semantic analysis | Complete (Phase 0.6, `0.6.0`) |
-| Transformation plan lowering | Complete (Phase 0.7, `0.7.0`) |
-| Plan optimization | Complete (Phase 0.8, `0.8.0`) |
-| Capability matching | Complete (Phase 0.9, `0.9.0`) |
-| Compilation | Complete (Phase 0.9, `0.9.0`) |
-| Reference runtime | Complete (Phase 0.9, `0.9.0`) |
-| Conformance certification (Ch 23) | Not started (Phase 0.10) |
+| Lineage analysis (dataset-level) | Complete (`operation` / `flow` in COM) |
+| Identifier registry & extensibility | Complete (Phase 0.4) |
+| Standard libraries (Ch 17–19) | Complete (full catalog, Phase 0.11) |
+| Static semantic analysis | Complete (Phase 0.6) |
+| Transformation plan lowering | Complete (Phase 0.7) |
+| Plan optimization | Complete (Phase 0.8) |
+| Capability matching | Complete (Phase 0.9; full-catalog profile in 0.11) |
+| Compilation | Complete (Phase 0.9) |
+| Reference runtime | Complete (Phase 0.9; full catalog + null tokens in 0.11) |
+| Conformance certification (Ch 23) | Complete (Phase 0.10) |
+| SPEC completeness matrix | Complete (Phase 0.11) |
 
-*Released reference implementation: `0.9.0`.*
+*Released reference implementation: `0.11.0`.*
 
-See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
+See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan and [spec-completeness.md](../implementation/spec-completeness.md) for the chapter matrix.
 
 ## What you can use today
 
 1. **Contract authoring** — write YAML/JSON contracts with IDE/CI validation
 2. **CI gates** — fail builds on invalid contracts (`dtcs validate --json`)
-3. **Standard library usage** — reference `dtcs:` actions, functions, and rules; validate against embedded definitions (`dtcs registry list`)
+3. **Standard library usage** — reference the full `dtcs:` action, function, and rule catalogs; validate against embedded definitions (`dtcs registry list`)
 4. **Static semantic analysis** — check transformation semantics and expressions without runtime evaluation (`dtcs analyze`)
 5. **Version management** — compare contract revisions for breaking changes (`dtcs compat`, `dtcs evolve`)
 6. **Impact analysis** — trace which outputs depend on an input (`dtcs lineage --impact`)
@@ -53,16 +55,18 @@ See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan.
 9. **Capability matching** — verify a plan against an engine profile (`dtcs match`)
 10. **Compilation** — produce execution plans from transformation plans (`dtcs compile`)
 11. **Reference execution** — run contracts end-to-end with sample inputs (`dtcs run`)
-12. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
+12. **Conformance certification** — offline profiles via `dtcs conformance declare` / `dtcs conformance run`
+13. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
 
 - Production ETL execution (Spark, Polars, SQL compilation)
 - Multi-backend compilers beyond the reference profile
-- WASM/Node bindings
-- Conformance profiles and certification suites
+- External certification authority (Ch 23 §13)
 
 See [non-goals.md](../implementation/non-goals.md).
+
+WASM and Node bindings (`@eddiethedean/dtcs-wasm`, `@eddiethedean/dtcs`) are available for parse, validate, and conformance declare.
 
 ## Security considerations
 
@@ -75,7 +79,7 @@ Normative security guidance is in [SPEC.md Chapter 24](../../SPEC.md#chapter-24-
 
 The reference validator performs static analysis only. It does not connect to external systems, networks, or secrets.
 
-For governance requirements, see SPEC Chapter 26 and the metadata validation rules in Chapter 5.
+For governance requirements, see SPEC Chapter 26 and the metadata validation rules in Chapter 5. Automated probes: [security-checklist.md](security-checklist.md).
 
 ## Distribution
 
@@ -83,9 +87,11 @@ For governance requirements, see SPEC Chapter 26 and the metadata validation rul
 |---------|---------|
 | Rust | [crates.io/crates/dtcs](https://crates.io/crates/dtcs) |
 | Python | [pypi.org/project/dtcs](https://pypi.org/project/dtcs) |
+| WASM | [`@eddiethedean/dtcs-wasm`](https://www.npmjs.com/package/@eddiethedean/dtcs-wasm) |
+| Node | [`@eddiethedean/dtcs`](https://www.npmjs.com/package/@eddiethedean/dtcs) |
 | Source | [github.com/eddiethedean/dtcs](https://github.com/eddiethedean/dtcs) |
 
-Both Rust and Python packages install the same `dtcs` CLI.
+Rust and Python packages install the same `dtcs` CLI.
 
 ## Evaluation checklist
 
@@ -98,9 +104,9 @@ Both Rust and Python packages install the same `dtcs` CLI.
 - [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_normalize.dtcs.yaml --input tests/fixtures/runtime/customer_normalize_input.json`
 - [ ] Run offline conformance certification: `dtcs conformance run --profile integrated-platform`
 - [ ] Review [security-checklist.md](security-checklist.md) for Ch 24 requirements
-- [ ] Read SPEC Chapters 1–3 for design principles and scope
+- [ ] Read SPEC Chapters 1–3 and [Appendix A](../../SPEC.md#appendix-a----standard-library-catalog-normative) for design principles and the standard library catalog
 
-Conformance certification (Phase 0.10) is available via `dtcs conformance declare` and `dtcs conformance run`. See [conformance.md](../user/conformance.md). External certification authority remains out of scope per Ch 23 §13.
+Conformance certification is available via `dtcs conformance declare` and `dtcs conformance run`. See [conformance.md](../user/conformance.md). External certification authority remains out of scope per Ch 23 §13.
 
 ## Getting started
 

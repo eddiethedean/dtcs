@@ -179,13 +179,17 @@
         "output": "result_a",
         "inputs": [
           "source_a"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       },
       {
         "output": "result_b",
         "inputs": [
           "source_b"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

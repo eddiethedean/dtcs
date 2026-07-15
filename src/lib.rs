@@ -77,7 +77,7 @@ mod python;
 pub use analysis::{check_contract, check_expression, AnalysisFinding, AnalysisReport};
 pub use capability::{
     discover as discover_capabilities, match_plan, match_plan_with_registry, reference_profile,
-    CapabilityMatchReport, EngineCapabilityDeclaration,
+    validate as validate_capabilities, CapabilityMatchReport, EngineCapabilityDeclaration,
 };
 pub use compatibility::{
     analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,
@@ -93,10 +93,11 @@ pub use diagnostics::{
 };
 pub use lineage::{analyze as analyze_lineage, LineageAnalysisReport, LineageGovernance};
 pub use model::{
-    parse_logical_type, type_compatible, types_assignable, ExtensionCompatibility, LogicalType,
-    RegistryCategory, RegistryDocument, RegistryEntry, RegistryEntryStatus,
-    RegistryPublicationStatus, RegistryRef, Rule, RulePhase, TransformationContract,
-    TypeCompatibility, TypeParseError,
+    parse_logical_type, type_compatible, types_assignable, CompatibilityDeclaration,
+    ContractGuarantees, ExtensionCompatibility, FieldConstraints, InformationFlow, LogicalType,
+    NullBehavior, RegistryCategory, RegistryDocument, RegistryEntry, RegistryEntryStatus,
+    RegistryPublicationStatus, RegistryRef, Rule, RuleOutcome, RulePhase, RuleScope,
+    TransformationContract, TypeCompatibility, TypeParseError,
 };
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
 pub use plan::{

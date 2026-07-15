@@ -3,7 +3,9 @@
 use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, UnaryOp};
 use crate::runtime::conversion::integer_to_decimal;
 use crate::runtime::functions::call_function;
-use crate::runtime::model::{parse_qualified_field_with_interfaces, Row, RuntimeValue};
+use crate::runtime::model::{
+    lookup_field, parse_qualified_field_with_interfaces, FieldLookup, Row, RuntimeValue,
+};
 
 /// Evaluate an expression AST against a row workspace context.
 pub fn evaluate_expr(
@@ -32,11 +34,9 @@ fn evaluate_expr_with_interfaces(
             let row = rows
                 .get(row_index)
                 .ok_or_else(|| format!("row index {row_index} out of range"))?;
-            row.get(&qualified.field_name).cloned().ok_or_else(|| {
-                format!(
-                    "missing field '{}' on interface '{}'",
-                    qualified.field_name, qualified.interface_id
-                )
+            Ok(match lookup_field(row, &qualified.field_name) {
+                FieldLookup::Missing => RuntimeValue::missing(),
+                FieldLookup::Present(value) => value,
             })
         }
         Expr::Unary { op, expr, .. } => {
@@ -208,6 +208,28 @@ fn evaluate_binary(
         BinaryOp::Lt | BinaryOp::Lte | BinaryOp::Gt | BinaryOp::Gte => {
             compare_ordered(op, left, right).map(RuntimeValue::Boolean)
         }
+        BinaryOp::In => match right {
+            RuntimeValue::List(items) => Ok(RuntimeValue::Boolean(
+                items.iter().any(|item| values_equal(left, item)),
+            )),
+            RuntimeValue::String(haystack) => match left.as_str() {
+                Some(needle) => Ok(RuntimeValue::Boolean(haystack.contains(needle))),
+                None if left.is_null() || left.is_missing() => Ok(RuntimeValue::Null),
+                None => Err("in with string right-hand side requires string left".into()),
+            },
+            _ => Err("in requires list or string on the right".into()),
+        },
+        BinaryOp::Contains => match left {
+            RuntimeValue::List(items) => Ok(RuntimeValue::Boolean(
+                items.iter().any(|item| values_equal(item, right)),
+            )),
+            RuntimeValue::String(haystack) => match right.as_str() {
+                Some(needle) => Ok(RuntimeValue::Boolean(haystack.contains(needle))),
+                None if right.is_null() || right.is_missing() => Ok(RuntimeValue::Null),
+                None => Err("contains with string left-hand side requires string right".into()),
+            },
+            _ => Err("contains requires list or string on the left".into()),
+        },
         BinaryOp::And | BinaryOp::Or => unreachable!("handled by short-circuit evaluation"),
     }
 }

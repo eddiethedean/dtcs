@@ -15,11 +15,11 @@ This repository contains:
 | | |
 |---|---|
 | **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference implementation** | `0.10.1` — validation, analysis, registries, standard libraries, plan lowering, optimization, capability matching, compilation, reference runtime, and conformance certification |
+| **Reference implementation** | `0.11.0` — validation, analysis, registries, full Ch 17–19 standard libraries, plan lowering, optimization, capability matching, compilation, reference runtime, conformance certification, and SPEC completeness |
 | **Document `dtcsVersion`** | `1.0.0` (currently exact; patch releases are rejected) |
 | **Try it now** | `pip install dtcs` or `cargo install dtcs` |
 
-**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded registry (including standard actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage, lower validated contracts to transformation plans, optimize plans with semantics-preserving rewrites, match plans against engine capabilities, compile to execution plans, run contracts in the reference in-memory runtime, and certify conformance across all eight implementation profiles — including end-to-end execution of sample contracts like `customer_normalize.dtcs.yaml`.
+**What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded full standard-library catalog (actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage (`operation` / `flow`), lower validated contracts to transformation plans, optimize plans with semantics-preserving rewrites, match plans against engine capabilities, compile to execution plans, run contracts in the reference in-memory runtime (including null/missing/invalid semantics), and certify conformance across all eight implementation profiles — including end-to-end execution of sample contracts like `customer_normalize.dtcs.yaml`.
 
 [Documentation](docs/README.md) · [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
@@ -101,7 +101,7 @@ Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full wal
 
 ## Pipeline
 
-The reference implementation through Phase 0.9:
+The reference implementation through Phase 0.11:
 
 ```text
 DTCS Document
@@ -137,7 +137,7 @@ Diagnostics                            └─ lineage::analyze
 Transformation Plan → Execution Plan → Outputs
 ```
 
-Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation. Phase 0.5 embeds starter standard libraries for semantic actions, functions, and rules, and validates contract usage against structured registry definitions (target types, phases, arity, and return types). Phase 0.6 adds static semantic analysis. Phase 0.7 lowers validated contracts into transformation plans with dependency graphs and plan validation. Phase 0.8 optimizes plans with semantics-preserving expression, function, action, and rule passes. Phase 0.9 adds engine capability matching, compilation to execution plans, and a reference in-memory runtime covering all embedded `dtcs:` stdlib entries.
+Phase 0.2 adds metadata validation, extended type system checks, expression typing, and I/O interface depth. Phase 0.3 adds compatibility classification, evolution analysis, versioning validation, and dataset-level lineage analysis. Phase 0.4 adds the identifier registry, file/URI loading with offline cache, and registry-aware extension validation. Phase 0.5 embeds starter standard libraries; Phase 0.11 completes the full Ch 17–19 catalogs and SPEC Appendix A. Phase 0.6 adds static semantic analysis. Phase 0.7 lowers validated contracts into transformation plans with dependency graphs and plan validation. Phase 0.8 optimizes plans with semantics-preserving expression, function, action, and rule passes. Phase 0.9 adds engine capability matching, compilation to execution plans, and a reference in-memory runtime. Phase 0.10 adds conformance profiles and WASM/Node bindings. Phase 0.11 deepens COM lineage/guarantees/null semantics and publishes the [SPEC completeness matrix](docs/implementation/spec-completeness.md).
 
 Production ETL orchestration and external engine backends remain out of scope. See [docs/implementation/non-goals.md](docs/implementation/non-goals.md).
 
@@ -158,7 +158,7 @@ Production ETL orchestration and external engine backends remain out of scope. S
 
 ## Testing
 
-Integration tests, fixture manifests, and conformance cases are documented in [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md). The embedded standard library exercises a **starter catalog** of semantic actions, functions, and rules (SPEC Ch 17–19); it is not an exhaustive stdlib conformance proof. See [test-verification-report.md](docs/implementation/test-verification-report.md) for current suite confidence.
+Integration tests, fixture manifests, and conformance cases are documented in [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md). The embedded standard library covers the full Ch 17–19 catalog (SPEC [Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative)). See [spec-completeness.md](docs/implementation/spec-completeness.md) for chapter coverage and [test-verification-report.md](docs/implementation/test-verification-report.md) for suite confidence.
 
 ## Contributing
 

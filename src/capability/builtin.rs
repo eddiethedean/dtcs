@@ -10,7 +10,23 @@ pub const REFERENCE_ENGINE_ID: &str = "dtcs:reference";
 
 /// Supported expression operators in the reference runtime.
 pub const REFERENCE_OPERATORS: &[&str] = &[
-    "add", "sub", "mul", "div", "eq", "neq", "lt", "lte", "gt", "gte", "and", "or", "negate", "not",
+    "add", "sub", "mul", "div", "eq", "neq", "lt", "lte", "gt", "gte", "and", "or", "negate",
+    "not", "in", "contains",
+];
+
+/// Supported language features for the reference engine.
+pub const REFERENCE_LANGUAGE_FEATURES: &[&str] = &[
+    "nullMissingInvalidDistinction",
+    "collectionOperators",
+    "temporalLiterals",
+];
+
+/// Supported optimization capabilities.
+pub const REFERENCE_OPTIMIZATION: &[&str] = &[
+    "constantFolding",
+    "actionFusion",
+    "ruleDedup",
+    "deadExpressionElimination",
 ];
 
 /// Supported runtime features for the reference engine.
@@ -19,6 +35,8 @@ pub const REFERENCE_RUNTIME_FEATURES: &[&str] = &[
     "prePostconditions",
     "lineageMaterialization",
     "deterministic",
+    "nonDeterminismSourceReporting",
+    "datasetActions",
 ];
 
 /// Returns the embedded reference engine capability profile.
@@ -59,6 +77,10 @@ pub fn reference_profile() -> EngineCapabilityDeclaration {
         engine_version: env!("CARGO_PKG_VERSION").into(),
         capability_version: "1.0.0".into(),
         categories: CapabilityCategories {
+            language_features: REFERENCE_LANGUAGE_FEATURES
+                .iter()
+                .map(|f| (*f).to_string())
+                .collect(),
             logical_types,
             semantic_actions,
             functions,
@@ -67,10 +89,15 @@ pub fn reference_profile() -> EngineCapabilityDeclaration {
                 .iter()
                 .map(|op| (*op).to_string())
                 .collect(),
+            optimization: REFERENCE_OPTIMIZATION
+                .iter()
+                .map(|f| (*f).to_string())
+                .collect(),
             runtime_features: REFERENCE_RUNTIME_FEATURES
                 .iter()
                 .map(|f| (*f).to_string())
                 .collect(),
+            extension_support: vec!["vendorNamespacedPreserve".into()],
         },
     }
 }

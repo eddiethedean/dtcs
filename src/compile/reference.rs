@@ -248,6 +248,7 @@ fn node_step(
                     node_id: node.id.clone(),
                     action_id: action.action.clone(),
                     target: action.target.clone(),
+                    parameters: action.parameters.clone(),
                 },
             })
         }

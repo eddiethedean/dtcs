@@ -36,6 +36,36 @@ pub struct DocumentationMetadata {
     pub references: Vec<String>,
 }
 
+/// Ownership metadata (SPEC Chapter 5 §4 / §7).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OwnershipMetadata {
+    /// Owning party or team.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub owner: Option<String>,
+    /// Accountable organization.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub organization: Option<String>,
+    /// Contact URI or email.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contact: Option<String>,
+}
+
+/// Lifecycle metadata (SPEC Chapter 5 §4).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LifecycleMetadata {
+    /// Lifecycle state (for example `draft`, `active`, `retired`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub state: Option<String>,
+    /// Effective-from timestamp (ISO-8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_from: Option<String>,
+    /// Effective-until timestamp (ISO-8601).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effective_until: Option<String>,
+}
+
 /// Governance metadata (SPEC Chapter 5 §7).
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -109,6 +139,12 @@ pub struct Metadata {
     /// Governance metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub governance: Option<GovernanceMetadata>,
+    /// Ownership metadata (SPEC Chapter 5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ownership: Option<OwnershipMetadata>,
+    /// Lifecycle metadata (SPEC Chapter 5).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lifecycle: Option<LifecycleMetadata>,
     /// Provenance metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub provenance: Option<ProvenanceMetadata>,
@@ -121,6 +157,9 @@ pub struct Metadata {
     /// Recommended replacement contract id when deprecated.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub replacement: Option<String>,
+    /// Anticipated removal version or date (SPEC Chapter 12 §10).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub anticipated_removal: Option<String>,
     /// Custom namespaced metadata preserved verbatim.
     #[serde(default, flatten)]
     pub extensions: IndexMap<String, Value>,

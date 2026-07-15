@@ -20,6 +20,9 @@ pub struct EngineCapabilityDeclaration {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityCategories {
+    /// Language features (expression subset, null distinction, etc.).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub language_features: Vec<String>,
     /// Supported logical type expressions.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub logical_types: Vec<String>,
@@ -35,9 +38,15 @@ pub struct CapabilityCategories {
     /// Supported expression operators.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub operators: Vec<String>,
+    /// Supported optimization passes.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub optimization: Vec<String>,
     /// Supported runtime features.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub runtime_features: Vec<String>,
+    /// Extension support declarations.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub extension_support: Vec<String>,
 }
 
 /// A missing capability required by a plan.

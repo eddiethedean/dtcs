@@ -108,6 +108,22 @@ pub enum ConformanceAssertion {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         codes: Vec<String>,
     },
+    /// Static contract analysis succeeds (no error diagnostics).
+    AnalyzeValid,
+    /// Compatibility classification between fixture and comparisonFixture.
+    CompatLevel {
+        /// Path to the second contract fixture (relative to tests/fixtures).
+        #[serde(rename = "comparisonFixture")]
+        comparison_fixture: String,
+        /// Expected compatibility level string (for example `identical`).
+        level: String,
+    },
+    /// Evolution analysis between fixture (older) and comparisonFixture (newer) succeeds.
+    EvolveValid {
+        /// Path to the newer contract fixture.
+        #[serde(rename = "comparisonFixture")]
+        comparison_fixture: String,
+    },
     /// Plan lowering succeeds.
     PlanValid,
     /// Optimization preserves semantics.

@@ -68,8 +68,11 @@ pub enum ExecutionStepKind {
         node_id: String,
         /// Semantic action registry identifier.
         action_id: String,
-        /// Qualified target field.
+        /// Qualified target field or interface.
         target: String,
+        /// Action parameters.
+        #[serde(default, skip_serializing_if = "indexmap::IndexMap::is_empty")]
+        parameters: indexmap::IndexMap<String, serde_json::Value>,
     },
     /// Evaluate an expression declaration.
     EvaluateExpression {

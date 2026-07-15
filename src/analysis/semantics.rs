@@ -147,8 +147,45 @@ fn check_determinism(
         .semantics
         .as_ref()
         .and_then(|s| s.deterministic)
+        .or_else(|| {
+            contract
+                .guarantees
+                .as_ref()
+                .and_then(|g| g.semantics.as_ref())
+                .and_then(|s| s.deterministic)
+        })
         .unwrap_or(false);
+
+    // When non-deterministic, require declared sources (Ch 8 §11 / Ch 16 §9).
     if !deterministic {
+        for expression in &contract.expressions {
+            if !expression.deterministic && expression.non_determinism_source.is_none() {
+                report.diagnostics.push(analysis_error(
+                    codes::NON_DETERMINISTIC_SEMANTICS,
+                    DiagnosticCategory::Semantic,
+                    format!(
+                        "expression '{}' is non-deterministic but does not declare nonDeterminismSource",
+                        expression.id
+                    ),
+                    Some(format!("expressions.{}", expression.id)),
+                    Some("Declare nonDeterminismSource or set deterministic: true".into()),
+                ));
+            }
+        }
+        for function in &contract.functions {
+            if !function.deterministic && function.non_determinism_source.is_none() {
+                report.diagnostics.push(analysis_error(
+                    codes::NON_DETERMINISTIC_SEMANTICS,
+                    DiagnosticCategory::Semantic,
+                    format!(
+                        "function '{}' is non-deterministic but does not declare nonDeterminismSource",
+                        function.id
+                    ),
+                    Some(format!("functions.{}", function.id)),
+                    Some("Declare nonDeterminismSource or set deterministic: true".into()),
+                ));
+            }
+        }
         return;
     }
 

@@ -87,7 +87,9 @@
         "output": "out",
         "inputs": [
           "in"
-        ]
+        ],
+        "operation": "dtcs:derive",
+        "flow": "derived"
       }
     ]
   },

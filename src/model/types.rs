@@ -25,6 +25,24 @@ pub struct TypeConversion {
     pub lossy: bool,
 }
 
+/// Optional field constraints included in type identity (SPEC Chapter 4 §7).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FieldConstraints {
+    /// Minimum inclusive numeric/string-length bound.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<String>,
+    /// Maximum inclusive numeric/string-length bound.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<String>,
+    /// Regular expression pattern for string values.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pattern: Option<String>,
+    /// Enumerated allowed values.
+    #[serde(default, rename = "enum", skip_serializing_if = "Vec::is_empty")]
+    pub enum_values: Vec<String>,
+}
+
 /// A field within a schema.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Field {
@@ -38,6 +56,9 @@ pub struct Field {
     /// Declared type conversions.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conversions: Vec<TypeConversion>,
+    /// Optional constraints contributing to type identity.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub constraints: Option<FieldConstraints>,
 }
 
 /// Supported primitive logical types from SPEC Chapter 4.

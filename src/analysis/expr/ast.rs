@@ -71,4 +71,8 @@ pub enum BinaryOp {
     Gte,
     And,
     Or,
+    /// Membership test (`value in collection`).
+    In,
+    /// Collection/string contains (`collection contains value`).
+    Contains,
 }

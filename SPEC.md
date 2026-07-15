@@ -4891,3 +4891,192 @@ By standardizing change management, publication, registry
 administration, extension review, conformance maintenance, and lifecycle
 management, DTCS enables an open, sustainable standards ecosystem
 capable of supporting independent implementations for many years.
+
+
+------------------------------------------------------------------------
+
+# Appendix A --- Standard Library Catalog (Normative)
+
+## A.1 Purpose
+
+This appendix enumerates concrete `dtcs:` identifiers for Semantic
+Actions, Functions, and Rules that constitute the DTCS standard
+libraries.
+
+Categories listed in Chapter 17 §5 map to the Semantic Action
+identifiers defined in §A.3. Function and Rule identifiers in §A.4 and
+§A.5 complete the standard libraries referenced by Chapters 18 and 19.
+
+Implementations that claim support for the DTCS standard libraries
+SHALL recognize these identifiers with the semantics described here and
+in the corresponding chapters. Additional vendor identifiers MAY be
+provided through registries as defined in Chapter 22.
+
+------------------------------------------------------------------------
+
+## A.2 Semantic Action parameters
+
+SemanticAction instances MAY include a `parameters` map.
+
+Parameter keys and value shapes are defined per action identifier.
+Dataset-scoped actions use interface identifiers as targets.
+Field-scoped actions use `interface.field` targets.
+
+Implementations SHALL reject unknown required parameters and SHALL
+preserve declared parameters through planning, compilation, and
+execution without semantic loss.
+
+------------------------------------------------------------------------
+
+## A.3 Semantic Actions
+
+Unless otherwise noted, every standard Semantic Action listed below is
+deterministic.
+
+Field transforms (category: transformation) operate on string-typed
+field targets unless a registry definition states otherwise:
+
+-   `dtcs:lowercase` --- no parameters; lineageBehavior `preserve`
+-   `dtcs:uppercase` --- no parameters; lineageBehavior `preserve`
+-   `dtcs:capitalize` --- no parameters; lineageBehavior `preserve`
+-   `dtcs:trim` --- no parameters; lineageBehavior `preserve`
+-   `dtcs:normalize_whitespace` --- no parameters; lineageBehavior
+    `preserve`
+-   `dtcs:hash_sha256` --- no parameters; lineageBehavior `derive`
+
+Dataset operators:
+
+-   `dtcs:project` (category: projection) --- parameters: `fields`
+    (array of field names); lineageBehavior `preserve`
+-   `dtcs:select` (category: selection) --- parameters: `field`,
+    optional `equals`; lineageBehavior `filter`
+-   `dtcs:filter` (category: filtering) --- parameters: `field`,
+    optional `equals`; lineageBehavior `filter`
+-   `dtcs:aggregate` (category: aggregation) --- parameters:
+    `groupBy`, `valueField`, `op`; lineageBehavior `aggregate`
+-   `dtcs:group` (category: grouping) --- parameters: `groupBy`,
+    `valueField`, `op`; lineageBehavior `aggregate`
+-   `dtcs:join` (category: joining) --- parameters: `right`,
+    `leftKey`, optional `rightKey`; lineageBehavior `derive`
+-   `dtcs:sort` (category: sorting) --- parameters: `field`, optional
+    `descending`; lineageBehavior `preserve`
+-   `dtcs:union` (category: union) --- parameters: `other`;
+    lineageBehavior `derive`
+-   `dtcs:partition` (category: partitioning) --- parameters: `field`;
+    lineageBehavior `partition`
+
+Lineage default operation:
+
+-   `dtcs:derive` (category: transformation) --- no parameters;
+    lineageBehavior `derive`
+
+`dtcs:derive` is the default lineage `operation` when a mapping omits an
+explicit operation identifier (see §A.6 and Chapter 10 §6).
+
+------------------------------------------------------------------------
+
+## A.4 Functions
+
+Standard Functions MAY be invoked from expressions using direct `dtcs:`
+call syntax as defined in Chapter 8.
+
+Each Function SHALL declare a null-behavior token. The tokens used by
+the standard library are:
+
+-   `propagate` --- a null or missing argument yields a null result
+-   `defined` --- null and missing arguments are interpreted according
+    to the Function's documented semantics (the result is not forced to
+    null solely by argument absence)
+
+The standard Function catalog is:
+
+-   `dtcs:lower` --- nullBehavior `propagate`
+-   `dtcs:upper` --- nullBehavior `propagate`
+-   `dtcs:concat` --- nullBehavior `propagate`; minimum two arguments
+-   `dtcs:substr` --- nullBehavior `propagate`
+-   `dtcs:replace` --- nullBehavior `propagate`
+-   `dtcs:coalesce` --- nullBehavior `propagate`
+-   `dtcs:length` --- nullBehavior `propagate`
+-   `dtcs:to_string` --- nullBehavior `propagate`
+-   `dtcs:to_integer` --- nullBehavior `propagate`
+-   `dtcs:to_decimal` --- nullBehavior `propagate`
+-   `dtcs:abs` --- nullBehavior `propagate`; numeric absolute value
+-   `dtcs:min` --- nullBehavior `propagate`; variadic minimum
+-   `dtcs:max` --- nullBehavior `propagate`; variadic maximum
+-   `dtcs:contains` --- nullBehavior `propagate`; substring containment
+-   `dtcs:is_null` --- nullBehavior `defined`; true when the argument
+    is null
+-   `dtcs:is_missing` --- nullBehavior `defined`; true when the
+    argument is missing
+
+All standard Functions listed above are deterministic.
+
+------------------------------------------------------------------------
+
+## A.5 Rules
+
+Standard Rules MAY appear as preconditions, execution rules, or
+postconditions subject to registry phase metadata (Chapter 19 §5).
+
+The standard Rule catalog is:
+
+-   `dtcs:not_null` --- no parameters; the target SHALL be present and
+    non-null
+-   `dtcs:min_length` --- parameter: `min`; string minimum length
+-   `dtcs:max_length` --- parameter: `max`; string maximum length
+-   `dtcs:regex_match` --- parameter: `pattern`; regular-expression
+    match
+-   `dtcs:range` --- optional parameters: `min`, `max`; inclusive
+    numeric bounds
+-   `dtcs:one_of` --- parameter: `values` (array); value membership
+-   `dtcs:equals` --- parameter: `value`; equality comparison with
+    `allowIndeterminate` true
+
+Rule evaluation outcomes and indeterminate handling SHALL follow Chapter
+19. Implementations SHALL NOT invent alternate identifiers for the same
+standard semantics.
+
+------------------------------------------------------------------------
+
+## A.6 Lineage mapping fields
+
+A lineage mapping object SHALL identify provenance from inputs to an
+output as defined in Chapter 10.
+
+Lineage mapping fields:
+
+-   `id` (optional) --- stable mapping identity
+-   `output` --- destination interface or field reference
+-   `inputs` --- array of contributing source references
+-   `operation` --- semantic operation identifier; defaults to
+    `dtcs:derive` when omitted
+-   `flow` --- information-flow kind; one of:
+
+    -   `preserved`
+    -   `derived`
+    -   `aggregated`
+    -   `filtered`
+    -   `partitioned`
+    -   `discarded`
+
+Information loss SHALL be explicit where it affects contractual
+guarantees (Chapter 10 §7).
+
+------------------------------------------------------------------------
+
+## A.7 Null semantics tokens
+
+Runtime evaluation SHALL distinguish the following value kinds
+(Chapter 8 §9):
+
+-   null --- a present key with a null payload
+-   missing --- an explicit missing token serialized as
+    `{"$dtcs":"missing"}`
+-   invalid --- an explicit invalid token serialized as
+    `{"$dtcs":"invalid"}`, optionally with a `reason` field
+
+Null, missing, and invalid are not interchangeable. Functions and
+Semantic Actions SHALL apply their declared null-behavior with respect
+to these distinctions. Implementations SHALL NOT coerce missing or
+invalid values to null except where a standard library entry explicitly
+defines that behavior.

@@ -74,6 +74,18 @@ pub(crate) fn validate_lineage(ctx: &mut ValidationContext, contract: &Transform
                 Some("List contributing input identifiers"),
             );
         }
+        if mapping.operation.trim().is_empty() {
+            ctx.error(
+                codes::MISSING_REQUIRED_FIELD,
+                DiagnosticCategory::Reference,
+                format!(
+                    "lineage mapping for output '{}' must declare a semantic operation",
+                    mapping.output
+                ),
+                Some(&format!("lineage.mappings.{}.operation", mapping.output)),
+                Some("Set operation to a registry action or dtcs:derive"),
+            );
+        }
         for input_id in &mapping.inputs {
             if !input_ids.contains(input_id) {
                 ctx.error(

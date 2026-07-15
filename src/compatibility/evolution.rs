@@ -99,6 +99,18 @@ fn detect_deprecation_changes(
         }
     }
 
+    let old_removal = old_meta.and_then(|m| m.anticipated_removal.as_deref());
+    let new_removal = new_meta.and_then(|m| m.anticipated_removal.as_deref());
+    if new_deprecated && old_removal != new_removal {
+        if let Some(removal) = new_removal {
+            changes.push(ContractChange {
+                category: ChangeCategory::Metadata,
+                message: format!("anticipated removal: {removal}"),
+                object_ref: Some("metadata.anticipatedRemoval".into()),
+            });
+        }
+    }
+
     changes
 }
 

@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use super::{
-    Expression, Function, Input, Lineage, Metadata, Output, Rule, SemanticAction,
-    TransformationSemantics, Versioning,
+    CompatibilityDeclaration, ContractGuarantees, Expression, Function, Input, Lineage, Metadata,
+    Output, Rule, SemanticAction, TransformationSemantics, Versioning,
 };
 
 /// Supported DTCS specification versions for this implementation.
@@ -48,6 +48,12 @@ pub struct TransformationContract {
     /// Lineage metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub lineage: Option<Lineage>,
+    /// Contractual guarantees (SPEC Chapter 2 §3).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub guarantees: Option<ContractGuarantees>,
+    /// Compatibility declaration (SPEC Chapter 3 §9).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compatibility: Option<CompatibilityDeclaration>,
     /// Versioning metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub versioning: Option<Versioning>,

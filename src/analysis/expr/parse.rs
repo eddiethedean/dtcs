@@ -140,13 +140,15 @@ impl<'a> Parser<'a> {
     fn parse_comparison(&mut self) -> Result<Expr, ParseError> {
         let mut left = self.parse_additive()?;
         loop {
-            let op = match self.peek().kind {
+            let op = match &self.peek().kind {
                 TokenKind::Op("==") => Some(BinaryOp::Eq),
                 TokenKind::Op("!=") => Some(BinaryOp::Neq),
                 TokenKind::Op("<") => Some(BinaryOp::Lt),
                 TokenKind::Op("<=") => Some(BinaryOp::Lte),
                 TokenKind::Op(">") => Some(BinaryOp::Gt),
                 TokenKind::Op(">=") => Some(BinaryOp::Gte),
+                TokenKind::Ident(name) if name == "in" => Some(BinaryOp::In),
+                TokenKind::Ident(name) if name == "contains" => Some(BinaryOp::Contains),
                 _ => None,
             };
             let Some(op) = op else { break };

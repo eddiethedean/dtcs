@@ -9,67 +9,109 @@ entries:
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:upper:
     name: "Upper"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:concat:
     name: "Concat"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["string"],"returnType":"string","returnNullable":false,"deterministic":true}
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["string"],"returnType":"string","returnNullable":false,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:substr:
     name: "Substring"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string","integer"],"returnType":"string","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string","integer"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:replace:
     name: "Replace"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":3,"maxArgs":3,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":3,"maxArgs":3,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:coalesce:
     name: "Coalesce"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:length:
     name: "Length"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","binary"],"returnType":"integer","returnNullable":false,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","binary"],"returnType":"integer","returnNullable":false,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:to_string:
     name: "To String"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"string","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:to_integer:
     name: "To Integer"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","decimal","integer"],"returnType":"integer","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","decimal","integer"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:to_decimal:
     name: "To Decimal"
     category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true}
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:abs:
+    name: "Absolute"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["integer","decimal"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:min:
+    name: "Min"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:max:
+    name: "Max"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:contains:
+    name: "Contains"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:is_null:
+    name: "Is Null"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"boolean","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:is_missing:
+    name: "Is Missing"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"boolean","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}

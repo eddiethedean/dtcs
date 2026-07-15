@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use crate::capability::{match_plan, reference_profile};
+use crate::compatibility;
 use crate::compile;
 use crate::parser::{parse, DocumentFormat};
 use crate::plan;
@@ -178,6 +179,100 @@ fn run_test_case(
                         format!("diagnostic code mismatch: expected {expected:?}, got {actual:?}"),
                     )
                 }
+            }
+        }
+        ConformanceAssertion::AnalyzeValid => {
+            let contract = match load_valid_contract(&content, format) {
+                Ok(contract) => contract,
+                Err(message) => {
+                    return fail_result(test.id.clone(), profile_id, message);
+                }
+            };
+            let report = analysis::check_contract(&contract, None);
+            if report.diagnostics.iter().any(|d| d.severity.is_error()) {
+                fail_result(
+                    test.id.clone(),
+                    profile_id,
+                    format!("expected analysis success: {:?}", report.diagnostics),
+                )
+            } else {
+                pass_result(test.id.clone(), profile_id)
+            }
+        }
+        ConformanceAssertion::CompatLevel {
+            comparison_fixture,
+            level,
+        } => {
+            let left = match load_valid_contract(&content, format) {
+                Ok(contract) => contract,
+                Err(message) => {
+                    return fail_result(test.id.clone(), profile_id, message);
+                }
+            };
+            let right_bytes = match std::fs::read(fixtures_dir.join(comparison_fixture)) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    return fail_result(
+                        test.id.clone(),
+                        profile_id,
+                        format!("read comparison fixture: {err}"),
+                    );
+                }
+            };
+            let right = match load_valid_contract(&right_bytes, format) {
+                Ok(contract) => contract,
+                Err(message) => {
+                    return fail_result(test.id.clone(), profile_id, message);
+                }
+            };
+            let report =
+                compatibility::analyze(&left, &right, compatibility::ComparisonScope::all());
+            let actual = serde_json::to_value(report.level)
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_string))
+                .unwrap_or_else(|| format!("{:?}", report.level));
+            if actual.eq_ignore_ascii_case(level) {
+                pass_result(test.id.clone(), profile_id)
+            } else {
+                fail_result(
+                    test.id.clone(),
+                    profile_id,
+                    format!("expected compat level {level}, got {actual}"),
+                )
+            }
+        }
+        ConformanceAssertion::EvolveValid { comparison_fixture } => {
+            let older = match load_valid_contract(&content, format) {
+                Ok(contract) => contract,
+                Err(message) => {
+                    return fail_result(test.id.clone(), profile_id, message);
+                }
+            };
+            let newer_bytes = match std::fs::read(fixtures_dir.join(comparison_fixture)) {
+                Ok(bytes) => bytes,
+                Err(err) => {
+                    return fail_result(
+                        test.id.clone(),
+                        profile_id,
+                        format!("read comparison fixture: {err}"),
+                    );
+                }
+            };
+            let newer = match load_valid_contract(&newer_bytes, format) {
+                Ok(contract) => contract,
+                Err(message) => {
+                    return fail_result(test.id.clone(), profile_id, message);
+                }
+            };
+            let report = compatibility::analyze_evolution(&older, &newer);
+            if report.diagnostics.iter().any(|d| d.severity.is_error()) {
+                fail_result(
+                    test.id.clone(),
+                    profile_id,
+                    format!("expected evolution success: {:?}", report.diagnostics),
+                )
+            } else {
+                pass_result(test.id.clone(), profile_id)
             }
         }
         ConformanceAssertion::PlanValid => {

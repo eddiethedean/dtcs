@@ -12,7 +12,7 @@ Reference-implementation milestones for the Data Transformation Contract Standar
 
 ## Tiers
 
-Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2----core-concepts) pipeline.
+Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2----core-concepts) pipeline.
 
 | Tier | Phases | Pipeline stage |
 |------|--------|----------------|
@@ -21,6 +21,7 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **III — Semantic** | [0.4](#phase-04--registries--extensibility) · [0.5](#phase-05--standard-libraries) · [0.6](#phase-06--semantic-analysis) | Identifiers, libraries, static semantics |
 | **IV — Planning & execution** | [0.7](#phase-07--transformation-plan) · [0.8](#phase-08--plan-optimization) · [0.9](#phase-09--execution-pipeline) | Plan → optimize → compile → run |
 | **V — Certification** | [0.10](#phase-010--conformance--ecosystem) | Conformance, security, governance |
+| **VI — SPEC completeness** | [0.11](#phase-011--spec-completeness) | Full Ch 17–19 catalog; COM depth; completeness matrix |
 
 ## Status overview
 
@@ -30,43 +31,46 @@ Phases are grouped into five tiers that follow the [Ch 2 §13](SPEC.md#chapter-2
 | **0.2** | [Contract Model](#phase-02--contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
 | **0.3** | [Contract Analysis](#phase-03--contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
 | **0.4** | [Registries & Extensibility](#phase-04--registries--extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
-| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog) |
+| **0.5** | [Standard Libraries](#phase-05--standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog; full catalog in 0.11) |
 | **0.6** | [Semantic Analysis](#phase-06--semantic-analysis) | Ch 7–8 | **Complete** (`0.6.0`) |
 | **0.7** | [Transformation Plan](#phase-07--transformation-plan) | Ch 13 (lowering) | **Complete** (`0.7.0`) |
 | **0.8** | [Plan Optimization](#phase-08--plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | **Complete** (`0.8.0`) |
 | **0.9** | [Execution Pipeline](#phase-09--execution-pipeline) | Ch 14–16 | **Complete** (`0.9.0`) |
-| **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Complete** |
+| **0.10** | [Conformance & Ecosystem](#phase-010--conformance--ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Complete** (`0.10.1`) |
+| **0.11** | [SPEC Completeness](#phase-011--spec-completeness) | Ch 4–8, 10, 12, 14–19 (deepening); Appendix A | **Complete** (`0.11.0`) |
 
 ## SPEC chapter index
 
 | Ch | Title | Phase | Coverage |
 |----|-------|-------|----------|
-| 1 | [Introduction](SPEC.md#chapter-1----introduction) | 0.1, 0.10 | Principles (0.1); conformance intro (0.10) |
-| 2 | [Core Concepts](SPEC.md#chapter-2----core-concepts) | 0.1, 0.10 | Vocabulary (0.1); concept conformance (0.10) |
-| 3 | [Canonical Object Model](SPEC.md#chapter-3----canonical-object-model) | 0.1 | Full |
-| 4 | [Type System](SPEC.md#chapter-4----type-system) | 0.1 partial, 0.2 | Primitives (0.1); conversion, inference, collections (0.2) |
+| 1 | [Introduction](SPEC.md#chapter-1----introduction) | 0.1, 0.10 | Full — principles (0.1); conformance intro (0.10) |
+| 2 | [Core Concepts](SPEC.md#chapter-2----core-concepts) | 0.1, 0.10, 0.11 | Full — vocabulary (0.1); conformance (0.10); guarantees COM (0.11) |
+| 3 | [Canonical Object Model](SPEC.md#chapter-3----canonical-object-model) | 0.1, 0.11 | Full — deepened by 0.11 (guarantees, compatibility decl, nested extensions) |
+| 4 | [Type System](SPEC.md#chapter-4----type-system) | 0.1, 0.2, 0.11 | Full — deepened by 0.11 |
 | 5 | [Metadata](SPEC.md#chapter-5----metadata) | 0.2 | Full |
-| 6 | [Inputs and Outputs](SPEC.md#chapter-6----inputs-and-outputs) | 0.1 partial, 0.2 | Schemas, lineage hooks (0.1); multiplicity, streaming (0.2) |
-| 7 | [Transformation Semantics](SPEC.md#chapter-7----transformation-semantics) | 0.6 | Full |
-| 8 | [Expression Language](SPEC.md#chapter-8----expression-language) | 0.6, 0.8 | Static analysis (0.6); optimization (0.8) |
-| 9 | [Validation](SPEC.md#chapter-9----validation) | 0.1 | Full; deepened by 0.2 and 0.6 |
-| 10 | [Lineage](SPEC.md#chapter-10----lineage) | 0.1 partial, 0.3 | Integrity validation (0.1); impact analysis (0.3) |
-| 11 | [Compatibility](SPEC.md#chapter-11----compatibility) | 0.3 | Full |
-| 12 | [Evolution](SPEC.md#chapter-12----evolution) | 0.3 | Full |
-| 13 | [Transformation Plan](SPEC.md#chapter-13----transformation-plan) | 0.7, 0.8 | Lowering (0.7); optimization (0.8) |
-| 14 | [Engine Capability Model](SPEC.md#chapter-14----engine-capability-model) | 0.9 | Full |
-| 15 | [Compilation](SPEC.md#chapter-15----compilation) | 0.8 partial, 0.9 | Optimization boundary (0.8); compilation (0.9) |
-| 16 | [Runtime](SPEC.md#chapter-16----runtime) | 0.9 | Full |
-| 17 | [Semantic Actions](SPEC.md#chapter-17----semantic-actions) | 0.1 partial, 0.5 partial, 0.8 | Identity (0.1); starter library (0.5); optimization (0.8) |
-| 18 | [Function Model](SPEC.md#chapter-18----function-model) | 0.1 partial, 0.5 partial, 0.8 | Identity (0.1); starter library (0.5); optimization (0.8) |
-| 19 | [Rule Model](SPEC.md#chapter-19----rule-model) | 0.1 partial, 0.5 partial, 0.8 | Identity (0.1); starter library (0.5); optimization (0.8) |
+| 6 | [Inputs and Outputs](SPEC.md#chapter-6----inputs-and-outputs) | 0.1, 0.2, 0.11 | Full — deepened by 0.11 |
+| 7 | [Transformation Semantics](SPEC.md#chapter-7----transformation-semantics) | 0.6, 0.11 | Full — deepened by 0.11 guarantees |
+| 8 | [Expression Language](SPEC.md#chapter-8----expression-language) | 0.6, 0.8, 0.11 | Full — deepened by 0.11 null/missing/invalid semantics |
+| 9 | [Validation](SPEC.md#chapter-9----validation) | 0.1 | Full; deepened by 0.2, 0.6, and 0.11 |
+| 10 | [Lineage](SPEC.md#chapter-10----lineage) | 0.1, 0.3, 0.11 | Full — deepened by 0.11 (`operation`, `flow`) |
+| 11 | [Compatibility](SPEC.md#chapter-11----compatibility) | 0.3, 0.11 | Full — deepened by 0.11 compatibility declaration |
+| 12 | [Evolution](SPEC.md#chapter-12----evolution) | 0.3, 0.11 | Full — deepened by 0.11 |
+| 13 | [Transformation Plan](SPEC.md#chapter-13----transformation-plan) | 0.7, 0.8 | Full |
+| 14 | [Engine Capability Model](SPEC.md#chapter-14----engine-capability-model) | 0.9, 0.11 | Full — deepened by 0.11 full-catalog profile |
+| 15 | [Compilation](SPEC.md#chapter-15----compilation) | 0.8, 0.9, 0.11 | Full — deepened by 0.11 action parameters |
+| 16 | [Runtime](SPEC.md#chapter-16----runtime) | 0.9, 0.11 | Full — deepened by 0.11 full catalog + null tokens |
+| 17 | [Semantic Actions](SPEC.md#chapter-17----semantic-actions) | 0.5, 0.8, 0.11 | Full — starter (0.5); optimization (0.8); full catalog (0.11) |
+| 18 | [Function Model](SPEC.md#chapter-18----function-model) | 0.5, 0.8, 0.11 | Full — starter (0.5); optimization (0.8); full catalog (0.11) |
+| 19 | [Rule Model](SPEC.md#chapter-19----rule-model) | 0.5, 0.8, 0.11 | Full — starter (0.5); optimization (0.8); full catalog (0.11) |
 | 20 | [Diagnostics](SPEC.md#chapter-20----diagnostics) | 0.1 | Full; stage codes added per phase |
-| 21 | [Extensibility](SPEC.md#chapter-21----extensibility) | 0.4 | Full |
-| 22 | [Registries](SPEC.md#chapter-22----registries) | 0.4 | Full |
-| 23 | [Conformance](SPEC.md#chapter-23----conformance) | 0.10 | Full |
+| 21 | [Extensibility](SPEC.md#chapter-21----extensibility) | 0.4, 0.11 | Full — deepened by 0.11 nested extensions |
+| 22 | [Registries](SPEC.md#chapter-22----registries) | 0.4, 0.11 | Full — deepened by 0.11 builtin catalogs |
+| 23 | [Conformance](SPEC.md#chapter-23----conformance) | 0.10 | Full *(N/A: external cert authority)* |
 | 24 | [Security Considerations](SPEC.md#chapter-24----security-considerations) | 0.10 | Full |
 | 25 | [Versioning](SPEC.md#chapter-25----versioning) | 0.3 | Full |
 | 26 | [Governance](SPEC.md#chapter-26----governance) | 0.10 | Full |
+
+Chapter-level evidence matrix: [`docs/implementation/spec-completeness.md`](docs/implementation/spec-completeness.md). Normative identifier catalog: [SPEC Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative).
 
 ## Dependencies
 
@@ -90,9 +94,11 @@ Tier IV       │                    │                             └──�
               │                    │                                                 └──► 0.9 Execution Pipeline
               │                    │                                                           │
 Tier V        │                    │                                                           └──► 0.10 Conformance
+              │                    │                                                                     │
+Tier VI       │                    │                                                                     └──► 0.11 SPEC Completeness
 ```
 
-**Parallel work:** 0.4 and 0.3 can start after 0.2 (registries do not require compatibility engine). 0.6 requires 0.5. 0.9 ships in order: capabilities → compile → runtime.
+**Parallel work:** 0.4 and 0.3 can start after 0.2 (registries do not require compatibility engine). 0.6 requires 0.5. 0.9 ships in order: capabilities → compile → runtime. 0.11 follows 0.10.
 
 ---
 
@@ -268,15 +274,9 @@ Publish the complete `dtcs:` standard libraries in the built-in registry ([Ch 2 
 | Registry-driven validation | Structured JSON `definition` blocks drive target type, nullability, rule phases, function arity, and return-type checks in `src/validation/semantics.rs` | Done |
 | Fixtures | Stdlib validation fixtures under `tests/fixtures/stdlib_*.yaml` | Done |
 
-### Remaining
+### Remaining (completed in 0.11)
 
-| Area | Work | SPEC |
-|------|------|------|
-| Semantic actions | Full catalog: projection, selection, aggregation, grouping, joining, sorting, union, partitioning, filtering; type and lineage semantics per action | [Ch 17 §5–10](SPEC.md#chapter-17----semantic-actions) |
-| Functions | Remaining standard library entries; direct `dtcs:` call syntax in expressions | [Ch 18 §3–10](SPEC.md#chapter-18----function-model) |
-| Rules | Remaining standard library entries with scope and outcome metadata | [Ch 19 §3–10](SPEC.md#chapter-19----rule-model) |
-
-Rule parameters, positional function signatures, expression return nullability, and per-entry fixtures shipped in `0.5.0`.
+Full Ch 17–19 catalogs (dataset operators, additional functions/rules, normative Appendix A) shipped in [Phase 0.11](#phase-011--spec-completeness). Rule parameters, positional function signatures, expression return nullability, and per-entry fixtures for the starter subset shipped in `0.5.0`.
 
 ### Modules
 
@@ -284,9 +284,8 @@ Rule parameters, positional function signatures, expression return nullability, 
 
 ### Exit criteria
 
-- [Ch 17 §13](SPEC.md#chapter-17----semantic-actions), [Ch 18 §13](SPEC.md#chapter-18----function-model), [Ch 19 §13](SPEC.md#chapter-19----rule-model)
-- Each library entry has registry metadata, type rules, and at least one fixture
-- Full Ch 17–19 catalogs (not just the starter subset above)
+- [x] Starter catalog embedded and validated against registry definitions
+- [x] Full Ch 17–19 catalogs completed in `0.11.0` (see Phase 0.11)
 
 ---
 
@@ -458,7 +457,7 @@ Ship in three milestones within the phase:
 
 ## Phase 0.10 — Conformance & Ecosystem
 
-**Target:** `0.10.x` · **Tier:** V · **Prerequisite:** 0.9
+**Target:** `0.10.x` · **Tier:** V · **Prerequisite:** 0.9 · **Status:** **Complete** (`0.10.1`)
 
 **Implements:** Integrated Platform · **SPEC:** [Ch 1 §10](SPEC.md#chapter-1----introduction), [Ch 2 §14](SPEC.md#chapter-2----core-concepts), [Ch 23](SPEC.md#chapter-23----conformance)–[24](SPEC.md#chapter-24----security-considerations), [Ch 26](SPEC.md#chapter-26----governance)
 
@@ -494,7 +493,45 @@ Prove objective conformance across all declared implementation classes; align pr
 - [x] [Ch 2 §13](SPEC.md#chapter-2----core-concepts): full pipeline verified end-to-end
 
 - [x] Publish to crates.io and PyPI at `0.10.0` (tag `v0.10.0` triggers [`.github/workflows/release.yml`](.github/workflows/release.yml))
-- [ ] Publish patch `0.10.1` — test suite verification (tag `v0.10.1` triggers release workflow)
+- [x] Publish patch `0.10.1` — test suite verification (tag `v0.10.1` triggers release workflow)
+
+---
+
+## Phase 0.11 — SPEC Completeness
+
+**Target:** `0.11.x` · **Tier:** VI · **Prerequisite:** 0.10 · **Status:** **Complete** (`0.11.0`)
+
+**Implements:** Full standard-library catalog, deepened COM/runtime semantics · **SPEC:** [Ch 4](SPEC.md#chapter-4----type-system)–[8](SPEC.md#chapter-8----expression-language), [Ch 10](SPEC.md#chapter-10----lineage), [Ch 12](SPEC.md#chapter-12----evolution), [Ch 14](SPEC.md#chapter-14----engine-capability-model)–[19](SPEC.md#chapter-19----rule-model), [Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative)
+
+### Goal
+
+Close remaining SPEC gaps in the reference implementation: complete the Ch 17–19 starter→full catalog, deepen COM fields (lineage, guarantees, compatibility, null semantics), and publish an objective chapter completeness matrix. Production ETL, Polars/Spark/SQL backends, and an external certification authority remain intentional non-goals.
+
+### Deliverables
+
+| Area | Work | SPEC |
+|------|------|------|
+| Semantic actions | Full catalog: field transforms + project, select, filter, aggregate, group, join, sort, union, partition, derive; action `parameters` | [Ch 17 §5–10](SPEC.md#chapter-17----semantic-actions), [Appendix A §A.3](SPEC.md#appendix-a----standard-library-catalog-normative) |
+| Functions | Full catalog including `abs`, `min`, `max`, `contains`, `is_null`, `is_missing`; nullBehavior tokens | [Ch 18](SPEC.md#chapter-18----function-model), [Appendix A §A.4](SPEC.md#appendix-a----standard-library-catalog-normative) |
+| Rules | Full catalog including `one_of`, `equals` (`allowIndeterminate`) | [Ch 19](SPEC.md#chapter-19----rule-model), [Appendix A §A.5](SPEC.md#appendix-a----standard-library-catalog-normative) |
+| Lineage COM | Mapping `operation` (default `dtcs:derive`), `flow` enum, optional `id` | [Ch 10 §5–7](SPEC.md#chapter-10----lineage), [Appendix A §A.6](SPEC.md#appendix-a----standard-library-catalog-normative) |
+| Null semantics | Distinguish null / missing / invalid at runtime | [Ch 8 §9](SPEC.md#chapter-8----expression-language), [Appendix A §A.7](SPEC.md#appendix-a----standard-library-catalog-normative) |
+| Guarantees & compatibility | First-class `guarantees` and `compatibility` COM fields | [Ch 2 §3](SPEC.md#chapter-2----core-concepts), [Ch 3](SPEC.md#chapter-3----canonical-object-model), [Ch 11](SPEC.md#chapter-11----compatibility)–[12](SPEC.md#chapter-12----evolution) |
+| Capabilities / compile / runtime | `dtcs:reference` profile and reference backend cover the full catalog | [Ch 14](SPEC.md#chapter-14----engine-capability-model)–[16](SPEC.md#chapter-16----runtime) |
+| Completeness matrix | Chapter-by-chapter Full/N/A evidence document | [`docs/implementation/spec-completeness.md`](docs/implementation/spec-completeness.md) |
+| Normative catalog | SPEC Appendix A | [Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative) |
+
+### Modules
+
+`src/registry/builtin/`, `src/model/` (`lineage.rs`, `action.rs`, `guarantees.rs`, `compatibility_decl.rs`, `null_behavior.rs`), `src/runtime/`, `src/capability/`, `src/compile/`
+
+### Exit criteria
+
+- [x] Full Ch 17–19 catalogs embedded, validated, and executed by the reference runtime
+- [x] Lineage `operation` / `flow` defaults and null/missing/invalid tokens implemented
+- [x] [SPEC Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative) published (normative identifier catalog)
+- [x] [`docs/implementation/spec-completeness.md`](docs/implementation/spec-completeness.md): all 26 chapters Full except intentional N/A non-goals
+- [x] Package versions at `0.11.0` (crates.io / PyPI / bindings)
 
 ---
 
