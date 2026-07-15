@@ -37,6 +37,9 @@ test("node bindings smoke test", async (t) => {
   try {
     dtcs = await import(join(root, "..", "index.js"));
   } catch (err) {
+    if (process.env.CI || process.env.DTCS_REQUIRE_BINDINGS === "1") {
+      throw err;
+    }
     t.skip(`node binding unavailable: ${err}`);
     return;
   }

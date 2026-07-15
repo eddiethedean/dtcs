@@ -3,11 +3,20 @@
 use std::fs;
 use std::path::PathBuf;
 
-use dtcs::{parse, parse_and_validate, DocumentFormat, InformationFlow, NullBehavior};
+use dtcs::{
+    parse, parse_and_validate, parse_validate_and_run, DocumentFormat, InformationFlow,
+    NullBehavior, RuntimeInputs,
+};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures")
+        .join(name)
+}
+
+fn example(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
         .join(name)
 }
 
@@ -185,6 +194,52 @@ fn conformance_analyzer_assertions_pass() {
     assert!(
         report.is_valid(),
         "analyzer conformance failed: {:?}",
+        report
+            .results
+            .iter()
+            .filter(|r| !r.passed)
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn flagship_minimal_example_validates() {
+    let content = fs::read(example("minimal.dtcs.yaml")).expect("read minimal example");
+    let report = parse_and_validate(&content, DocumentFormat::Yaml);
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+    let contract = parse(&content, DocumentFormat::Yaml)
+        .contract
+        .expect("contract");
+    assert_eq!(contract.id, "demo.minimal");
+}
+
+#[test]
+fn flagship_customer_pipeline_end_to_end() {
+    let content = fs::read(example("customer_pipeline.dtcs.yaml")).expect("read customer_pipeline");
+    let report = parse_and_validate(&content, DocumentFormat::Yaml);
+    assert!(report.is_valid(), "{:?}", report.diagnostics);
+
+    let inputs: RuntimeInputs =
+        serde_json::from_slice(&read("runtime/customer_pipeline_input.json"))
+            .expect("pipeline inputs");
+    let result = parse_validate_and_run(&content, DocumentFormat::Yaml, &inputs);
+    assert!(result.is_valid(), "{:?}", result.diagnostics);
+    let outputs = result.outputs.expect("outputs");
+    let clean = outputs.get("customer_clean").expect("customer_clean");
+    assert_eq!(clean.len(), 2);
+    assert_eq!(
+        clean[0].get("email"),
+        Some(&dtcs::RuntimeValue::String("alice@example.com".into()))
+    );
+}
+
+#[test]
+fn conformance_fixtures_load_without_on_disk_dir() {
+    let missing = PathBuf::from("/tmp/dtcs-missing-fixtures-dir-does-not-exist");
+    let report = dtcs::conformance::run_for_profiles(Some(&["parser".into()]), &missing);
+    assert!(
+        report.is_valid(),
+        "embedded fixture fallback failed: {:?}",
         report
             .results
             .iter()

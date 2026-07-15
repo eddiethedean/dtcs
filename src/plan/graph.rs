@@ -253,10 +253,12 @@ fn add_action_edges(
             );
         }
     } else {
-        let mut target_counts: HashMap<&str, usize> = HashMap::new();
+        let mut target_counts: HashMap<String, usize> = HashMap::new();
         for node in &action_nodes {
             if let PlanNodeKind::SemanticAction(action) = &node.kind {
-                *target_counts.entry(action.target.as_str()).or_default() += 1;
+                *target_counts
+                    .entry(action_write_interface(&action.target))
+                    .or_default() += 1;
             }
         }
         for (target, count) in target_counts {
@@ -266,7 +268,7 @@ fn add_action_edges(
                         codes::INVALID_PLAN,
                         DiagnosticCategory::Semantic,
                         format!(
-                            "multiple semantic actions target '{target}' without an explicit ordering declaration"
+                            "multiple semantic actions target interface '{target}' without an explicit ordering declaration"
                         ),
                     )
                     .with_object_ref("semantics.ordering")
@@ -284,19 +286,12 @@ fn add_action_edges(
         let PlanNodeKind::SemanticAction(action) = &node.kind else {
             continue;
         };
-        let Some((iface, _)) = action.target.split_once('.') else {
-            continue;
-        };
+        let iface = action_write_interface(&action.target);
 
         if contract.inputs.iter().any(|i| i.id == iface) {
-            push_edge(
-                edges,
-                iface.to_string(),
-                node.id.clone(),
-                DependencyReason::FieldRead,
-            );
-        } else if output_ids.contains(iface) {
-            for input in lineage_inputs_for_output(contract, iface) {
+            push_edge(edges, iface, node.id.clone(), DependencyReason::FieldRead);
+        } else if output_ids.contains(iface.as_str()) {
+            for input in lineage_inputs_for_output(contract, &iface) {
                 push_edge(edges, input, node.id.clone(), DependencyReason::Lineage);
             }
         }
@@ -347,7 +342,7 @@ fn writers_per_target(nodes: &[PlanNode]) -> HashMap<String, Vec<String>> {
     let mut map: HashMap<String, Vec<String>> = HashMap::new();
     for node in nodes {
         if let PlanNodeKind::SemanticAction(action) = &node.kind {
-            map.entry(action.target.clone())
+            map.entry(action_write_interface(&action.target))
                 .or_default()
                 .push(node.id.clone());
         }
@@ -356,6 +351,15 @@ fn writers_per_target(nodes: &[PlanNode]) -> HashMap<String, Vec<String>> {
         ids.sort();
     }
     map
+}
+
+/// Group write targets by interface so field actions (`in.email`) and dataset
+/// actions (`in`) share an ordering/dependency domain.
+fn action_write_interface(target: &str) -> String {
+    target
+        .split_once('.')
+        .map(|(iface, _)| iface.to_string())
+        .unwrap_or_else(|| target.to_string())
 }
 
 fn add_expression_edges(
@@ -444,11 +448,13 @@ fn last_writer_for_target(
     nodes: &[PlanNode],
     target: &str,
 ) -> Option<String> {
+    let target_iface = action_write_interface(target);
     let writers: HashSet<_> = nodes
         .iter()
         .filter_map(|node| {
             if let PlanNodeKind::SemanticAction(action) = &node.kind {
-                if action.target == target {
+                if action_write_interface(&action.target) == target_iface || action.target == target
+                {
                     return Some(node.id.as_str());
                 }
             }

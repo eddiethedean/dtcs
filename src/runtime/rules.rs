@@ -38,6 +38,9 @@ pub fn evaluate_rule(
             if value.is_null() {
                 return Err(format!("rule '{}' violated: value is null", rule.id));
             }
+            if value.is_missing() {
+                return Err(format!("rule '{}' violated: value is missing", rule.id));
+            }
             if value.is_invalid() {
                 return Err(format!("rule '{}' violated: value is invalid", rule.id));
             }

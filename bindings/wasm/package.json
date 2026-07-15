@@ -13,7 +13,7 @@
     "pkg/dtcs_wasm.js"
   ],
   "scripts": {
-    "build": "wasm-pack build --target web --out-dir pkg",
+    "build": "wasm-pack build --target web --out-dir pkg && rm -f pkg/.gitignore",
     "test": "node --test test/smoke.test.mjs"
   },
   "keywords": [

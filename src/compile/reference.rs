@@ -2,12 +2,12 @@
 
 use super::CompileResult;
 use crate::capability::{match_plan, reference_profile, EngineCapabilityDeclaration};
-use crate::diagnostics::{codes, compilation_error, DiagnosticCategory};
+use crate::diagnostics::{codes, compilation_error, Diagnostic, DiagnosticCategory};
 use crate::model::RulePhase;
 use crate::plan::{
     plan_as_contract, topological_order, validate, PlanNode, PlanNodeKind, TransformationPlan,
 };
-use crate::runtime::parse_qualified_field;
+use crate::runtime::parse_qualified_field_with_interfaces;
 
 use super::compiler::Compiler;
 use super::model::{ExecutionPlan, ExecutionStep, ExecutionStepKind, ExecutionTarget};
@@ -61,6 +61,7 @@ impl Compiler for ReferenceCompiler {
             InterfaceKind::Input,
             &mut steps,
             &mut step_index,
+            &mut result.diagnostics,
         );
         push_materialize_steps(plan, &mut steps, &mut step_index);
         push_ordered_node_steps(
@@ -69,8 +70,13 @@ impl Compiler for ReferenceCompiler {
             InterfaceKind::Output,
             &mut steps,
             &mut step_index,
+            &mut result.diagnostics,
         );
         push_postcondition_steps(plan, &mut steps, &mut step_index);
+
+        if result.diagnostics.iter().any(|d| d.severity.is_error()) {
+            return result;
+        }
 
         if steps.is_empty() {
             result.diagnostics.push(
@@ -219,14 +225,19 @@ fn push_ordered_node_steps(
     interface_kind: InterfaceKind,
     steps: &mut Vec<ExecutionStep>,
     step_index: &mut usize,
+    diagnostics: &mut Vec<Diagnostic>,
 ) {
     for node_id in order {
         let Some(node) = plan.nodes.iter().find(|n| &n.id == node_id) else {
             continue;
         };
-        if let Some(step) = node_step(plan, node, interface_kind, *step_index) {
-            steps.push(step);
-            *step_index += 1;
+        match node_step(plan, node, interface_kind, *step_index) {
+            Ok(Some(step)) => {
+                steps.push(step);
+                *step_index += 1;
+            }
+            Ok(None) => {}
+            Err(diagnostic) => diagnostics.push(diagnostic),
         }
     }
 }
@@ -236,13 +247,24 @@ fn node_step(
     node: &PlanNode,
     interface_kind: InterfaceKind,
     step_index: usize,
-) -> Option<ExecutionStep> {
+) -> Result<Option<ExecutionStep>, Diagnostic> {
     match &node.kind {
         PlanNodeKind::SemanticAction(action) => {
-            if target_interface(plan, &action.target)? != interface_kind {
-                return None;
+            let kind = target_interface(plan, &action.target).ok_or_else(|| {
+                compilation_error(
+                    codes::COMPILATION_FAILED,
+                    DiagnosticCategory::Semantic,
+                    format!(
+                        "cannot resolve semantic action target '{}' to an input or output interface",
+                        action.target
+                    ),
+                )
+                .with_object_ref(format!("semanticActions.{}", node.id))
+            })?;
+            if kind != interface_kind {
+                return Ok(None);
             }
-            Some(ExecutionStep {
+            Ok(Some(ExecutionStep {
                 id: format!("step_{step_index}"),
                 kind: ExecutionStepKind::ApplyAction {
                     node_id: node.id.clone(),
@@ -250,29 +272,52 @@ fn node_step(
                     target: action.target.clone(),
                     parameters: action.parameters.clone(),
                 },
-            })
+            }))
         }
         PlanNodeKind::Rule(rule) if rule.phase == RulePhase::Execution => {
-            if target_interface(plan, &rule.target)? != interface_kind {
-                return None;
+            let kind = target_interface(plan, &rule.target).ok_or_else(|| {
+                compilation_error(
+                    codes::COMPILATION_FAILED,
+                    DiagnosticCategory::Semantic,
+                    format!(
+                        "cannot resolve rule target '{}' to an input or output interface",
+                        rule.target
+                    ),
+                )
+                .with_object_ref(format!("rules.{}", node.id))
+            })?;
+            if kind != interface_kind {
+                return Ok(None);
             }
-            Some(ExecutionStep {
+            Ok(Some(ExecutionStep {
                 id: format!("step_{step_index}"),
                 kind: ExecutionStepKind::ValidateRules {
                     phase: RulePhase::Execution,
                     rule_ids: vec![rule.id.clone()],
                 },
-            })
+            }))
         }
         // Expression write targets are not defined in COM yet; omit until modeled.
-        PlanNodeKind::Expression(_) | PlanNodeKind::Rule(_) => None,
+        PlanNodeKind::Expression(_) | PlanNodeKind::Rule(_) => Ok(None),
     }
 }
 
 fn target_interface(plan: &TransformationPlan, target: &str) -> Option<InterfaceKind> {
-    let interface_id = parse_qualified_field(target)
+    let interface_ids: Vec<String> = plan
+        .inputs
+        .iter()
+        .map(|i| i.id.clone())
+        .chain(plan.outputs.iter().map(|o| o.id.clone()))
+        .collect();
+    let interface_id = parse_qualified_field_with_interfaces(target, &interface_ids)
         .map(|qualified| qualified.interface_id)
-        .unwrap_or_else(|| target.to_string());
+        .or_else(|| {
+            if interface_ids.iter().any(|id| id == target) {
+                Some(target.to_string())
+            } else {
+                None
+            }
+        })?;
     if plan.inputs.iter().any(|input| input.id == interface_id) {
         Some(InterfaceKind::Input)
     } else if plan.outputs.iter().any(|output| output.id == interface_id) {

@@ -19,7 +19,6 @@ fn is_dataset_action_target(action_id: &str) -> bool {
             | "dtcs:sort"
             | "dtcs:union"
             | "dtcs:partition"
-            | "dtcs:derive"
     )
 }
 

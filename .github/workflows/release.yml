@@ -236,6 +236,8 @@ jobs:
         run: |
           rustup target add wasm32-unknown-unknown
           npm run build
+          # wasm-pack writes pkg/.gitignore with '*', which empties npm pack contents.
+          rm -f pkg/.gitignore
       - uses: actions/upload-artifact@v4
         with:
           name: wasm-pkg
@@ -289,6 +291,7 @@ jobs:
             echo "NPM_TOKEN not configured; skipping npm publish"
             exit 0
           fi
+          rm -f pkg/.gitignore
           npm publish --access public
       - name: Publish Node npm package
         working-directory: bindings/node

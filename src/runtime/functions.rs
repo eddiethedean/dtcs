@@ -87,7 +87,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         }
         "dtcs:coalesce" => {
             for arg in args {
-                if !arg.is_null() {
+                if !arg.is_null() && !arg.is_missing() && !arg.is_invalid() {
                     return Ok(arg.clone());
                 }
             }

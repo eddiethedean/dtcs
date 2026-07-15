@@ -37,6 +37,9 @@ test("wasm bindings smoke test", async (t) => {
   try {
     wasm = await import(join(pkgRoot, "dtcs_wasm.js"));
   } catch (err) {
+    if (process.env.CI || process.env.DTCS_REQUIRE_BINDINGS === "1") {
+      throw err;
+    }
     t.skip(`wasm package not built: ${err}`);
     return;
   }

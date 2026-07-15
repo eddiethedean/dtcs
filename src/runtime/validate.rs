@@ -3,7 +3,7 @@
 use crate::compile::{validate as validate_compiled_plan, ExecutionPlan};
 use crate::diagnostics::DiagnosticReport;
 use crate::model::{Input, Schema};
-use crate::runtime::model::{Dataset, RuntimeInputs, RuntimeValue};
+use crate::runtime::model::{Dataset, RuntimeInputs};
 
 /// Validate an execution plan before runtime execution.
 #[must_use]
@@ -35,30 +35,8 @@ pub fn validate_inputs(inputs: &[Input], provided: &RuntimeInputs) -> Result<(),
         }
     }
 
-    validate_equal_row_counts(inputs, provided)
-}
-
-fn validate_equal_row_counts(inputs: &[Input], provided: &RuntimeInputs) -> Result<(), String> {
-    let mut lengths = Vec::new();
-    for input in inputs {
-        if let Some(dataset) = provided.get(&input.id) {
-            if !dataset.is_empty() {
-                lengths.push((input.id.clone(), dataset.len()));
-            }
-        }
-    }
-    if lengths.len() < 2 {
-        return Ok(());
-    }
-    let expected = lengths[0].1;
-    for (id, len) in &lengths[1..] {
-        if *len != expected {
-            return Err(format!(
-                "input '{}' has {len} rows but '{}' has {expected} rows; all provided inputs must have equal row counts",
-                id, lengths[0].0
-            ));
-        }
-    }
+    // Unequal input lengths are allowed (for example joins). Materialize paths
+    // that align by index handle short inputs by producing null/missing cells.
     Ok(())
 }
 
@@ -70,9 +48,13 @@ fn validate_dataset_schema(
     for (row_index, row) in dataset.iter().enumerate() {
         for field in &schema.fields {
             let value = row.get(&field.name);
-            if !field.nullable && value.map_or(true, RuntimeValue::is_null) {
+            let invalid_for_required = match value {
+                None => true,
+                Some(v) => !field.nullable && (v.is_null() || v.is_missing() || v.is_invalid()),
+            };
+            if invalid_for_required {
                 return Err(format!(
-                    "input '{interface_id}' row {row_index} field '{}' is null but not nullable",
+                    "input '{interface_id}' row {row_index} field '{}' is null/missing/invalid but not nullable",
                     field.name
                 ));
             }

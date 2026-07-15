@@ -31,17 +31,25 @@ if not dtcs.is_valid(report):
         print(d["severity"], d["id"], d["message"])
 ```
 
+`analyze` returns nested reports — check each:
+
+```python
+result = dtcs.analyze(contract)
+assert dtcs.is_valid(result["validation"])
+assert dtcs.is_valid(result["analysis"])
+```
+
 ## Parse and validate
 
 | Function | Arguments | Returns |
 |----------|-----------|---------|
-| `parse(content, format="yaml")` | `bytes`/`str`, format `yaml`\|`json` | `{contract?, diagnostics}` |
-| `parse_file(path)` | filesystem path | `{contract?, diagnostics}` |
-| `validate(contract, registry_path=None)` | COM dict | validation report |
-| `validate_with_registry(contract, registry_path)` | COM dict + vendor registry path | validation report |
-| `parse_and_validate(content, format="yaml")` | document bytes | combined report |
-| `validate_result(result, registry_path=None)` | parse result dict | merge parse + validate diagnostics |
-| `is_valid(report)` | any report-like dict | `bool` |
+| `parse(content, format="yaml")` | `bytes`/`str`, format `yaml`\|`json` | `{contract, report: {diagnostics}}` |
+| `parse_file(path)` | filesystem path | `{contract, report: {diagnostics}}` |
+| `validate(contract, registry_path=None)` | COM dict | `{diagnostics}` |
+| `validate_with_registry(contract, registry_path)` | COM dict + vendor registry path | `{diagnostics}` |
+| `parse_and_validate(content, format="yaml")` | document bytes | `{diagnostics}` |
+| `validate_result(result, registry_path=None)` | parse result dict | `{diagnostics}` |
+| `is_valid(report)` | any report-like dict with `diagnostics` | `bool` |
 
 ### Example
 
@@ -61,13 +69,13 @@ assert contract["dtcsVersion"] == "1.0.0"
 
 | Function | Returns (typical) |
 |----------|-------------------|
-| `analyze(contract, registry_path=None)` | analysis diagnostics report |
+| `analyze(contract, registry_path=None)` | `{validation, analysis}` (each has `diagnostics`) |
 | `plan_lower(contract, registry_path=None)` | `{plan, diagnostics}` |
-| `plan_validate(plan, registry_path=None)` | report |
+| `plan_validate(plan, registry_path=None)` | `{diagnostics}` |
 | `plan_optimize(plan, registry_path=None, *, validate=True)` | `{plan, diagnostics}` |
 | `plan_equivalent(before, after)` | `bool` |
 | `plan_topological_order(contract, plan)` | ordered node id list |
-| `metadata_validate(contract)` / `version_validate(contract)` | focused reports |
+| `metadata_validate(contract)` / `version_validate(contract)` | focused `{diagnostics}` reports |
 
 ## Compatibility and lineage
 
@@ -76,7 +84,7 @@ assert contract["dtcsVersion"] == "1.0.0"
 | `compat_analyze(source, target, scope=None)` | classification of target vs source |
 | `evolve_analyze(older, newer)` | same-identity revision analysis |
 | `lineage_analyze(contract, impact=None, dependency=None)` | dataset lineage |
-| `inspect(contract)` | summary dict (`inputs`, `outputs`, `semanticActions`, `rules`, …) |
+| `inspect(contract)` | human-readable **string** summary (not a dict) |
 
 ## Registry
 
@@ -91,9 +99,9 @@ assert contract["dtcsVersion"] == "1.0.0"
 | Function | Notes |
 |----------|-------|
 | `capability_reference_profile()` | embedded `dtcs:reference` |
-| `capability_match(plan, profile=None)` | `{supported, …}` |
+| `capability_match(plan, profile=None)` | `{supported, diagnostics, …}` |
 | `compile_plan(plan)` | `{plan, diagnostics}` execution plan |
-| `execution_validate(plan)` | report |
+| `execution_validate(plan)` | `{diagnostics}` |
 | `runtime_execute(execution_plan, inputs)` | `{outputs, diagnostics}` |
 
 `inputs` map interface id → list of row dicts. Cell values may be JSON `null`, or `{"$dtcs":"missing"}` / `{"$dtcs":"invalid"}`. **Do not coerce** missing/invalid to `None`.
@@ -116,11 +124,11 @@ assert len(result["outputs"]["customer_clean"]) == 2
 | Function | Notes |
 |----------|-------|
 | `conformance_declare(profile=None)` | Ch 23 capability declaration |
-| `conformance_run(profile=None)` | offline report (`None`/`"all"` runs every profile) |
+| `conformance_run(profile=None)` | offline report (`None`/`"all"` runs every profile). Fixtures are embedded in the wheel; optional `DTCS_FIXTURES` overrides the on-disk search path. |
 
 ## Typing
 
-The wheel does not yet ship `py.typed` / `.pyi` stubs. Treat return values as JSON-compatible dicts/lists.
+The wheel does not yet ship `py.typed` / `.pyi` stubs. Treat return values as JSON-compatible dicts/lists (except `inspect`, which returns `str`).
 
 ## See also
 

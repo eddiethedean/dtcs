@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 echo "==> DTCS security checklist (automated probes)"
-cargo run --quiet --bin dtcs -- conformance run --profile integrated-platform --json > /tmp/dtcs-security-report.json
+cargo run --quiet --bin dtcs -- conformance run --profile all --json > /tmp/dtcs-security-report.json
 
 python3 - <<'PY'
 import json

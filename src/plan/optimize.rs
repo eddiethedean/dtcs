@@ -418,7 +418,11 @@ fn optimize_actions(plan: &mut TransformationPlan, transforms: &mut Vec<Transfor
     let mut previous_by_target: HashMap<String, (String, String)> = HashMap::new();
 
     for (id, action, target) in action_nodes {
-        if let Some((prev_id, prev_action)) = previous_by_target.get(&target) {
+        let write_key = target
+            .split_once('.')
+            .map(|(iface, _)| iface.to_string())
+            .unwrap_or_else(|| target.clone());
+        if let Some((prev_id, prev_action)) = previous_by_target.get(&write_key) {
             if prev_action == &action && is_idempotent_action(&action) {
                 remove_ids.insert(id.clone());
                 transforms.push(TransformRecord {
@@ -431,7 +435,7 @@ fn optimize_actions(plan: &mut TransformationPlan, transforms: &mut Vec<Transfor
                 continue;
             }
         }
-        previous_by_target.insert(target, (id, action));
+        previous_by_target.insert(write_key, (id, action));
     }
 
     if remove_ids.is_empty() {

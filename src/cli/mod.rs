@@ -387,7 +387,9 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 return Ok(1);
             }
 
-            let plan = plan_result.plan.expect("valid plan result");
+            let plan = plan_result
+                .plan
+                .ok_or_else(|| miette::miette!("plan lowering succeeded without a plan"))?;
             if json {
                 println!(
                     "{}",
@@ -440,7 +442,9 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                         .map_err(|e| miette::miette!("{e}"))?;
                     return Ok(1);
                 }
-                plan_result.plan.expect("valid plan result")
+                plan_result
+                    .plan
+                    .ok_or_else(|| miette::miette!("plan lowering succeeded without a plan"))?
             };
 
             let options = crate::plan::OptimizeOptions {
@@ -482,7 +486,7 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 let optimized = optimize_result
                     .plan
                     .as_ref()
-                    .expect("valid optimize result");
+                    .ok_or_else(|| miette::miette!("optimization succeeded without a plan"))?;
                 let contract = crate::plan::plan_as_contract(optimized);
                 let order = crate::plan::topological_order(
                     &contract,
@@ -567,7 +571,9 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                     .map_err(|e| miette::miette!("{e}"))?;
                 return Ok(1);
             }
-            let execution_plan = compile_result.plan.expect("valid compile result");
+            let execution_plan = compile_result.plan.ok_or_else(|| {
+                miette::miette!("compilation succeeded without an execution plan")
+            })?;
             if json {
                 println!(
                     "{}",
@@ -599,7 +605,9 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                     .map_err(|e| miette::miette!("{e}"))?;
                 return Ok(1);
             }
-            let execution_plan = compile_result.plan.expect("valid compile result");
+            let execution_plan = compile_result.plan.ok_or_else(|| {
+                miette::miette!("compilation succeeded without an execution plan")
+            })?;
             let inputs = load_runtime_inputs(&input)?;
             let execute_result = crate::runtime::execute(&execution_plan, &inputs);
             if !execute_result.is_valid() {
@@ -617,7 +625,9 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                         .map_err(|e| miette::miette!("{e}"))?
                 );
             } else {
-                let outputs = execute_result.outputs.expect("valid execute result");
+                let outputs = execute_result
+                    .outputs
+                    .ok_or_else(|| miette::miette!("execution succeeded without outputs"))?;
                 for (interface_id, dataset) in outputs {
                     println!("{interface_id}: {} row(s)", dataset.len());
                 }
@@ -997,7 +1007,9 @@ fn load_transformation_plan(
                 path.display()
             ));
         }
-        plan_result.plan.expect("valid plan result")
+        plan_result
+            .plan
+            .ok_or_else(|| miette::miette!("plan lowering succeeded without a plan"))?
     };
 
     if optimize {
@@ -1017,7 +1029,9 @@ fn load_transformation_plan(
                 path.display()
             ));
         }
-        plan = optimize_result.plan.expect("valid optimize result");
+        plan = optimize_result
+            .plan
+            .ok_or_else(|| miette::miette!("optimization succeeded without a plan"))?;
     }
 
     Ok(plan)

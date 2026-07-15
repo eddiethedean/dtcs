@@ -35,6 +35,9 @@ enum StdlibDefinition {
         #[serde(default)]
         #[serde(rename = "targetKind")]
         target_kind: Option<String>,
+        /// Parameter names from the registry definition (string list form).
+        #[serde(default)]
+        parameters: Option<Vec<String>>,
     },
     #[serde(rename = "rule")]
     Rule {
@@ -249,10 +252,22 @@ fn validate_stdlib_action(
         );
         return;
     }
+    if action.action == "dtcs:derive" {
+        ctx.error(
+            codes::INVALID_SEMANTIC_ACTION,
+            DiagnosticCategory::Semantic,
+            "dtcs:derive is a lineage mapping operation, not a semantic action",
+            Some(&format!("semanticActions.{}.action", action.id)),
+            Some("Use dtcs:derive only in lineage.mappings.operation"),
+        );
+        return;
+    }
+
     let Some(StdlibDefinition::SemanticAction {
         target_type,
         target_nullable_allowed,
         target_kind,
+        parameters: required_params,
     }) = parsed
     else {
         return;
@@ -296,6 +311,7 @@ fn validate_stdlib_action(
                 );
             }
         }
+        validate_dataset_action_parameters(ctx, action, required_params.as_deref());
         return;
     }
 
@@ -512,7 +528,42 @@ fn parameter_value_matches_type(value: &serde_json::Value, expected: &str) -> bo
         "list<string>" => value
             .as_array()
             .is_some_and(|items| items.iter().all(|item| item.as_str().is_some())),
+        "list<integer>" => value
+            .as_array()
+            .is_some_and(|items| items.iter().all(|item| value_as_integer(item).is_some())),
         _ => false,
+    }
+}
+
+fn validate_dataset_action_parameters(
+    ctx: &mut ValidationContext,
+    action: &crate::model::SemanticAction,
+    required: Option<&[String]>,
+) {
+    let Some(required) = required else {
+        return;
+    };
+    // Present in the catalog list but optional at runtime.
+    const OPTIONAL: &[&str] = &["equals", "descending", "rightKey"];
+    let object_ref = format!("semanticActions.{}.parameters", action.id);
+    for name in required {
+        if OPTIONAL.contains(&name.as_str()) {
+            continue;
+        }
+        if !action.parameters.contains_key(name) {
+            ctx.error(
+                codes::INVALID_SEMANTIC_ACTION,
+                DiagnosticCategory::Semantic,
+                format!(
+                    "{} requires parameter '{}' (got keys {:?})",
+                    action.action,
+                    name,
+                    action.parameters.keys().cloned().collect::<Vec<_>>()
+                ),
+                Some(&object_ref),
+                Some("Supply the documented parameters map for this dataset operator"),
+            );
+        }
     }
 }
 
@@ -877,10 +928,12 @@ mod tests {
                 target_type,
                 target_nullable_allowed,
                 target_kind,
+                parameters,
             }) => {
                 assert_eq!(target_type.as_deref(), Some("string"));
                 assert_eq!(target_nullable_allowed, Some(false));
                 assert_eq!(target_kind, None);
+                assert_eq!(parameters, None);
             }
             other => panic!("unexpected: {other:?}"),
         }

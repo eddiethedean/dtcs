@@ -10,6 +10,7 @@ mod reference;
 pub mod rules;
 mod runtime_trait;
 mod validate;
+mod value_serde;
 
 pub use model::{
     parse_qualified_field, parse_qualified_field_with_interfaces, Dataset, QualifiedField, Row,

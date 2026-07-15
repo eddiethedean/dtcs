@@ -1,7 +1,7 @@
 //! Offline conformance test orchestration (Ch 23 §8).
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::capability::{match_plan, reference_profile};
 use crate::compatibility;
@@ -12,6 +12,7 @@ use crate::runtime::{execute, RuntimeInputs, RuntimeValue};
 use crate::{analysis, validate};
 
 use super::declare;
+use super::fixtures::{default_fixtures_dir, read_fixture};
 use super::model::{
     ConformanceAssertion, ConformanceManifest, ConformanceReport, ConformanceTestCase,
     ConformanceTestResult,
@@ -25,12 +26,6 @@ const EMBEDDED_MANIFEST: &str = include_str!("manifest.json");
 #[must_use]
 pub fn manifest() -> ConformanceManifest {
     serde_json::from_str(EMBEDDED_MANIFEST).expect("valid embedded conformance manifest")
-}
-
-/// Default fixtures directory for the reference implementation.
-#[must_use]
-pub fn default_fixtures_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
 }
 
 /// Runs all conformance tests for all profiles.
@@ -100,11 +95,10 @@ fn run_test_case(
     }
 
     let format = parse_format(&test.format);
-    let fixture_path = fixtures_dir.join(&test.fixture);
-    let content = match std::fs::read(&fixture_path) {
+    let content = match read_fixture(fixtures_dir, &test.fixture) {
         Ok(bytes) => bytes,
         Err(err) => {
-            return fail_result(test.id.clone(), profile_id, format!("read fixture: {err}"));
+            return fail_result(test.id.clone(), profile_id, err);
         }
     };
 
@@ -209,7 +203,7 @@ fn run_test_case(
                     return fail_result(test.id.clone(), profile_id, message);
                 }
             };
-            let right_bytes = match std::fs::read(fixtures_dir.join(comparison_fixture)) {
+            let right_bytes = match read_fixture(fixtures_dir, comparison_fixture) {
                 Ok(bytes) => bytes,
                 Err(err) => {
                     return fail_result(
@@ -248,7 +242,7 @@ fn run_test_case(
                     return fail_result(test.id.clone(), profile_id, message);
                 }
             };
-            let newer_bytes = match std::fs::read(fixtures_dir.join(comparison_fixture)) {
+            let newer_bytes = match read_fixture(fixtures_dir, comparison_fixture) {
                 Ok(bytes) => bytes,
                 Err(err) => {
                     return fail_result(
@@ -383,11 +377,8 @@ fn run_test_case(
                     format!("compile failed: {:?}", compile_result.diagnostics),
                 );
             };
-            let input_path = fixtures_dir.join(input);
-            let expected_path = fixtures_dir.join(expected_output);
-            let inputs: RuntimeInputs = match std::fs::read_to_string(&input_path)
-                .map_err(|e| e.to_string())
-                .and_then(|text| serde_json::from_str(&text).map_err(|e| e.to_string()))
+            let inputs: RuntimeInputs = match read_fixture(fixtures_dir, input)
+                .and_then(|bytes| serde_json::from_slice(&bytes).map_err(|e| e.to_string()))
             {
                 Ok(inputs) => inputs,
                 Err(message) => {
@@ -417,9 +408,8 @@ fn run_test_case(
                 }
             };
             let expected: BTreeMap<String, Vec<BTreeMap<String, RuntimeValue>>> =
-                match std::fs::read_to_string(&expected_path)
-                    .map_err(|e| e.to_string())
-                    .and_then(|text| serde_json::from_str(&text).map_err(|e| e.to_string()))
+                match read_fixture(fixtures_dir, expected_output)
+                    .and_then(|bytes| serde_json::from_slice(&bytes).map_err(|e| e.to_string()))
                 {
                     Ok(expected) => expected,
                     Err(message) => {
@@ -455,10 +445,8 @@ fn run_test_case(
                     format!("compile failed: {:?}", compile_result.diagnostics),
                 );
             };
-            let input_path = fixtures_dir.join(input);
-            let inputs: RuntimeInputs = match std::fs::read_to_string(&input_path)
-                .map_err(|e| e.to_string())
-                .and_then(|text| serde_json::from_str(&text).map_err(|e| e.to_string()))
+            let inputs: RuntimeInputs = match read_fixture(fixtures_dir, input)
+                .and_then(|bytes| serde_json::from_slice(&bytes).map_err(|e| e.to_string()))
             {
                 Ok(inputs) => inputs,
                 Err(message) => {

@@ -1,0 +1,14 @@
+{
+  "customer_clean": [
+    {
+      "customer_id": "1",
+      "email": "alice@example.com",
+      "region": "us-east"
+    },
+    {
+      "customer_id": "3",
+      "email": "bob@example.com",
+      "region": "eu-west"
+    }
+  ]
+}

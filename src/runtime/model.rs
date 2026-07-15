@@ -14,7 +14,10 @@ pub enum FieldLookup {
 }
 
 /// A runtime value (SPEC logical types).
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+///
+/// JSON deserialization recognizes `{"$dtcs":"missing"}` / `{"$dtcs":"invalid"}`
+/// before falling back to ordinary maps (see `value_serde`).
+#[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(untagged)]
 pub enum RuntimeValue {
     /// Null value (present key, null payload).
@@ -39,12 +42,21 @@ pub enum RuntimeValue {
     Duration(String),
     /// Homogeneous list.
     List(Vec<RuntimeValue>),
-    /// String-keyed map.
-    Map(BTreeMap<String, RuntimeValue>),
     /// Explicit missing value token used in expression evaluation (SPEC Chapter 8 §9).
     Missing(MissingValue),
     /// Explicit invalid value (SPEC Chapter 8 §9).
     Invalid(InvalidValue),
+    /// String-keyed map (after `$dtcs` tokens).
+    Map(BTreeMap<String, RuntimeValue>),
+}
+
+impl<'de> Deserialize<'de> for RuntimeValue {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        super::value_serde::deserialize_runtime_value(deserializer)
+    }
 }
 
 /// Tagged missing payload so JSON can round-trip distinctly from null.

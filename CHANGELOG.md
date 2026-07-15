@@ -34,6 +34,12 @@ Phase 0.11 — SPEC Completeness (full Ch 17–19 catalog, COM deepening, normat
 - Dataset semantic actions (`dtcs:filter` / `dtcs:project`, …) accept interface targets; compile includes them in execution steps.
 - Rule parameter type `list<string>` accepted for `dtcs:one_of`.
 - Postcondition rules iterate the current target workspace row count after filters.
+- Runtime JSON deserializes `{"$dtcs":"missing"|"invalid"}` as tokens (not ordinary maps).
+- Joins are no longer rejected solely because input datasets have equal row counts; non-nullable schema checks reject missing/invalid cells.
+- Field writes are ordered relative to same-interface dataset actions; `dtcs:derive` is rejected as a semantic action.
+- Dataset action `parameters` are validated against the stdlib catalog; unresolvable compile targets hard-fail instead of being dropped.
+- Conformance fixtures and source-scan inputs are embedded so `conformance run` works from packaged crates/wheels; `no-network-surface` fails closed when sources are unavailable.
+- WASM npm pack no longer empties `pkg/` via wasm-pack’s `pkg/.gitignore`; binding smokes fail in CI instead of skipping green.
 
 ### Documentation
 

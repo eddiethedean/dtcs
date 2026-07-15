@@ -19,12 +19,12 @@ dtcs = "0.11"
 |-----|---------|
 | `parse` / `parse_file` | YAML/JSON → COM |
 | `validate` / `validate_with_registry` | Validation report |
-| `analyze` | Static semantic analysis |
-| `plan_lower` / `plan_optimize` / `plan_equivalent` | Transformation plans |
-| `compat_analyze` / `evolve_analyze` / `lineage_analyze` | Contract analysis |
-| `capability_match` / `compile_plan` / `runtime_execute` | Execution pipeline |
+| `check_contract` | Static semantic analysis |
+| `lower_plan` / `optimize_plan` / `plan_equivalent` | Transformation plans |
+| `analyze_compatibility` / `analyze_evolution` / `analyze_lineage` | Compatibility and lineage |
+| `match_plan` / `compile` / `execute` | Capability match, compile, runtime |
 | `conformance_run` / `conformance_declare` | Ch 23 certification |
-| `registry_resolve` / `default_registry` | Identifier catalog |
+| `resolve_registry` / `default_registry` | Identifier catalog |
 | `SPEC_VERSION` | Spec version string |
 
 Exact signatures: see docs.rs for the installed crate version.

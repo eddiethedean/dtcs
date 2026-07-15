@@ -34,9 +34,14 @@ fn check_action_composition(report: &mut AnalysisReport, contract: &Transformati
         return;
     }
 
-    let mut seen = std::collections::HashMap::<&str, usize>::new();
+    let mut seen = std::collections::HashMap::<String, usize>::new();
     for action in &contract.semantic_actions {
-        *seen.entry(action.target.as_str()).or_default() += 1;
+        let iface = action
+            .target
+            .split_once('.')
+            .map(|(iface, _)| iface.to_string())
+            .unwrap_or_else(|| action.target.clone());
+        *seen.entry(iface).or_default() += 1;
     }
 
     for (target, count) in seen {
@@ -45,7 +50,7 @@ fn check_action_composition(report: &mut AnalysisReport, contract: &Transformati
                 codes::INVALID_SEMANTICS,
                 DiagnosticCategory::Semantic,
                 format!(
-                    "multiple semantic actions target '{target}' without an explicit ordering declaration"
+                    "multiple semantic actions target interface '{target}' without an explicit ordering declaration"
                 ),
                 Some("semantics.ordering".into()),
                 Some("Declare semantics.ordering or avoid overlapping semantic action targets".into()),
