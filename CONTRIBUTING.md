@@ -19,10 +19,15 @@ Thank you for contributing to the Data Transformation Contract Standard and its 
    pytest python/tests -v
    ./scripts/check-docs.sh
    ```
-4. Read [docs/implementation/architecture.md](docs/implementation/architecture.md) and [public-api.md](docs/implementation/public-api.md).
-5. See [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md) for fixtures and golden files.
+4. Preview the documentation site (MkDocs / Read the Docs):
+   ```bash
+   pip install -r docs/requirements.txt
+   mkdocs serve
+   ```
+5. Read [docs/implementation/architecture.md](docs/implementation/architecture.md) and [public-api.md](docs/implementation/public-api.md).
+6. See [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md) for fixtures and golden files.
 
-Full user-oriented dev notes: [docs/user/getting-started.md](docs/user/getting-started.md#develop-from-source).
+Full user-oriented dev notes: [docs/user/getting-started.md](docs/user/getting-started.md#develop-from-source). Hosted docs: [dtcs.readthedocs.io](https://dtcs.readthedocs.io/).
 
 ### CI checks
 
@@ -69,7 +74,7 @@ The Rust reference crate lives in [src/](src/). Before implementing a module:
 
 ### Scope
 
-The reference crate through **0.11.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, starter standard libraries with registry-driven semantics validation, static semantic and expression analysis (Ch 7–8), transformation plan lowering (Ch 13), semantics-preserving plan optimization (Ch 13 §9), engine capability matching (Ch 14), compilation to execution plans (Ch 15), reference in-memory runtime execution (Ch 16), conformance profiles and offline certification (Ch 23), and automated security checklist probes (Ch 24). See [docs/implementation/non-goals.md](docs/implementation/non-goals.md) for remaining out-of-scope work.
+The reference crate through **0.11.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, full Ch 17–19 standard libraries with registry-driven semantics validation, COM deepening (lineage operation/flow, guarantees, compatibility, null/missing/invalid), static semantic and expression analysis (Ch 7–8), transformation plan lowering (Ch 13), semantics-preserving plan optimization (Ch 13 §9), engine capability matching (Ch 14), compilation to execution plans (Ch 15), reference in-memory runtime execution (Ch 16), conformance profiles and offline certification (Ch 23), and automated security checklist probes (Ch 24). See [docs/implementation/non-goals.md](docs/implementation/non-goals.md) for remaining out-of-scope work.
 
 ### Conformance maintenance (Ch 26 §9)
 

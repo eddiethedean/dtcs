@@ -1,13 +1,22 @@
 # Documentation
 
+Hosted site: [dtcs.readthedocs.io](https://dtcs.readthedocs.io/) (import this repo once under that project name on [Read the Docs](https://readthedocs.org/)). Preview locally with MkDocs:
+
+```bash
+pip install -r docs/requirements.txt
+mkdocs serve
+```
+
+Configuration: [`mkdocs.yml`](https://github.com/eddiethedean/dtcs/blob/main/mkdocs.yml) · [`.readthedocs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/.readthedocs.yaml).
+
 Choose your path:
 
 | Audience | Start here |
 |----------|------------|
 | **New users** | [user/getting-started.md](user/getting-started.md) |
 | **Evaluators / architects** | [adoption/overview.md](adoption/overview.md) |
-| **Contributors** | [CONTRIBUTING.md](../CONTRIBUTING.md) · [implementation/README.md](implementation/README.md) |
-| **Spec authors** | [editorial/baseline.md](editorial/baseline.md) · [SPEC.md](../SPEC.md) |
+| **Contributors** | [CONTRIBUTING.md](https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md) · [implementation/README.md](implementation/README.md) |
+| **Spec authors** | [editorial/baseline.md](editorial/baseline.md) · [SPEC.md](SPEC.md) |
 
 ## User guides
 
@@ -15,14 +24,14 @@ Choose your path:
 |----------|-------------|
 | [getting-started.md](user/getting-started.md) | Install and validate your first contract in 5 minutes |
 | [cli-guide.md](user/cli-guide.md) | All CLI commands, flags, and exit codes |
-| [writing-contracts.md](user/writing-contracts.md) | Contract structure, standard library catalog, and field reference |
-| [expressions.md](user/expressions.md) | Expression syntax, typing, and examples |
-| [compatibility.md](user/compatibility.md) | Compatibility levels and evolution analysis |
+| [writing-contracts.md](user/writing-contracts.md) | Contract structure, full Appendix A catalog, and field reference |
+| [expressions.md](user/expressions.md) | Expression syntax, typing, null/missing/invalid |
+| [compatibility.md](user/compatibility.md) | Compatibility levels, COM declaration, and evolution analysis |
 | [json-output.md](user/json-output.md) | JSON output shapes for all commands |
-| [ci-integration.md](user/ci-integration.md) | CI gates and automation patterns |
+| [ci-integration.md](user/ci-integration.md) | CI gates (validate/analyze/compat/conformance) |
 | [troubleshooting.md](user/troubleshooting.md) | Common installation and usage problems |
-| [conformance.md](user/conformance.md) | Conformance profiles, declare/run, and certification |
-| [faq.md](user/faq.md) | Frequently asked questions |
+| [conformance.md](user/conformance.md) | Conformance profiles, assertion kinds, declare/run |
+| [faq.md](user/faq.md) | FAQ including [0.11.0 migration](user/faq.md#migration-to-0110) |
 
 ## Adoption
 
@@ -41,10 +50,11 @@ Choose your path:
 
 | Document | Description |
 |----------|-------------|
-| [SPEC.md](../SPEC.md) | Full DTCS 1.0 draft specification (normative, authoritative) |
-| [ROADMAP.md](../ROADMAP.md) | Reference implementation milestones (Phases 0.1–0.11) |
+| [SPEC.md](SPEC.md) | Full DTCS 1.0 draft specification (normative, authoritative) |
+| [Appendix A](SPEC.md#appendix-a-standard-library-catalog-normative) | Normative `dtcs:` action/function/rule catalog |
+| [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) | Reference implementation milestones (Phases 0.1–0.11) |
 | [spec-completeness.md](implementation/spec-completeness.md) | Chapter-by-chapter SPEC coverage matrix (0.11.0) |
-| [CHANGELOG.md](../CHANGELOG.md) | Release notes |
+| [CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md) | Release notes and [0.11.0 migration](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#0110) |
 
 ## Editorial process
 
@@ -59,7 +69,7 @@ Documents governing how the specification is authored and reviewed:
 
 ## Reference implementation
 
-Guides for building the Rust crate in [src/](../src/):
+Guides for building the Rust crate in [src/](https://github.com/eddiethedean/dtcs/blob/main/src/):
 
 | Document | Description |
 |----------|-------------|

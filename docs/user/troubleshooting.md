@@ -10,7 +10,7 @@ Pre-built wheels are published for common platforms and Python 3.9–3.13. If pi
 
 1. Ensure you are on a supported Python version.
 2. Install Rust 1.75+ and [maturin](https://www.maturin.rs/).
-3. Or pin a released version: `pip install dtcs==0.9.0`.
+3. Or pin a released version: `pip install dtcs==0.11.0`.
 
 See [faq.md](faq.md#pip-install-dtcs-fails-to-build-what-do-i-do).
 
@@ -38,7 +38,7 @@ Most repository examples assume you run commands from the **repository root**:
 dtcs validate examples/customer_normalize.dtcs.yaml
 ```
 
-If you are in the `examples/` directory, adjust paths or return to the repo root. See [examples/README.md](../../examples/README.md).
+If you are in the `examples/` directory, adjust paths or return to the repo root. See [examples/README.md](https://github.com/eddiethedean/dtcs/blob/main/examples/README.md).
 
 ### `dtcs run --input` file not found
 
@@ -62,9 +62,18 @@ dtcs diagnostics my_contract.yaml --json
 | `dtcs:unresolved-reference` | Field path does not exist | Use `interface.field` format matching an input/output `id` |
 | `dtcs:invalid-type` | Malformed type expression | Use `list<string>`, not bare `list` |
 | `dtcs:unknown-registry-entry` | Unrecognized `dtcs:` identifier | Run `dtcs registry list`; use embedded stdlib identifiers |
+| `dtcs:invalid-semantic-action` | Dataset action missing `parameters`, or bad target | See [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative); supply `fields` / join keys / etc. |
 | stdlib semantics errors | Wrong target type, nullability, or rule phase | Run `dtcs registry resolve dtcs:IDENTIFIER --json` |
 
-See [writing-contracts.md](writing-contracts.md#validate-as-you-write) for more diagnostic fixes.
+### Unexpected lineage `operation` / `flow` after round-trip
+
+From 0.11.0, omitted lineage `operation` defaults to `dtcs:derive` and `flow` defaults to `derived`. Plan JSON goldens and `dtcs plan --json` may show these fields even when your YAML omitted them. This is intentional.
+
+### Runtime treats missing fields as null
+
+Missing and null are distinct. Inspect JSON for `{"$dtcs":"missing"}` vs `null`. Use `dtcs:is_missing` / `dtcs:is_null` in expressions. See [faq.md](faq.md#what-are-null-vs-missing-vs-invalid-values) and [expressions.md](expressions.md#null-missing-and-invalid).
+
+See [writing-contracts.md](writing-contracts.md#validate-as-you-write) for more diagnostic fixes. Migrating from 0.10.x: [faq.md](faq.md#migration-to-0110).
 
 ## Analysis and planning
 
@@ -105,4 +114,4 @@ See [ci-integration.md](ci-integration.md) for validate/analyze/compat gates wit
 
 - [FAQ](faq.md)
 - [GitHub issues](https://github.com/eddiethedean/dtcs/issues) — include `dtcs version`, the command run, and `dtcs diagnostics --json` output
-- [SPEC.md](../../SPEC.md) for normative behavior
+- [SPEC.md](../SPEC.md) for normative behavior

@@ -1,6 +1,6 @@
 # SPEC Completeness Matrix (0.11.0)
 
-Chapter-by-chapter coverage of [`SPEC.md`](../../SPEC.md) by the DTCS reference implementation at **`0.11.0`**.
+Chapter-by-chapter coverage of [`SPEC.md`](../SPEC.md) by the DTCS reference implementation at **`0.11.0`**.
 
 Coverage ratings:
 
@@ -9,7 +9,7 @@ Coverage ratings:
 | **Full** | Normative requirements for that chapter are implemented in the reference crate (parse → validate → analyze → plan → optimize → match → compile → run → conformance), with registry/runtime support where applicable. |
 | **N/A** | Intentionally out of scope for the reference implementation (see [non-goals.md](non-goals.md) and SPEC Ch 1 §3 / Ch 23 §13). |
 
-The starter→full standard-library catalog for **Chapters 17–19** was completed in **0.11.0** (dataset operators, additional functions/rules, and normative catalog appendix). See [Appendix A](../../SPEC.md#appendix-a----standard-library-catalog-normative) in `SPEC.md`.
+The starter→full standard-library catalog for **Chapters 17–19** was completed in **0.11.0** (dataset operators, additional functions/rules, and normative catalog appendix). See [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative) in `SPEC.md`.
 
 ## Matrix
 
@@ -52,10 +52,10 @@ These SPEC-adjacent items are **not** claimed as reference-implementation respon
 | Polars / Spark / SQL backends | Ch 1 §3 |
 | External certification authority | Ch 23 §13 |
 
-See [non-goals.md](non-goals.md) and [ROADMAP.md](../../ROADMAP.md) Phase 0.11.
+See [non-goals.md](non-goals.md) and [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) Phase 0.11.
 
 ## Related
 
-- Normative catalog identifiers: [SPEC Appendix A](../../SPEC.md#appendix-a----standard-library-catalog-normative)
-- Phase history: [ROADMAP.md](../../ROADMAP.md)
-- Release notes: [CHANGELOG.md](../../CHANGELOG.md)
+- Normative catalog identifiers: [SPEC Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative)
+- Phase history: [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md)
+- Release notes: [CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md)

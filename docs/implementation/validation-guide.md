@@ -18,7 +18,11 @@ Semantic and extension phases resolve `dtcs:` identifiers through the
 embedded registry (`registry::default_registry`). Standard library entries
 include JSON `definition` blocks; the semantics pass validates actions,
 functions, and rules against those definitions (target type, nullability,
-rule phases, arity, return types). Callers may inject a vendor catalog with
+rule phases, arity, return types, action `parameters`). Lineage validation
+requires mappings for every output and checks `operation` / `flow` fields
+(defaults applied during deserialize). Nested vendor extensions on actions,
+functions, expressions, and rules are preserved and validated like
+contract-level extensions. Callers may inject a vendor catalog with
 `validate_with_registry`. Unsupported mandatory extensions produce
 `dtcs:unsupported-extension`.
 

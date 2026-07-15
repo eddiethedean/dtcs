@@ -2,11 +2,11 @@
 
 This guide set supports building the Rust reference implementation of DTCS.
 
-See the canonical documentation index at [`docs/README.md`](../README.md).
+See the canonical documentation index at [`docs/README.md`](../index.md).
 
-Treat [`SPEC.md`](../../SPEC.md) as the authoritative source of truth.
+Treat [`SPEC.md`](../SPEC.md) as the authoritative source of truth.
 
-The implementation pipeline through Phase 0.9:
+The implementation pipeline through Phase 0.11:
 
 ```text
 parse -> Canonical Object Model -> validate -> diagnostics
@@ -15,7 +15,10 @@ parse -> Canonical Object Model -> validate -> diagnostics
                                               -> plan (lowering, graph, validation)
                                               -> optimize (semantics-preserving rewrites)
                                               -> capability match -> compile -> runtime execute
+                                              -> conformance declare / run
 ```
+
+Phase 0.11 completes the full Ch 17–19 catalog and COM deepening. See [spec-completeness.md](spec-completeness.md).
 
 Do not implement multi-backend compilers or production ETL orchestration without an agreed milestone.
 

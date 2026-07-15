@@ -8,23 +8,19 @@ The Data Transformation Contract Standard (DTCS) is a vendor-neutral specificati
 
 ### What does the reference implementation do today?
 
-Through version 0.9.0, the reference tools can:
+Through version **0.11.0**, the reference tools can:
 
-- Parse YAML/JSON into the Canonical Object Model
+- Parse YAML/JSON into the Canonical Object Model (including `guarantees`, `compatibility`, nested extensions)
 - Validate contracts with structured diagnostics
-- Resolve `dtcs:` identifiers through the embedded registry
-- Validate semantic actions, functions, and rules against embedded standard library definitions
+- Resolve the full Ch 17–19 `dtcs:` catalog (field transforms, dataset operators, functions, rules) through the embedded registry
 - Load and merge vendor registry catalogs
 - Compare contracts for compatibility (five classification levels)
-- Analyze evolution between contract revisions
+- Analyze evolution between contract revisions (including deprecation / anticipated removal)
 - Validate versioning declarations (Ch 25)
-- Analyze dataset-level lineage (dependency graph, impact, governance)
-- Run static semantic and expression analysis (Ch 7–8)
-- Lower validated contracts to canonical transformation plans (Ch 13)
-- Optimize lowered plans with semantics-preserving rewrites (Ch 13 §9)
-- Match transformation plans against engine capability profiles (Ch 14)
-- Compile plans to execution plans using the reference backend (Ch 15)
-- Execute contracts end-to-end with the reference in-memory runtime (Ch 16)
+- Analyze dataset-level lineage with `operation` and `flow` (dependency graph, impact, governance)
+- Run static semantic and expression analysis (Ch 7–8), including null/missing/invalid distinction
+- Lower, optimize, match, compile, and execute contracts end-to-end with the reference runtime
+- Certify conformance across all eight implementation profiles (Ch 23)
 
 The reference runtime is suitable for evaluation and conformance testing — not production ETL. See [non-goals.md](../implementation/non-goals.md).
 
@@ -45,8 +41,8 @@ Pre-built wheels are published for common platforms. If pip tries to compile fro
 ### How do I install a specific version?
 
 ```bash
-pip install dtcs==0.9.0
-cargo install dtcs --version 0.9.0
+pip install dtcs==0.11.0
+cargo install dtcs --version 0.11.0
 ```
 
 ## Contracts
@@ -67,6 +63,7 @@ Run `dtcs diagnostics contract.yaml` for details. The most common first-time err
 2. Unresolved field references in semantic actions or rules
 3. Unsupported `dtcsVersion`
 4. All inputs marked optional
+5. Dataset actions missing required `parameters` (for example `fields` on `dtcs:project`)
 
 See [writing-contracts.md](writing-contracts.md).
 
@@ -74,6 +71,16 @@ See [writing-contracts.md](writing-contracts.md).
 
 - `dtcsVersion` — which specification version the document conforms to
 - `version` — the revision of this specific contract (semver-like)
+
+### What are null vs missing vs invalid values?
+
+At runtime and in expression evaluation these are distinct (SPEC Chapter 8 §9 / Appendix A.7):
+
+- **null** — JSON `null` (present key, null payload)
+- **missing** — `{"$dtcs":"missing"}`
+- **invalid** — `{"$dtcs":"invalid"}` (optional `reason`)
+
+Do not treat missing/invalid as null in tooling. Use `dtcs:is_null` / `dtcs:is_missing` when you need predicates. See [expressions.md](expressions.md).
 
 ## Analysis
 
@@ -90,19 +97,32 @@ Consumers of the older (source) contract can adopt the newer (target) contract w
 
 No. All analysis is read-only.
 
+Contracts may also declare a COM-level `compatibility` policy (`policy`, `forward`, `backward`, `notes`) separate from analysis results. See [compatibility.md](compatibility.md).
+
+## Migration to 0.11.0
+
+Notable changes when upgrading from 0.10.x:
+
+1. **Lineage** — omitted `operation` deserializes as `dtcs:derive`; `flow` defaults to `derived`. Round-tripping plans may show these fields explicitly.
+2. **Dataset actions** — operators such as `dtcs:project` / `dtcs:join` require a `parameters` map (see [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative)).
+3. **Runtime JSON** — consumers must treat `{"$dtcs":"missing"}` and `{"$dtcs":"invalid"}` as distinct from JSON `null`.
+4. **Full catalog** — `dtcs registry list` now includes the full Ch 17–19 set, not only the Phase 0.5 starter subset.
+
+Full detail: [CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#0110) migration summary.
+
+### How do I upgrade between versions?
+
+See the [migration summary in CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#migration-summary). Pin versions with `pip install dtcs==0.11.0` or `cargo install dtcs --version 0.11.0`.
+
 ## Contributing
 
 ### Where do I start?
 
-Read [CONTRIBUTING.md](../../CONTRIBUTING.md) and [docs/implementation/README.md](../implementation/README.md).
+Read [CONTRIBUTING.md](https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md) and [docs/implementation/README.md](../implementation/README.md).
 
 ### SPEC.md vs implementation docs — which wins?
 
 **SPEC.md** is authoritative. Implementation docs in `docs/implementation/` are illustrative unless explicitly normative.
-
-### How do I upgrade between versions?
-
-See the [migration summary in CHANGELOG.md](../../CHANGELOG.md#migration-summary). Pin versions with `pip install dtcs==0.9.0` or `cargo install dtcs --version 0.9.0`.
 
 ## Where to get help
 
@@ -118,4 +138,5 @@ See also [troubleshooting.md](troubleshooting.md).
 
 - Installation problems: [troubleshooting.md](troubleshooting.md)
 - CI integration: [ci-integration.md](ci-integration.md)
+- Conformance: [conformance.md](conformance.md)
 - Enterprise evaluation: [adoption/overview.md](../adoption/overview.md)

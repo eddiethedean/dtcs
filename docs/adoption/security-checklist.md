@@ -1,6 +1,6 @@
 # Security checklist (Ch 24)
 
-This document maps [SPEC.md](../../SPEC.md) Chapter 24 security requirements to verifiable checks in the reference implementation.
+This document maps [SPEC.md](../SPEC.md) Chapter 24 security requirements to verifiable checks in the reference implementation.
 
 ## Automated probes
 
@@ -8,7 +8,7 @@ Run via `dtcs conformance run` (security section of the report) or `./scripts/se
 
 | Probe ID | Ch 24 area | Automated check |
 |----------|------------|-----------------|
-| `contract-integrity` | §5 Contract integrity | Rejects duplicate JSON parameter keys in rule `parameters` |
+| `contract-integrity` | §5 Contract integrity | Rejects duplicate JSON parameter keys in rule / action `parameters` |
 | `registry-trust` | §7 Registry trust | Rejects novel `dtcs:` entries when merging vendor catalogs |
 | `trusted-extensions` | §6 Trusted extensions | Blocks mandatory unsupported extension namespaces |
 | `diagnostics-stability` | §10 Diagnostics | Emits stable `dtcs:` codes without filesystem paths in messages |

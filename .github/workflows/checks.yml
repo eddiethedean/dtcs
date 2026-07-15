@@ -59,7 +59,12 @@ jobs:
           cargo test --test phase_0_10 --locked
           cargo run --bin dtcs -- conformance run --profile all
       - name: documentation
-        run: ./scripts/check-docs.sh
+        env:
+          NO_MKDOCS_2_WARNING: "true"
+        run: |
+          python3 -m pip install --user -r docs/requirements.txt
+          export PATH="$HOME/.local/bin:$PATH"
+          ./scripts/check-docs.sh
       - name: wasm build
         run: |
           rustup target add wasm32-unknown-unknown

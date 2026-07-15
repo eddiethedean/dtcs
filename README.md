@@ -1,6 +1,7 @@
 # DTCS — Data Transformation Contract Standard
 
 [![CI](https://github.com/eddiethedean/dtcs/actions/workflows/ci.yml/badge.svg)](https://github.com/eddiethedean/dtcs/actions/workflows/ci.yml)
+[![Documentation Status](https://readthedocs.org/projects/dtcs/badge/?version=latest)](https://dtcs.readthedocs.io/en/latest/)
 [![crates.io](https://img.shields.io/crates/v/dtcs)](https://crates.io/crates/dtcs)
 [![PyPI](https://img.shields.io/pypi/v/dtcs)](https://pypi.org/project/dtcs/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
@@ -21,7 +22,7 @@ This repository contains:
 
 **What you can do today:** validate YAML/JSON contracts, resolve `dtcs:` identifiers through the embedded full standard-library catalog (actions, functions, and rules), compare versions for compatibility, analyze evolution between revisions, trace dataset lineage (`operation` / `flow`), lower validated contracts to transformation plans, optimize plans with semantics-preserving rewrites, match plans against engine capabilities, compile to execution plans, run contracts in the reference in-memory runtime (including null/missing/invalid semantics), and certify conformance across all eight implementation profiles — including end-to-end execution of sample contracts like `customer_normalize.dtcs.yaml`.
 
-[Documentation](docs/README.md) · [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
+[Documentation](https://dtcs.readthedocs.io/) · [Docs source](docs/README.md) · [Quick start](#quick-start) · [User docs](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Roadmap](ROADMAP.md)
 
 ## Install
 
@@ -97,7 +98,7 @@ assert dtcs.is_valid(result)
 assert result["outputs"]["customer_clean"][0]["email"] == "alice@example.com"
 ```
 
-Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full walkthrough. For normative definitions, see [SPEC.md](SPEC.md) — start with [Chapter 3 (COM)](SPEC.md#chapter-3----canonical-object-model) and [Chapter 9 (Validation)](SPEC.md#chapter-9----validation).
+Read [docs/user/getting-started.md](docs/user/getting-started.md) for a full walkthrough. For normative definitions, see [SPEC.md](SPEC.md) — start with [Chapter 3 (COM)](SPEC.md#chapter-3-canonical-object-model) and [Chapter 9 (Validation)](SPEC.md#chapter-9-validation).
 
 ## Pipeline
 
@@ -158,7 +159,7 @@ Production ETL orchestration and external engine backends remain out of scope. S
 
 ## Testing
 
-Integration tests, fixture manifests, and conformance cases are documented in [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md). The embedded standard library covers the full Ch 17–19 catalog (SPEC [Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative)). See [spec-completeness.md](docs/implementation/spec-completeness.md) for chapter coverage and [test-verification-report.md](docs/implementation/test-verification-report.md) for suite confidence.
+Integration tests, fixture manifests, and conformance cases are documented in [docs/implementation/testing-plan.md](docs/implementation/testing-plan.md). The embedded standard library covers the full Ch 17–19 catalog (SPEC [Appendix A](SPEC.md#appendix-a-standard-library-catalog-normative)). See [spec-completeness.md](docs/implementation/spec-completeness.md) for chapter coverage and [test-verification-report.md](docs/implementation/test-verification-report.md) for suite confidence.
 
 ## Contributing
 

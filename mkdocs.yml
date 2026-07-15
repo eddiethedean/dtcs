@@ -1,0 +1,121 @@
+# MkDocs configuration for Read the Docs and local preview.
+# Build: pip install -r docs/requirements.txt && mkdocs serve
+site_name: DTCS
+site_description: Data Transformation Contract Standard — vendor-neutral contracts for transformation semantics
+site_url: https://dtcs.readthedocs.io
+repo_url: https://github.com/eddiethedean/dtcs
+repo_name: eddiethedean/dtcs
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; DTCS contributors — Apache-2.0
+docs_dir: docs
+site_dir: site
+strict: true
+
+# index.md is a symlink to docs/README.md; exclude only that hub duplicate.
+exclude_docs: |
+  /README.md
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/eddiethedean/dtcs
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/dtcs/
+    - icon: fontawesome/brands/rust
+      link: https://crates.io/crates/dtcs
+
+validation:
+  omitted_files: warn
+  absolute_links: relative_to_docs
+  unrecognized_links: warn
+  anchors: warn
+
+nav:
+  - Home: index.md
+  - Getting started: user/getting-started.md
+  - User guides:
+      - CLI guide: user/cli-guide.md
+      - Writing contracts: user/writing-contracts.md
+      - Expressions: user/expressions.md
+      - Compatibility: user/compatibility.md
+      - JSON output: user/json-output.md
+      - CI integration: user/ci-integration.md
+      - Conformance: user/conformance.md
+      - Troubleshooting: user/troubleshooting.md
+      - FAQ: user/faq.md
+  - Adoption:
+      - Overview: adoption/overview.md
+      - Security checklist: adoption/security-checklist.md
+  - API:
+      - Python: api/python.md
+  - Specification:
+      - SPEC.md: SPEC.md
+      - Roadmap: https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md
+      - Changelog: https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md
+      - Completeness matrix: implementation/spec-completeness.md
+  - Editorial:
+      - Baseline: editorial/baseline.md
+      - Style guide: editorial/style-guide.md
+      - Authoring guide: editorial/authoring-guide.md
+      - Review checklist: editorial/review-checklist.md
+  - Implementation:
+      - Overview: implementation/README.md
+      - Project goal: implementation/project-goal.md
+      - Architecture: implementation/architecture.md
+      - Crate layout: implementation/crate-layout.md
+      - Model guide: implementation/model-guide.md
+      - Validation guide: implementation/validation-guide.md
+      - Diagnostics guide: implementation/diagnostics-guide.md
+      - Public API: implementation/public-api.md
+      - CLI spec: implementation/cli-spec.md
+      - Implementation phases: implementation/implementation-phases.md
+      - Testing plan: implementation/testing-plan.md
+      - Rust dependencies: implementation/rust-dependencies.md
+      - Spec usage: implementation/spec-usage.md
+      - Non-goals: implementation/non-goals.md
+      - Test verification: implementation/test-verification-report.md
+  - Contributing: https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md

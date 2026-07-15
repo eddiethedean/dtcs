@@ -25,6 +25,9 @@ dtcs/
       function.rs
       rule.rs
       lineage.rs
+      guarantees.rs
+      compatibility_decl.rs
+      null_behavior.rs
       versioning.rs
       extension.rs
       registry.rs
@@ -116,6 +119,13 @@ dtcs/
       reference.rs
       validate.rs
       runtime_trait.rs
+    conformance/
+      mod.rs
+      profiles.rs
+      runner.rs
+      model.rs
+      security.rs
+      manifest.json
     cli/
       mod.rs
     bin/
@@ -129,6 +139,9 @@ dtcs/
       capability/
       plans/
       plans_optimized/
+      execution_plans/
+    conformance/
+      manifest.json
     fixture_expectations.json
     plan_expectations.json
     optimize_expectations.json
@@ -140,6 +153,8 @@ dtcs/
     phase_0_7.rs
     phase_0_8.rs
     phase_0_9.rs
+    phase_0_10.rs
+    phase_0_11.rs
     manifest.rs
 ```
 

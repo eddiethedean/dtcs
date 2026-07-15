@@ -1,6 +1,6 @@
 # Diagnostics Guide
 
-Diagnostics are spec-level observations implemented in [`src/diagnostics/`](../../src/diagnostics/).
+Diagnostics are spec-level observations implemented in [`src/diagnostics/`](https://github.com/eddiethedean/dtcs/blob/main/src/diagnostics/).
 
 ## Types
 
@@ -47,7 +47,7 @@ pub struct Diagnostic {
 
 ## Standard diagnostic identifiers
 
-Defined in [`src/diagnostics/codes.rs`](../../src/diagnostics/codes.rs):
+Defined in [`src/diagnostics/codes.rs`](https://github.com/eddiethedean/dtcs/blob/main/src/diagnostics/codes.rs):
 
 - `dtcs:parse-error`
 - `dtcs:unsupported-version`

@@ -11,7 +11,7 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 - Seven-phase validation pipeline
 - Diagnostics
 - Type model (primitives, composites, conversions, extension types, expression typing)
-- Metadata validation (identity, governance, provenance, classification, documentation)
+- Metadata validation (identity, governance, ownership, lifecycle, provenance, classification, documentation, deprecation / `anticipatedRemoval`)
 - Full Semantic Action, Function, and Rule standard libraries (`dtcs:`), with action parameters
 - I/O interfaces (optional inputs, streaming, pre/postconditions)
 - Compatibility analysis (five classification levels)
@@ -39,4 +39,4 @@ Chapter evidence: [spec-completeness.md](spec-completeness.md).
 - External engine backends (Spark, Polars, SQL)
 - External certification authority (Ch 23 §13)
 
-See [non-goals.md](non-goals.md) and [ROADMAP.md](../../ROADMAP.md).
+See [non-goals.md](non-goals.md) and [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md).

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Documentation
+
+- Hosted documentation via Read the Docs (`mkdocs.yml`, `.readthedocs.yaml`); preview with `mkdocs serve`.
+
 ## Migration summary
 
 | Version | Breaking or notable changes |
@@ -27,7 +33,7 @@ Phase 0.11 — SPEC Completeness (full Ch 17–19 catalog, COM deepening, normat
 - Contract COM: `guarantees` and `compatibility` declaration fields; nested extension preservation.
 - Runtime null/missing/invalid value tokens; function `nullBehavior` (`propagate` / `defined`).
 - Expanded `dtcs:reference` capability profile covering the full catalog.
-- Normative [SPEC Appendix A](SPEC.md#appendix-a----standard-library-catalog-normative); completeness matrix at [docs/implementation/spec-completeness.md](docs/implementation/spec-completeness.md).
+- Normative [SPEC Appendix A](SPEC.md#appendix-a-standard-library-catalog-normative); completeness matrix at [docs/implementation/spec-completeness.md](docs/implementation/spec-completeness.md).
 
 ### Migration notes
 

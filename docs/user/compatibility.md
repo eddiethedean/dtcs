@@ -12,6 +12,20 @@ Phase 0.3 adds read-only analysis for comparing contracts and tracking safe evol
 
 Both `compat` and `evolve` require **valid** contracts. Run `dtcs validate` first.
 
+## Contract-level compatibility declaration
+
+Contracts MAY declare a COM `compatibility` object (SPEC Chapter 3 §9) separate from analysis results:
+
+```yaml
+compatibility:
+  policy: "dtcs:default"
+  backward: true
+  forward: false
+  notes: "Additive optional fields only"
+```
+
+Evolution analysis also recognizes metadata deprecation fields: `deprecated`, `replacement`, and `anticipatedRemoval` (SPEC Chapter 12 §10). Lineage diffs include `operation` and `flow` when those mapping fields change.
+
 ## Compatibility levels
 
 The classifier assigns one of five levels (SPEC Chapter 11):
@@ -96,7 +110,7 @@ All five classification levels have paired fixtures under `tests/fixtures/compat
 | `conditional_a.yaml` / `conditional_b.yaml` | Conditionally compatible |
 | `incompatible_a.yaml` / `incompatible_b.yaml` | Incompatible |
 
-User-facing copies of key pairs are in [`examples/analysis/`](../../examples/analysis/).
+User-facing copies of key pairs are in [`examples/analysis/`](https://github.com/eddiethedean/dtcs/blob/main/examples/analysis/backward_old.yaml).
 
 ## Next steps
 

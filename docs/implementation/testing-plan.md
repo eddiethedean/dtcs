@@ -6,9 +6,9 @@ See [test-verification-report.md](test-verification-report.md) for the latest ve
 
 ## How to add a test
 
-1. **Choose a fixture** — add a YAML or JSON file under [`tests/fixtures/`](../../tests/fixtures/) (or reuse an existing one).
-2. **Register expectations** — add an entry to [`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) for parse/validation outcomes, or to phase-specific manifests (`plan_expectations.json`, `optimize_expectations.json`, `compile_expectations.json`, `capability_expectations.json`).
-3. **Add integration coverage** — extend the appropriate phase test file (`tests/phase_0_*.rs`) or parametrize in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+1. **Choose a fixture** — add a YAML or JSON file under [`tests/fixtures/`](https://github.com/eddiethedean/dtcs/blob/main/tests/fixtures/) (or reuse an existing one).
+2. **Register expectations** — add an entry to [`tests/fixture_expectations.json`](https://github.com/eddiethedean/dtcs/blob/main/tests/fixture_expectations.json) for parse/validation outcomes, or to phase-specific manifests (`plan_expectations.json`, `optimize_expectations.json`, `compile_expectations.json`, `capability_expectations.json`).
+3. **Add integration coverage** — extend the appropriate phase test file (`tests/phase_0_*.rs`) or parametrize in [`python/tests/test_dtcs.py`](https://github.com/eddiethedean/dtcs/blob/main/python/tests/test_dtcs.py).
 4. **Golden files** — for plan, optimize, or compile output, add or regenerate JSON under `tests/fixtures/plans/`, `plans_optimized/`, or `execution_plans/`. Regenerate optimize goldens with `cargo run --example write_optimize_goldens`.
 5. **Run locally:**
    ```bash
@@ -18,7 +18,7 @@ See [test-verification-report.md](test-verification-report.md) for the latest ve
 
 ## Shared fixture manifest
 
-[`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](../../tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](../../tests/mvp.rs), [`tests/phase_0_2.rs`](../../tests/phase_0_2.rs), [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs), [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs), [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs), [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs), [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs), [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs), and [`tests/manifest.rs`](../../tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](../../python/tests/test_dtcs.py).
+[`tests/fixture_expectations.json`](https://github.com/eddiethedean/dtcs/blob/main/tests/fixture_expectations.json) records expected parse and validation outcomes for the fixture corpus under [`tests/fixtures/`](https://github.com/eddiethedean/dtcs/blob/main/tests/fixtures/). Rust integration tests in [`tests/mvp.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/mvp.rs), [`tests/phase_0_2.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_2.rs), [`tests/phase_0_3.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_3.rs), [`tests/phase_0_4.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_4.rs), [`tests/phase_0_6.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_6.rs), [`tests/phase_0_7.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_7.rs), [`tests/phase_0_8.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_8.rs), [`tests/phase_0_9.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_9.rs), and [`tests/manifest.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/manifest.rs) cover behavior in detail; Python tests parametrize over the same manifest in [`python/tests/test_dtcs.py`](https://github.com/eddiethedean/dtcs/blob/main/python/tests/test_dtcs.py).
 
 ## Phase 0.5 fixture groups (standard libraries)
 
@@ -29,7 +29,7 @@ See [test-verification-report.md](test-verification-report.md) for the latest ve
 | Rules | `stdlib_rule_range_valid.yaml`, `stdlib_rule_regex_match_valid.yaml` |
 | Signature errors | `stdlib_function_concat_signature_invalid.yaml`, `stdlib_function_substr_param_order_invalid.yaml` |
 
-Covered by [`tests/fixture_expectations.json`](../../tests/fixture_expectations.json) and validation integration tests.
+Covered by [`tests/fixture_expectations.json`](https://github.com/eddiethedean/dtcs/blob/main/tests/fixture_expectations.json) and validation integration tests.
 
 ## Phase 0.4 fixture groups
 
@@ -38,7 +38,7 @@ Covered by [`tests/fixture_expectations.json`](../../tests/fixture_expectations.
 | Registry loading | `tests/fixtures/registry/vendor_catalog.yaml`, `vendor_mandatory_extension.yaml` |
 | Namespace safety | `invalid_http_rule.yaml`, `invalid_http_action.yaml`, `invalid_http_type.yaml` |
 
-Integration tests: [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs).
+Integration tests: [`tests/phase_0_4.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_4.rs).
 
 ## Phase 0.6 fixture groups
 
@@ -48,7 +48,7 @@ Integration tests: [`tests/phase_0_4.rs`](../../tests/phase_0_4.rs).
 | Semantic analysis | `analysis_dtcs_call_valid.yaml`, `analysis_logical_ops.yaml` |
 | Invalid semantics | `analysis_duplicate_action_target.yaml`, expression/semantics error fixtures |
 
-Integration tests: [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs).
+Integration tests: [`tests/phase_0_6.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_6.rs).
 
 ## Phase 0.3 fixture groups
 
@@ -59,7 +59,7 @@ Integration tests: [`tests/phase_0_6.rs`](../../tests/phase_0_6.rs).
 | Versioning | `invalid_version.yaml`, `version_conflict.yaml` |
 | Lineage analysis | `lineage_multi.yaml` |
 
-Integration tests: [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs).
+Integration tests: [`tests/phase_0_3.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_3.rs).
 
 ## Phase 0.7 fixture groups
 
@@ -70,7 +70,7 @@ Integration tests: [`tests/phase_0_3.rs`](../../tests/phase_0_3.rs).
 | Ambiguous action order | `analysis_duplicate_action_target.yaml` (plan invalid) |
 | Golden plans | `tests/fixtures/plans/*.plan.json` via `tests/plan_expectations.json` |
 
-Integration tests: [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs).
+Integration tests: [`tests/phase_0_7.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_7.rs).
 
 ## Phase 0.8 fixture groups
 
@@ -84,7 +84,7 @@ Integration tests: [`tests/phase_0_7.rs`](../../tests/phase_0_7.rs).
 | Dead-expression elimination | `optimize_dead_expr.yaml`, `optimize_dead_after_fold.yaml` |
 | Golden optimized plans | `tests/fixtures/plans_optimized/*.plan.json` via `tests/optimize_expectations.json` |
 
-Integration tests: [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs). Python tests parametrize over `tests/optimize_expectations.json`.
+Integration tests: [`tests/phase_0_8.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_8.rs). Python tests parametrize over `tests/optimize_expectations.json`.
 
 ## Phase 0.9 fixture groups
 
@@ -95,7 +95,7 @@ Integration tests: [`tests/phase_0_8.rs`](../../tests/phase_0_8.rs). Python test
 | Runtime | `tests/fixtures/runtime/customer_normalize_input.json`, `plan_field_write_chain_input.json` |
 | End-to-end | `examples/customer_normalize.dtcs.yaml` |
 
-Integration tests: [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs). Manifest-driven compile goldens use [`tests/compile_expectations.json`](../../tests/compile_expectations.json); capability and runtime I/O expectations use [`tests/capability_expectations.json`](../../tests/capability_expectations.json).
+Integration tests: [`tests/phase_0_9.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_9.rs). Manifest-driven compile goldens use [`tests/compile_expectations.json`](https://github.com/eddiethedean/dtcs/blob/main/tests/compile_expectations.json); capability and runtime I/O expectations use [`tests/capability_expectations.json`](https://github.com/eddiethedean/dtcs/blob/main/tests/capability_expectations.json).
 
 ## Phase 0.10 fixture groups
 
@@ -106,7 +106,7 @@ Integration tests: [`tests/phase_0_9.rs`](../../tests/phase_0_9.rs). Manifest-dr
 | Security vectors | `registry/evil_dtcs_injection.yaml`, `invalid_rule_duplicate_params.json` |
 | Integrated Platform E2E | `examples/customer_normalize.dtcs.yaml`, runtime I/O fixtures |
 
-Integration tests: [`tests/phase_0_10.rs`](../../tests/phase_0_10.rs). CI runs `cargo test --test phase_0_10` and `dtcs conformance run --profile all`.
+Integration tests: [`tests/phase_0_10.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_10.rs). CI runs `cargo test --test phase_0_10` and `dtcs conformance run --profile all`.
 
 ## Phase 0.2 fixture groups
 

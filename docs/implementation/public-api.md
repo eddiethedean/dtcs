@@ -1,6 +1,6 @@
 # Public API
 
-The reference crate exposes a small, spec-aligned API from [`src/lib.rs`](../../src/lib.rs).
+The reference crate exposes a small, spec-aligned API from [`src/lib.rs`](https://github.com/eddiethedean/dtcs/blob/main/src/lib.rs).
 
 ## Parse and validate
 
@@ -252,7 +252,7 @@ let profiles = discover_capabilities();
 ## Registry (Phase 0.4–0.5)
 
 The embedded registry includes diagnostic codes, the reserved `dtcs` namespace,
-and starter standard libraries for semantic actions, functions, and rules.
+and the full Ch 17–19 standard libraries for semantic actions, functions, and rules (Appendix A).
 Entries may carry a JSON `definition` field consumed by semantics validation.
 
 ```rust
@@ -390,4 +390,4 @@ assert_eq!(type_compatible(&integer, &integer), TypeCompatibility::Identical);
 
 Expression and function typing runs during the Types validation phase. Expressions with bodies must declare a `type`; functions must declare a return `type`. The validator infers expression types from field references, literals, unary operators, precedence-aware binary operators, and in-contract function calls.
 
-Use terminology from [`SPEC.md`](../../SPEC.md). When this guide conflicts with the specification, **SPEC.md wins**.
+Use terminology from [`SPEC.md`](../SPEC.md). When this guide conflicts with the specification, **SPEC.md wins**.

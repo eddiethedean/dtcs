@@ -1,6 +1,6 @@
 # Python API reference
 
-Public functions exported from `dtcs` (see [`python/dtcs/__init__.py`](../../python/dtcs/__init__.py)).
+Public functions exported from `dtcs` (see [`python/dtcs/__init__.py`](https://github.com/eddiethedean/dtcs/blob/main/python/dtcs/__init__.py)).
 
 ## Version
 
@@ -61,11 +61,15 @@ Public functions exported from `dtcs` (see [`python/dtcs/__init__.py`](../../pyt
 | `execution_validate(plan)` | Validate execution plan |
 | `runtime_execute(execution_plan, inputs)` | Execute with runtime inputs |
 
-## Conformance (Phase 0.10)
+`runtime_execute` returns `{outputs, diagnostics}`. Output/input cell values may include JSON `null`, or tagged tokens `{"$dtcs":"missing"}` and `{"$dtcs":"invalid"}` (optional `reason`). **Do not coerce** missing/invalid to `None`/null. Parsed contracts may include `guarantees`, `compatibility`, lineage `operation`/`flow`, and SemanticAction `parameters`.
+
+## Conformance (Phase 0.10+)
 
 | Function | Description |
 |----------|-------------|
 | `conformance_declare(profile=None)` | Ch 23 §9 capability declaration JSON |
 | `conformance_run(profile=None)` | Offline conformance report (`None` or `all` runs every profile) |
 
-See [conformance.md](../user/conformance.md) for CLI equivalents and report interpretation.
+Analyzer-focused suites exercise `analyzeValid`, `compatLevel`, and `evolveValid` (see [conformance.md](../user/conformance.md)).
+
+See [conformance.md](../user/conformance.md) for CLI equivalents and report interpretation. Migrating from 0.10.x: [faq.md](../user/faq.md#migration-to-0110).

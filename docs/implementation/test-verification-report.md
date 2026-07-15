@@ -63,7 +63,7 @@ Plan goldens remain byte-identical change detectors; structural invariants and b
 | Conformance | **High** (20 cases, per-id assertions, security probes automated) |
 | Analysis / determinism | **Moderate–High** (impure analysis; double-run fixture) |
 | Bindings | **Moderate** (validate + diagnostic smoke; not full plan/optimize/run parity) |
-| Stdlib catalog | **Moderate** (starter catalog only — see README) |
+| Stdlib catalog | **Strong** (full catalog in 0.11.0) |
 | **Overall** | **High** |
 
 The suite would now fail if: diagnostic multisets drift, optimize changes runtime output, plan invariants break, pre/postconditions stop enforcing, format pairs diverge, conformance cases regress, bindings lose validate/diagnostic parity, or network client code appears in core paths.
@@ -72,7 +72,7 @@ The suite would now fail if: diagnostic multisets drift, optimize changes runtim
 
 ## Remaining gaps (documented, not blocking High)
 
-1. **Full Ch 17–19 stdlib** — starter catalog only; ROADMAP/README state this explicitly
+1. ~~**Full Ch 17–19 stdlib**~~ — completed in 0.11.0
 2. **Binding depth** — smoke parity only; no plan/optimize/run through WASM/Node
 3. **Mutation gate** — job is informational until mutant kill rate stabilizes
 4. **Phase-specific subset checks** — some remain where they assert extra behavior (message substrings, registry merge logic) beyond manifest codes

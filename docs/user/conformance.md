@@ -1,6 +1,6 @@
 # Conformance certification
 
-Phase 0.10 adds offline conformance profiles and a certification suite per [SPEC.md](../../SPEC.md) Chapter 23.
+Offline conformance profiles and a certification suite per [SPEC.md](../SPEC.md) Chapter 23. Phase 0.10 introduced the machinery; Phase 0.11 deepens Analyzer assertions and runtime catalog coverage.
 
 ## Profiles
 
@@ -16,6 +16,27 @@ The reference implementation declares eight implementation classes:
 | `compiler` | Compiler |
 | `runtime` | Runtime |
 | `integrated-platform` | Integrated Platform (primary) |
+
+Analyzer profile capabilities include `compatibilityAnalysis`, `evolutionAnalysis`, and `lineageAnalysis`.
+
+## Assertion kinds
+
+Manifest cases under `tests/conformance/manifest.json` (mirrored in `src/conformance/manifest.json`) use these assertion kinds:
+
+| Kind | Meaning |
+|------|---------|
+| `parseValid` / `parseInvalid` | Document parses (or fails to) |
+| `validateValid` / `validateInvalid` | Validation success / failure (+ optional `codes`) |
+| `analyzeValid` | Static analysis produces no error diagnostics |
+| `compatLevel` | Compatibility level vs `comparisonFixture` equals `level` |
+| `evolveValid` | Evolution analysis vs `comparisonFixture` succeeds |
+| `planValid` | Plan lowering succeeds |
+| `optimizeEquivalent` | Optimizer preserves semantics |
+| `matchSupported` | Capability match succeeds against `dtcs:reference` |
+| `compileValid` | Compilation succeeds |
+| `runtimeOutput` | Runtime output matches fixture (`input`, `expectedOutput`) |
+| `runtimeInvalid` | Runtime fails with expected diagnostic `codes` |
+| `securityProbe` | Automated Ch 24 probe (`probeId`) |
 
 ## Declare capability
 
@@ -37,6 +58,7 @@ profile_only = dtcs.conformance_declare("parser")
 
 ```bash
 dtcs conformance run --profile integrated-platform
+dtcs conformance run --profile analyzer
 dtcs conformance run --profile all --json
 ```
 
@@ -54,7 +76,7 @@ assert report["passed"]
 
 JSON reports include:
 
-- `implementationId`, `implementationVersion` — reference implementation identity
+- `implementationId`, `implementationVersion` — reference implementation identity (`0.11.0`)
 - `profiles` — profiles exercised in this run
 - `results` — per-test outcomes (`id`, `profile`, `passed`, optional `message`)
 - `security` — automated Ch 24 checklist probes
@@ -66,9 +88,12 @@ Failed tests list the profile, test id, and a diagnostic message. Security probe
 
 ```bash
 cargo test --test phase_0_10 --locked
+cargo test --test phase_0_11 --locked
 dtcs conformance run --profile all
 ./scripts/security-checklist.sh
 ```
+
+Also see [ci-integration.md](ci-integration.md).
 
 ## Bindings
 

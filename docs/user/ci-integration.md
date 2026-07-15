@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install dtcs==0.9.0
+      - run: pip install dtcs==0.11.0
       - run: dtcs validate examples/customer_normalize.dtcs.yaml --json
 ```
 
@@ -91,6 +91,19 @@ dtcs validate contracts/my_transform.yaml --registry vendor/catalog.yaml --json
 ```
 
 The Python API equivalent is `dtcs.validate_with_registry(contract, registry_path)`.
+
+## Conformance gate
+
+For integration profiles or release branches:
+
+```bash
+dtcs conformance run --profile all
+# or from a Rust checkout:
+cargo test --test phase_0_10 --locked
+cargo test --test phase_0_11 --locked
+```
+
+See [conformance.md](conformance.md).
 
 ## JSON output reference
 

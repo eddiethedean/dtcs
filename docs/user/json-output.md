@@ -253,13 +253,13 @@ Failure emits a diagnostics envelope (`{"diagnostics": [...]}`), same shape as `
 dtcs compile contract.yaml --json
 ```
 
-Success emits an execution plan document (same shape as the Rust `ExecutionPlan` type). See [`tests/fixtures/execution_plans/valid_customer.exec.json`](../../tests/fixtures/execution_plans/valid_customer.exec.json) for a full example.
+Success emits an execution plan document (same shape as the Rust `ExecutionPlan` type). See [`tests/fixtures/execution_plans/valid_customer.exec.json`](https://github.com/eddiethedean/dtcs/blob/main/tests/fixtures/execution_plans/valid_customer.exec.json) for a full example.
 
 ```json
 {
   "target": {
     "engineId": "dtcs:reference",
-    "engineVersion": "0.9.0",
+    "engineVersion": "0.11.0",
     "capabilityVersion": "1.0.0"
   },
   "identity": {
@@ -353,7 +353,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.10.1",
+  "implementationVersion": "0.11.0",
   "dtcsVersion": "1.0.0-draft",
   "primaryProfile": "integrated-platform",
   "profiles": [
@@ -361,7 +361,7 @@ Success emits a single registry entry (same object shape as list items, may incl
       "id": "integrated-platform",
       "implementationClass": "integratedPlatform",
       "dtcsVersion": "1.0.0-draft",
-      "implementationVersion": "0.10.1",
+      "implementationVersion": "0.11.0",
       "supportedRegistries": ["dtcs:builtin"],
       "supportedExtensions": ["acme"],
       "optionalCapabilities": ["planOptimization", "referenceRuntime"]
@@ -375,7 +375,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.10.1",
+  "implementationVersion": "0.11.0",
   "profiles": ["integrated-platform"],
   "results": [
     {
@@ -399,7 +399,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 
 ```json
 {
-  "crateVersion": "0.10.1",
+  "crateVersion": "0.11.0",
   "specVersion": "1.0.0-draft"
 }
 ```

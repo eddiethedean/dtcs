@@ -1,6 +1,6 @@
 # Recommended Rust Dependencies
 
-Current [`Cargo.toml`](../../Cargo.toml):
+Current [`Cargo.toml`](https://github.com/eddiethedean/dtcs/blob/main/Cargo.toml):
 
 ```toml
 [dependencies]

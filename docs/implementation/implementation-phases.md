@@ -1,6 +1,6 @@
 # Implementation Build Order
 
-> **Historical document.** This describes the *scaffold build order* (Phases 1–13 below), not the release roadmap. For current milestone status, use [ROADMAP.md](../../ROADMAP.md) (Phases 0.1–0.10).
+> **Historical document.** This describes the *scaffold build order* (Phases 1–13 below), not the release roadmap. For current milestone status, use [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) (Phases 0.1–0.11) and [spec-completeness.md](spec-completeness.md).
 
 | Scaffold phase (this doc) | ROADMAP phase | Topic |
 |---------------------------|---------------|-------|
@@ -134,7 +134,7 @@ Additional CLI command:
 dtcs plan <contract>
 ```
 
-Phases 12–13 (optimization, capability matching, compilation, runtime) are implemented in ROADMAP 0.8–0.9. See [ROADMAP.md](../../ROADMAP.md).
+Phases 12–13 (optimization, capability matching, compilation, runtime) are implemented in ROADMAP 0.8–0.9. See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md).
 
 ## Phase 12 — Plan Optimization (Phase 0.8)
 

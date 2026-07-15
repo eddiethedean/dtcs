@@ -6,11 +6,13 @@ This document helps architects and enterprise evaluators assess DTCS for their o
 
 DTCS standardizes **transformation semantics** as portable, vendor-neutral contracts. A DTCS contract captures:
 
-- Input and output schemas
-- Semantic actions, expressions, functions, and rules
-- Lineage (which inputs feed which outputs)
-- Metadata (governance, provenance, classification)
-- Versioning and compatibility policies
+- Input and output schemas (with optional field constraints)
+- Semantic actions (field transforms and dataset operators), expressions, functions, and rules
+- Lineage with explicit `operation` / information-flow `flow`
+- Guarantees and compatibility declarations
+- Metadata (governance, ownership, lifecycle, provenance, classification, deprecation)
+- Versioning policies
+- Distinctions among null, missing, and invalid values at runtime
 
 It does **not** define execution engines, storage, orchestration, or SQL dialects.
 
@@ -40,7 +42,7 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 *Released reference implementation: `0.11.0`.*
 
-See [ROADMAP.md](../../ROADMAP.md) for the full milestone plan and [spec-completeness.md](../implementation/spec-completeness.md) for the chapter matrix.
+See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) for the full milestone plan and [spec-completeness.md](../implementation/spec-completeness.md) for the chapter matrix.
 
 ## What you can use today
 
@@ -70,7 +72,7 @@ WASM and Node bindings (`@eddiethedean/dtcs-wasm`, `@eddiethedean/dtcs`) are ava
 
 ## Security considerations
 
-Normative security guidance is in [SPEC.md Chapter 24](../../SPEC.md#chapter-24----security-considerations). At a high level:
+Normative security guidance is in [SPEC.md Chapter 24](../SPEC.md#chapter-24-security-considerations). At a high level:
 
 - Contracts are **declarative documents** — the validator parses and analyzes them; it does not execute arbitrary code from contract bodies
 - Extension fields are preserved but validated for structure
@@ -96,15 +98,18 @@ Rust and Python packages install the same `dtcs` CLI.
 ## Evaluation checklist
 
 - [ ] Validate existing pipeline contracts with `dtcs validate`
-- [ ] Review diagnostic output for schema and lineage gaps
+- [ ] Review diagnostic output for schema and lineage gaps (`operation` / `flow`)
+- [ ] Author or review a dataset action with `parameters` (for example `dtcs:project`)
+- [ ] Exercise null / missing / invalid tokens with `dtcs run` and inspect JSON carefully
 - [ ] Compare current and proposed contract versions with `dtcs compat`
 - [ ] Trace lineage for critical inputs with `dtcs lineage --impact`
 - [ ] Match plans against engine capabilities with `dtcs match examples/customer_normalize.dtcs.yaml`
 - [ ] Compile contracts to execution plans with `dtcs compile examples/customer_normalize.dtcs.yaml`
 - [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_normalize.dtcs.yaml --input tests/fixtures/runtime/customer_normalize_input.json`
-- [ ] Run offline conformance certification: `dtcs conformance run --profile integrated-platform`
+- [ ] Run offline conformance certification: `dtcs conformance run --profile all` (includes Analyzer assertions)
 - [ ] Review [security-checklist.md](security-checklist.md) for Ch 24 requirements
-- [ ] Read SPEC Chapters 1–3 and [Appendix A](../../SPEC.md#appendix-a----standard-library-catalog-normative) for design principles and the standard library catalog
+- [ ] Read SPEC Chapters 1–3 and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative) for design principles and the standard library catalog
+- [ ] Skim [faq.md](../user/faq.md#migration-to-0110) if upgrading from 0.10.x
 
 Conformance certification is available via `dtcs conformance declare` and `dtcs conformance run`. See [conformance.md](../user/conformance.md). External certification authority remains out of scope per Ch 23 §13.
 

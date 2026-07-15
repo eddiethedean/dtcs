@@ -23,7 +23,7 @@ dtcs version
 
 ## Validate your first contract
 
-The repository includes a realistic example at [`examples/customer_normalize.dtcs.yaml`](../../examples/customer_normalize.dtcs.yaml):
+The repository includes a realistic example at [`examples/customer_normalize.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_normalize.dtcs.yaml):
 
 ```bash
 dtcs validate examples/customer_normalize.dtcs.yaml
@@ -135,7 +135,7 @@ dtcs registry resolve dtcs:lowercase
 dtcs registry resolve dtcs:concat --json
 ```
 
-The starter standard library (Phase 0.5) includes string actions like `dtcs:uppercase`, functions like `dtcs:length`, and rules like `dtcs:range`. See [writing-contracts.md](writing-contracts.md) for the full starter catalog.
+The embedded standard library (Phase 0.11 / [SPEC Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative)) includes field transforms (`dtcs:uppercase`, …), dataset operators (`dtcs:project`, `dtcs:join`, …), functions (`dtcs:length`, `dtcs:is_null`, …), and rules (`dtcs:range`, `dtcs:one_of`, …). See [writing-contracts.md](writing-contracts.md) for the catalog.
 
 ## Use from Python
 
@@ -169,20 +169,32 @@ assert result["outputs"]["customer_clean"][0]["email"] == "alice@example.com"
 
 Contract dicts returned by `parse` and `parse_file` use **camelCase** keys (`dtcsVersion`, `semanticActions`, etc.).
 
+## Certify conformance
+
+```bash
+dtcs conformance run --profile all
+dtcs conformance declare --json
+```
+
+See [conformance.md](conformance.md).
+
 ## What to read next
 
 | Goal | Document |
 |------|----------|
 | Understand contract fields | [writing-contracts.md](writing-contracts.md) |
-| Expression syntax | [expressions.md](expressions.md) |
+| Expression syntax and null tokens | [expressions.md](expressions.md) |
+| Upgrading to 0.11.0 | [faq.md](faq.md#migration-to-0110) · [CHANGELOG](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#0110) |
 | All CLI commands and flags | [cli-guide.md](cli-guide.md) |
 | Compatibility classifications | [compatibility.md](compatibility.md) |
+| Conformance profiles | [conformance.md](conformance.md) |
 | JSON output shapes | [json-output.md](json-output.md) |
 | CI integration | [ci-integration.md](ci-integration.md) |
 | Common questions | [faq.md](faq.md) |
 | Troubleshooting | [troubleshooting.md](troubleshooting.md) |
 | Enterprise evaluation | [adoption/overview.md](../adoption/overview.md) |
-| Normative definitions | [SPEC.md](../../SPEC.md) |
+| Standard library catalog | [SPEC Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative) |
+| Normative definitions | [SPEC.md](../SPEC.md) |
 
 ## Develop from source
 
@@ -197,4 +209,4 @@ maturin develop --no-default-features --features python --locked
 pytest python/tests -v
 ```
 
-See [CONTRIBUTING.md](../../CONTRIBUTING.md#contributor-quickstart) for the full workflow.
+See [CONTRIBUTING.md](https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md#contributor-quickstart) for the full workflow.
