@@ -35,7 +35,8 @@ Add your Python scripts directory to `PATH`, or use `python -m dtcs` in scripts 
 Most repository examples assume you run commands from the **repository root**:
 
 ```bash
-dtcs validate examples/customer_normalize.dtcs.yaml
+dtcs validate examples/minimal.dtcs.yaml
+# or: examples/customer_pipeline.dtcs.yaml
 ```
 
 If you are in the `examples/` directory, adjust paths or return to the repo root. See [examples/README.md](https://github.com/eddiethedean/dtcs/blob/main/examples/README.md).
@@ -44,7 +45,7 @@ If you are in the `examples/` directory, adjust paths or return to the repo root
 
 The `--input` path is relative to your current working directory. Clone the repository or provide an absolute path to your input JSON.
 
-Pip-only installs do not include `examples/` or `tests/fixtures/`. Copy input JSON from the repository or author your own.
+Pip-only installs do not include `examples/` or `tests/fixtures/`. Use the curlable sample in [getting-started.md](getting-started.md), clone the repository, or author your own files.
 
 ## Validation errors
 

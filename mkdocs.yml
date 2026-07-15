@@ -1,5 +1,5 @@
 # MkDocs configuration for Read the Docs and local preview.
-# Build: pip install -r docs/requirements.txt && mkdocs serve
+# Build: pip install -r docs/requirements.txt && NO_MKDOCS_2_WARNING=true mkdocs serve
 site_name: DTCS
 site_description: Data Transformation Contract Standard — vendor-neutral contracts for transformation semantics
 site_url: https://dtcs.readthedocs.io
@@ -77,45 +77,55 @@ validation:
 nav:
   - Home: index.md
   - Getting started: user/getting-started.md
-  - User guides:
-      - CLI guide: user/cli-guide.md
+  - Tutorials:
+      - Concepts: user/concepts.md
       - Writing contracts: user/writing-contracts.md
+      - Cookbook: user/cookbook.md
+  - Guides:
+      - CLI guide: user/cli-guide.md
       - Expressions: user/expressions.md
       - Compatibility: user/compatibility.md
       - JSON output: user/json-output.md
       - CI integration: user/ci-integration.md
       - Conformance: user/conformance.md
+      - Extensions & registries: user/extensions-and-registries.md
+      - Migration 0.11: user/migration-0.11.md
+      - Limits & deployment: user/limits.md
       - Troubleshooting: user/troubleshooting.md
       - FAQ: user/faq.md
+      - Glossary: user/glossary.md
   - Adoption:
       - Overview: adoption/overview.md
       - Security checklist: adoption/security-checklist.md
   - API:
       - Python: api/python.md
+      - Rust: api/rust.md
+      - WASM: api/wasm.md
+      - Node: api/node.md
   - Specification:
       - SPEC.md: SPEC.md
-      - Roadmap: https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md
-      - Changelog: https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md
       - Completeness matrix: implementation/spec-completeness.md
-  - Editorial:
-      - Baseline: editorial/baseline.md
-      - Style guide: editorial/style-guide.md
-      - Authoring guide: editorial/authoring-guide.md
-      - Review checklist: editorial/review-checklist.md
-  - Implementation:
+      - Changelog: https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md
+      - Roadmap: https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md
+  - Contribute:
+      - Contributing: https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md
+      - Architecture: implementation/architecture.md
       - Overview: implementation/README.md
       - Project goal: implementation/project-goal.md
-      - Architecture: implementation/architecture.md
       - Crate layout: implementation/crate-layout.md
       - Model guide: implementation/model-guide.md
       - Validation guide: implementation/validation-guide.md
       - Diagnostics guide: implementation/diagnostics-guide.md
-      - Public API: implementation/public-api.md
+      - Public API notes: implementation/public-api.md
       - CLI spec: implementation/cli-spec.md
-      - Implementation phases: implementation/implementation-phases.md
       - Testing plan: implementation/testing-plan.md
+      - Release runbook: implementation/release-runbook.md
       - Rust dependencies: implementation/rust-dependencies.md
       - Spec usage: implementation/spec-usage.md
       - Non-goals: implementation/non-goals.md
       - Test verification: implementation/test-verification-report.md
-  - Contributing: https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md
+      - Implementation phases: implementation/implementation-phases.md
+      - Editorial baseline: editorial/baseline.md
+      - Style guide: editorial/style-guide.md
+      - Authoring guide: editorial/authoring-guide.md
+      - Review checklist: editorial/review-checklist.md

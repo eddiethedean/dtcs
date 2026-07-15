@@ -161,6 +161,6 @@ dtcs diagnostics tests/fixtures/expression_type_mismatch.yaml
 ## Next steps
 
 - Contract structure and stdlib catalog: [writing-contracts.md](writing-contracts.md)
-- Static analysis: [getting-started.md](getting-started.md#analyze-semantics-and-expressions)
+- Static analysis overview: [concepts.md](concepts.md) · CLI: `dtcs analyze`
 - JSON output for `analyze` / `run`: [json-output.md](json-output.md)
 - Normative expression language: [SPEC.md](../SPEC.md) Chapter 8

@@ -42,7 +42,7 @@ dtcs diagnostics contract.yaml --json
   "inputs": 1,
   "outputs": 1,
   "semanticActions": 1,
-  "rules": 0,
+  "rules": 1,
   "expressions": 0,
   "functions": 0
 }

@@ -1,34 +1,26 @@
-# DTCS Rust Implementation Starter Pack
+# Reference implementation docs
 
-This guide set supports building the Rust reference implementation of DTCS.
+Guides for the Rust reference crate in [`src/`](https://github.com/eddiethedean/dtcs/tree/main/src).
 
-See the canonical documentation index at [`docs/README.md`](../index.md).
+Treat [`SPEC.md`](../SPEC.md) as the authoritative source of truth. User-facing docs start at [Getting started](../user/getting-started.md) and [Concepts](../user/concepts.md).
 
-Treat [`SPEC.md`](../SPEC.md) as the authoritative source of truth.
+## Start here
 
-The implementation pipeline through Phase 0.11:
+| Document | Description |
+|----------|-------------|
+| [architecture.md](architecture.md) | Layers, binding matrix, error model |
+| [crate-layout.md](crate-layout.md) | Module map |
+| [public-api.md](public-api.md) | Library surface notes (implementers) |
+| [spec-completeness.md](spec-completeness.md) | Chapter coverage matrix |
+| [release-runbook.md](release-runbook.md) | Maintainer release checklist |
+| [non-goals.md](non-goals.md) | Explicit out-of-scope items |
+| [testing-plan.md](testing-plan.md) | Fixtures and golden strategy |
+
+## Pipeline (current tools)
 
 ```text
-parse -> Canonical Object Model -> validate -> diagnostics
-                                              -> analyze (compat, evolution, lineage, versioning)
-                                              -> analyze (semantics, expressions)
-                                              -> plan (lowering, graph, validation)
-                                              -> optimize (semantics-preserving rewrites)
-                                              -> capability match -> compile -> runtime execute
-                                              -> conformance declare / run
+parse → COM → validate → analyze → plan → optimize → match → compile → run
+                                                              └→ conformance
 ```
 
-Phase 0.11 completes the full Ch 17–19 catalog and COM deepening. See [spec-completeness.md](spec-completeness.md).
-
-Do not implement multi-backend compilers or production ETL orchestration without an agreed milestone.
-
-## Related documents
-
-- [project-goal.md](project-goal.md)
-- [spec-completeness.md](spec-completeness.md)
-- [architecture.md](architecture.md)
-- [crate-layout.md](crate-layout.md)
-- [public-api.md](public-api.md)
-- [implementation-phases.md](implementation-phases.md)
-- [spec-usage.md](spec-usage.md)
-- [testing-plan.md](testing-plan.md)
+Consumer API pages: [Python](../api/python.md) · [Rust](../api/rust.md) · [WASM](../api/wasm.md) · [Node](../api/node.md).

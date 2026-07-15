@@ -101,18 +101,13 @@ Contracts may also declare a COM-level `compatibility` policy (`policy`, `forwar
 
 ## Migration to 0.11.0
 
-Notable changes when upgrading from 0.10.x:
+Dedicated guide with before/after YAML: **[migration-0.11.md](migration-0.11.md)**.
 
-1. **Lineage** — omitted `operation` deserializes as `dtcs:derive`; `flow` defaults to `derived`. Round-tripping plans may show these fields explicitly.
-2. **Dataset actions** — operators such as `dtcs:project` / `dtcs:join` require a `parameters` map (see [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative)).
-3. **Runtime JSON** — consumers must treat `{"$dtcs":"missing"}` and `{"$dtcs":"invalid"}` as distinct from JSON `null`.
-4. **Full catalog** — `dtcs registry list` now includes the full Ch 17–19 set, not only the Phase 0.5 starter subset.
-
-Full detail: [CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#0110) migration summary.
+Notable changes from 0.10.x: lineage `operation`/`flow` defaults, dataset action `parameters`, null/missing/invalid runtime tokens, and the full Ch 17–19 catalog.
 
 ### How do I upgrade between versions?
 
-See the [migration summary in CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#migration-summary). Pin versions with `pip install dtcs==0.11.0` or `cargo install dtcs --version 0.11.0`.
+Read [migration-0.11.md](migration-0.11.md) and the [CHANGELOG migration summary](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#migration-summary). Pin with `pip install dtcs==0.11.0` or `cargo install dtcs --version 0.11.0`.
 
 ## Contributing
 

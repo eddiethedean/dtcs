@@ -7,6 +7,22 @@ use super::context::ValidationContext;
 use super::field_index::{FieldIndex, TargetResolution};
 use super::lineage::validate_lineage;
 
+fn is_dataset_action_target(action_id: &str) -> bool {
+    matches!(
+        action_id,
+        "dtcs:project"
+            | "dtcs:select"
+            | "dtcs:filter"
+            | "dtcs:aggregate"
+            | "dtcs:group"
+            | "dtcs:join"
+            | "dtcs:sort"
+            | "dtcs:union"
+            | "dtcs:partition"
+            | "dtcs:derive"
+    )
+}
+
 pub(crate) fn validate_references(ctx: &mut ValidationContext, contract: &TransformationContract) {
     let index = FieldIndex::from_contract(contract);
 
@@ -36,7 +52,7 @@ pub(crate) fn validate_references(ctx: &mut ValidationContext, contract: &Transf
             ctx,
             &action.target,
             &format!("semanticActions.{}.target", action.id),
-            false,
+            is_dataset_action_target(&action.action),
             &index,
         );
     }

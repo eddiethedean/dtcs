@@ -2,6 +2,8 @@
 
 Reference-implementation milestones for the Data Transformation Contract Standard. Uses **0.X** release phases only and covers **all 26 chapters** of [`SPEC.md`](SPEC.md).
 
+> **Maturity:** Spec is `1.0.0-draft`. Tooling is alpha. Status **Covered** below means the **reference implementation exercises that draft SPEC area** for the listed release — not that DTCS 1.0 is finalized or production-certified.
+
 [`SPEC.md`](SPEC.md) is the source of truth. When this roadmap and the specification disagree, the specification wins.
 
 **Citation format:** `Ch N §M` — chapter *N*, section *M* in [`SPEC.md`](SPEC.md).
@@ -25,50 +27,50 @@ Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-
 
 ## Status overview
 
-| Phase | Name | SPEC focus | Status |
-|-------|------|------------|--------|
-| **0.1** | [Foundation](#phase-01-foundation) | Ch 1–3, 9–10, 17–20 (core) | **Complete** (`0.1.2`) |
-| **0.2** | [Contract Model](#phase-02-contract-model) | Ch 4–6 | **Complete** (`0.2.0`) |
-| **0.3** | [Contract Analysis](#phase-03-contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Complete** (`0.3.0`) |
-| **0.4** | [Registries & Extensibility](#phase-04-registries-extensibility) | Ch 21–22 | **Complete** (`0.4.0`) |
-| **0.5** | [Standard Libraries](#phase-05-standard-libraries) | Ch 17–19 | **Complete** (`0.5.0` starter catalog; full catalog in 0.11) |
-| **0.6** | [Semantic Analysis](#phase-06-semantic-analysis) | Ch 7–8 | **Complete** (`0.6.0`) |
-| **0.7** | [Transformation Plan](#phase-07-transformation-plan) | Ch 13 (lowering) | **Complete** (`0.7.0`) |
-| **0.8** | [Plan Optimization](#phase-08-plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | **Complete** (`0.8.0`) |
-| **0.9** | [Execution Pipeline](#phase-09-execution-pipeline) | Ch 14–16 | **Complete** (`0.9.0`) |
-| **0.10** | [Conformance & Ecosystem](#phase-010-conformance-ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Complete** (`0.10.1`) |
-| **0.11** | [SPEC Completeness](#phase-011-spec-completeness) | Ch 4–8, 10, 12, 14–19 (deepening); Appendix A | **Complete** (`0.11.0`) |
+| Phase | Name | SPEC focus | Reference impl coverage |
+|-------|------|------------|-------------------------|
+| **0.1** | [Foundation](#phase-01-foundation) | Ch 1–3, 9–10, 17–20 (core) | **Covered** (`0.1.2`) |
+| **0.2** | [Contract Model](#phase-02-contract-model) | Ch 4–6 | **Covered** (`0.2.0`) |
+| **0.3** | [Contract Analysis](#phase-03-contract-analysis) | Ch 10 §11–12, 11–12, 25 | **Covered** (`0.3.0`) |
+| **0.4** | [Registries & Extensibility](#phase-04-registries-extensibility) | Ch 21–22 | **Covered** (`0.4.0`) |
+| **0.5** | [Standard Libraries](#phase-05-standard-libraries) | Ch 17–19 | **Covered** (`0.5.0` starter; full catalog in 0.11) |
+| **0.6** | [Semantic Analysis](#phase-06-semantic-analysis) | Ch 7–8 | **Covered** (`0.6.0`) |
+| **0.7** | [Transformation Plan](#phase-07-transformation-plan) | Ch 13 (lowering) | **Covered** (`0.7.0`) |
+| **0.8** | [Plan Optimization](#phase-08-plan-optimization) | Ch 13 §9, 8 §14, 15 §9, 17–19 §11 | **Covered** (`0.8.0`) |
+| **0.9** | [Execution Pipeline](#phase-09-execution-pipeline) | Ch 14–16 | **Covered** (`0.9.0`) |
+| **0.10** | [Conformance & Ecosystem](#phase-010-conformance-ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Covered** (`0.10.1`) |
+| **0.11** | [SPEC Completeness](#phase-011-spec-completeness) | Ch 4–8, 10, 12, 14–19 (deepening); Appendix A | **Covered** (`0.11.0`) |
 
 ## SPEC chapter index
 
 | Ch | Title | Phase | Coverage |
 |----|-------|-------|----------|
-| 1 | [Introduction](SPEC.md#chapter-1-introduction) | 0.1, 0.10 | Full — principles (0.1); conformance intro (0.10) |
-| 2 | [Core Concepts](SPEC.md#chapter-2-core-concepts) | 0.1, 0.10, 0.11 | Full — vocabulary (0.1); conformance (0.10); guarantees COM (0.11) |
-| 3 | [Canonical Object Model](SPEC.md#chapter-3-canonical-object-model) | 0.1, 0.11 | Full — deepened by 0.11 (guarantees, compatibility decl, nested extensions) |
-| 4 | [Type System](SPEC.md#chapter-4-type-system) | 0.1, 0.2, 0.11 | Full — deepened by 0.11 |
-| 5 | [Metadata](SPEC.md#chapter-5-metadata) | 0.2 | Full |
-| 6 | [Inputs and Outputs](SPEC.md#chapter-6-inputs-and-outputs) | 0.1, 0.2, 0.11 | Full — deepened by 0.11 |
-| 7 | [Transformation Semantics](SPEC.md#chapter-7-transformation-semantics) | 0.6, 0.11 | Full — deepened by 0.11 guarantees |
-| 8 | [Expression Language](SPEC.md#chapter-8-expression-language) | 0.6, 0.8, 0.11 | Full — deepened by 0.11 null/missing/invalid semantics |
+| 1 | [Introduction](SPEC.md#chapter-1-introduction) | 0.1, 0.10 | Covered — principles (0.1); conformance intro (0.10) |
+| 2 | [Core Concepts](SPEC.md#chapter-2-core-concepts) | 0.1, 0.10, 0.11 | Covered — vocabulary (0.1); conformance (0.10); guarantees COM (0.11) |
+| 3 | [Canonical Object Model](SPEC.md#chapter-3-canonical-object-model) | 0.1, 0.11 | Covered — deepened by 0.11 (guarantees, compatibility decl, nested extensions) |
+| 4 | [Type System](SPEC.md#chapter-4-type-system) | 0.1, 0.2, 0.11 | Covered — deepened by 0.11 |
+| 5 | [Metadata](SPEC.md#chapter-5-metadata) | 0.2 | Covered |
+| 6 | [Inputs and Outputs](SPEC.md#chapter-6-inputs-and-outputs) | 0.1, 0.2, 0.11 | Covered — deepened by 0.11 |
+| 7 | [Transformation Semantics](SPEC.md#chapter-7-transformation-semantics) | 0.6, 0.11 | Covered — deepened by 0.11 guarantees |
+| 8 | [Expression Language](SPEC.md#chapter-8-expression-language) | 0.6, 0.8, 0.11 | Covered — deepened by 0.11 null/missing/invalid semantics |
 | 9 | [Validation](SPEC.md#chapter-9-validation) | 0.1 | Full; deepened by 0.2, 0.6, and 0.11 |
-| 10 | [Lineage](SPEC.md#chapter-10-lineage) | 0.1, 0.3, 0.11 | Full — deepened by 0.11 (`operation`, `flow`) |
-| 11 | [Compatibility](SPEC.md#chapter-11-compatibility) | 0.3, 0.11 | Full — deepened by 0.11 compatibility declaration |
-| 12 | [Evolution](SPEC.md#chapter-12-evolution) | 0.3, 0.11 | Full — deepened by 0.11 |
-| 13 | [Transformation Plan](SPEC.md#chapter-13-transformation-plan) | 0.7, 0.8 | Full |
-| 14 | [Engine Capability Model](SPEC.md#chapter-14-engine-capability-model) | 0.9, 0.11 | Full — deepened by 0.11 full-catalog profile |
-| 15 | [Compilation](SPEC.md#chapter-15-compilation) | 0.8, 0.9, 0.11 | Full — deepened by 0.11 action parameters |
-| 16 | [Runtime](SPEC.md#chapter-16-runtime) | 0.9, 0.11 | Full — deepened by 0.11 full catalog + null tokens |
-| 17 | [Semantic Actions](SPEC.md#chapter-17-semantic-actions) | 0.5, 0.8, 0.11 | Full — starter (0.5); optimization (0.8); full catalog (0.11) |
-| 18 | [Function Model](SPEC.md#chapter-18-function-model) | 0.5, 0.8, 0.11 | Full — starter (0.5); optimization (0.8); full catalog (0.11) |
-| 19 | [Rule Model](SPEC.md#chapter-19-rule-model) | 0.5, 0.8, 0.11 | Full — starter (0.5); optimization (0.8); full catalog (0.11) |
+| 10 | [Lineage](SPEC.md#chapter-10-lineage) | 0.1, 0.3, 0.11 | Covered — deepened by 0.11 (`operation`, `flow`) |
+| 11 | [Compatibility](SPEC.md#chapter-11-compatibility) | 0.3, 0.11 | Covered — deepened by 0.11 compatibility declaration |
+| 12 | [Evolution](SPEC.md#chapter-12-evolution) | 0.3, 0.11 | Covered — deepened by 0.11 |
+| 13 | [Transformation Plan](SPEC.md#chapter-13-transformation-plan) | 0.7, 0.8 | Covered |
+| 14 | [Engine Capability Model](SPEC.md#chapter-14-engine-capability-model) | 0.9, 0.11 | Covered — deepened by 0.11 full-catalog profile |
+| 15 | [Compilation](SPEC.md#chapter-15-compilation) | 0.8, 0.9, 0.11 | Covered — deepened by 0.11 action parameters |
+| 16 | [Runtime](SPEC.md#chapter-16-runtime) | 0.9, 0.11 | Covered — deepened by 0.11 full catalog + null tokens |
+| 17 | [Semantic Actions](SPEC.md#chapter-17-semantic-actions) | 0.5, 0.8, 0.11 | Covered — starter (0.5); optimization (0.8); full catalog (0.11) |
+| 18 | [Function Model](SPEC.md#chapter-18-function-model) | 0.5, 0.8, 0.11 | Covered — starter (0.5); optimization (0.8); full catalog (0.11) |
+| 19 | [Rule Model](SPEC.md#chapter-19-rule-model) | 0.5, 0.8, 0.11 | Covered — starter (0.5); optimization (0.8); full catalog (0.11) |
 | 20 | [Diagnostics](SPEC.md#chapter-20-diagnostics) | 0.1 | Full; stage codes added per phase |
-| 21 | [Extensibility](SPEC.md#chapter-21-extensibility) | 0.4, 0.11 | Full — deepened by 0.11 nested extensions |
-| 22 | [Registries](SPEC.md#chapter-22-registries) | 0.4, 0.11 | Full — deepened by 0.11 builtin catalogs |
+| 21 | [Extensibility](SPEC.md#chapter-21-extensibility) | 0.4, 0.11 | Covered — deepened by 0.11 nested extensions |
+| 22 | [Registries](SPEC.md#chapter-22-registries) | 0.4, 0.11 | Covered — deepened by 0.11 builtin catalogs |
 | 23 | [Conformance](SPEC.md#chapter-23-conformance) | 0.10 | Full *(N/A: external cert authority)* |
-| 24 | [Security Considerations](SPEC.md#chapter-24-security-considerations) | 0.10 | Full |
-| 25 | [Versioning](SPEC.md#chapter-25-versioning) | 0.3 | Full |
-| 26 | [Governance](SPEC.md#chapter-26-governance) | 0.10 | Full |
+| 24 | [Security Considerations](SPEC.md#chapter-24-security-considerations) | 0.10 | Covered |
+| 25 | [Versioning](SPEC.md#chapter-25-versioning) | 0.3 | Covered |
+| 26 | [Governance](SPEC.md#chapter-26-governance) | 0.10 | Covered |
 
 Chapter-level evidence matrix: [`docs/implementation/spec-completeness.md`](docs/implementation/spec-completeness.md). Normative identifier catalog: [SPEC Appendix A](SPEC.md#appendix-a-standard-library-catalog-normative).
 

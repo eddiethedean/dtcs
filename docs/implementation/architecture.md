@@ -1,56 +1,53 @@
 # Architecture
 
-Follow the architecture defined in `SPEC.md`.
+Reference-implementation architecture for adopters and contributors. Phase numbers in git history are historical; runtime behavior is defined by `SPEC.md` and the current crate.
 
-Implementation pipeline (through Phase 0.11):
+## Layers
 
 ```text
-DTCS Document
-        │
-        ▼
-Parser
-        │
-        ▼
-Canonical Object Model
-        │
-        ├──────────────────────────────┐
-        ▼                              ▼
-Validator (0.1–0.6, 0.11)        Analyzer (0.3, 0.6, 0.11)
-        │                              │
-        │  registry::resolve           ├─ compatibility::analyze
-        │  full stdlib definitions     ├─ analyze_evolution
-        │  extension pass (nested)     ├─ versioning::validate
-        ▼                              └─ lineage::analyze
-Diagnostics                            │
-        │                              ▼
-        ▼                         Analysis reports
-Plan lowering (0.7)
-        │
-        ▼
-Plan optimization (0.8)
-        │
-        ▼
-Capability matching (0.9, 0.11)
-        │
-        ▼
-Compilation (0.9, 0.11)
-        │
-        ▼
-Reference runtime (0.9, 0.11)
-        │
-        ▼
-Conformance (0.10, 0.11)
-        │
-        ▼
-Outputs / certification report
+┌─────────────────────────────────────────────────────────────┐
+│ Bindings: CLI · Python (PyO3) · WASM · Node (thin wrapper) │
+├─────────────────────────────────────────────────────────────┤
+│ Public library API (src/lib.rs)                              │
+├──────────────┬──────────────┬──────────────┬────────────────┤
+│ Parse / COM  │ Validate     │ Analyze      │ Registry       │
+│ model::      │ validation:: │ analysis::   │ registry::     │
+│              │ diagnostics::│ compatibility│                │
+├──────────────┴──────────────┴──────────────┴────────────────┤
+│ Plan · Optimize · Capability · Compile · Runtime             │
+│ plan:: · optimize · capability:: · compile:: · runtime::     │
+├─────────────────────────────────────────────────────────────┤
+│ Conformance (profiles, offline suite, security probes)       │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Analysis is **read-only** — it never mutates the Canonical Object Model.
-Registry resolution is also read-only; the embedded catalog (Appendix A) is authoritative for `dtcs:` identifiers.
-Standard library entries include structured definitions used during semantic validation.
-Plan lowering is **read-only** with respect to the COM — it produces a separate `TransformationPlan` IR.
-Plan optimization transforms a validated plan into a semantically equivalent optimized plan.
-Capability matching, compilation, and the reference runtime execute validated contracts in-memory for conformance and development use.
-Phase 0.11 completes COM depth (lineage `operation`/`flow`, guarantees, compatibility declaration, nested extensions, null/missing/invalid tokens) and the full Ch 17–19 catalog.
+| Layer | Responsibility | Mutates COM? |
+|-------|----------------|--------------|
+| Parse | YAML/JSON → COM | Creates |
+| Validate | Structural / type / reference / semantic checks | No (report only) |
+| Analyze | Compatibility, evolution, lineage, static semantics | No |
+| Registry | Resolve `dtcs:` and vendor IDs | Read-only catalog |
+| Plan | Lower COM → transformation IR + dependency graph | New IR |
+| Optimize | Semantics-preserving rewrites | Plan only |
+| Capability | Match plan vs engine profile | No |
+| Compile | Plan → execution steps | New IR |
+| Runtime | Execute steps on in-memory datasets | Workspaces only |
+| Conformance | Certify profiles offline | No |
 
-See [spec-completeness.md](spec-completeness.md) and [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) Phase 0.11.
+## Binding matrix
+
+| Surface | Parse/validate | Plan/run | Conformance run | Notes |
+|---------|----------------|----------|-----------------|-------|
+| CLI (`dtcs`) | Yes | Yes | Yes | Full surface |
+| Python | Yes | Yes | Yes | Same envelopes as CLI JSON |
+| Rust crate | Yes | Yes | Yes | [docs.rs/dtcs](https://docs.rs/dtcs) |
+| WASM | Yes | No | Declare only | Size-constrained |
+| Node | Yes | No | Declare only | Wraps WASM |
+
+## Error model
+
+Diagnostics use stable `dtcs:` codes, severity, category, and pipeline stage. Library APIs generally return reports rather than throwing on validation failure. See [diagnostics-guide.md](diagnostics-guide.md).
+
+## Non-goals
+
+Production ETL orchestration, Spark/Polars/SQL backends, and hosted registry authorities are out of scope. See [non-goals.md](non-goals.md) and [limits.md](../user/limits.md).

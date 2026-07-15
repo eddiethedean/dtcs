@@ -18,27 +18,29 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 ## Reference implementation maturity
 
-| Component | Status |
-|-----------|--------|
+> **Maturity:** Spec `1.0.0-draft` · tools alpha (`0.11.0`). **Covered** means the reference implementation exercises that draft area — not production certification of the standard.
+
+| Component | Reference impl coverage |
+|-----------|-------------------------|
 | Specification | Draft (`1.0.0-draft`, 26 chapters + Appendix A catalog) |
-| Parser (YAML/JSON) | Complete |
-| Seven-phase validation | Complete |
-| Metadata validation | Complete |
-| Type system (incl. expressions) | Complete |
-| Compatibility analysis | Complete (five classification levels) |
-| Evolution analysis | Complete |
-| Versioning validation (Ch 25) | Complete |
-| Lineage analysis (dataset-level) | Complete (`operation` / `flow` in COM) |
-| Identifier registry & extensibility | Complete (Phase 0.4) |
-| Standard libraries (Ch 17–19) | Complete (full catalog, Phase 0.11) |
-| Static semantic analysis | Complete (Phase 0.6) |
-| Transformation plan lowering | Complete (Phase 0.7) |
-| Plan optimization | Complete (Phase 0.8) |
-| Capability matching | Complete (Phase 0.9; full-catalog profile in 0.11) |
-| Compilation | Complete (Phase 0.9) |
-| Reference runtime | Complete (Phase 0.9; full catalog + null tokens in 0.11) |
-| Conformance certification (Ch 23) | Complete (Phase 0.10) |
-| SPEC completeness matrix | Complete (Phase 0.11) |
+| Parser (YAML/JSON) | Covered |
+| Seven-phase validation | Covered |
+| Metadata validation | Covered |
+| Type system (incl. expressions) | Covered |
+| Compatibility analysis | Covered (five classification levels) |
+| Evolution analysis | Covered |
+| Versioning validation (Ch 25) | Covered |
+| Lineage analysis (dataset-level) | Covered (`operation` / `flow` in COM) |
+| Identifier registry & extensibility | Covered (Phase 0.4) |
+| Standard libraries (Ch 17–19) | Covered (full catalog, Phase 0.11) |
+| Static semantic analysis | Covered (Phase 0.6) |
+| Transformation plan lowering | Covered (Phase 0.7) |
+| Plan optimization | Covered (Phase 0.8) |
+| Capability matching | Covered (Phase 0.9; full-catalog profile in 0.11) |
+| Compilation | Covered (Phase 0.9) |
+| Reference runtime | Covered (Phase 0.9; full catalog + null tokens in 0.11) |
+| Conformance certification (Ch 23) | Covered (Phase 0.10) |
+| SPEC completeness matrix | Covered (Phase 0.11) |
 
 *Released reference implementation: `0.11.0`.*
 
@@ -103,9 +105,9 @@ Rust and Python packages install the same `dtcs` CLI.
 - [ ] Exercise null / missing / invalid tokens with `dtcs run` and inspect JSON carefully
 - [ ] Compare current and proposed contract versions with `dtcs compat`
 - [ ] Trace lineage for critical inputs with `dtcs lineage --impact`
-- [ ] Match plans against engine capabilities with `dtcs match examples/customer_normalize.dtcs.yaml`
-- [ ] Compile contracts to execution plans with `dtcs compile examples/customer_normalize.dtcs.yaml`
-- [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_normalize.dtcs.yaml --input tests/fixtures/runtime/customer_normalize_input.json`
+- [ ] Match plans against engine capabilities with `dtcs match examples/customer_pipeline.dtcs.yaml` (from a clone)
+- [ ] Compile contracts to execution plans with `dtcs compile examples/customer_pipeline.dtcs.yaml`
+- [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_pipeline.dtcs.yaml --input tests/fixtures/runtime/customer_pipeline_input.json`
 - [ ] Run offline conformance certification: `dtcs conformance run --profile all` (includes Analyzer assertions)
 - [ ] Review [security-checklist.md](security-checklist.md) for Ch 24 requirements
 - [ ] Read SPEC Chapters 1–3 and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative) for design principles and the standard library catalog

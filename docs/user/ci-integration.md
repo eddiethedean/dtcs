@@ -41,7 +41,10 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install dtcs==0.11.0
-      - run: dtcs validate examples/customer_normalize.dtcs.yaml --json
+      - run: |
+          curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml \
+            -o contract.dtcs.yaml
+          dtcs validate contract.dtcs.yaml --json
 ```
 
 ## Static analysis gate
@@ -92,29 +95,38 @@ dtcs validate contracts/my_transform.yaml --registry vendor/catalog.yaml --json
 
 The Python API equivalent is `dtcs.validate_with_registry(contract, registry_path)`.
 
-## Conformance gate
-
-For integration profiles or release branches:
+## Conformance gate (adopters)
 
 ```bash
-dtcs conformance run --profile all
-# or from a Rust checkout:
-cargo test --test phase_0_10 --locked
-cargo test --test phase_0_11 --locked
+dtcs conformance run --profile all --json
 ```
 
-See [conformance.md](conformance.md).
+No Rust toolchain required after `pip install dtcs`. See [conformance.md](conformance.md) and [limits.md](limits.md).
+
+## Contributor CI (maintainers only)
+
+Use these only in this repository’s development workflows — not in consumer product CI:
+
+```bash
+cargo test --locked
+cargo test --test phase_0_10 --locked
+cargo test --test phase_0_11 --locked
+./scripts/check-docs.sh
+```
+
+See [CONTRIBUTING.md](https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md) and [release-runbook.md](../implementation/release-runbook.md).
 
 ## JSON output reference
 
 All commands support `--json`. Field names use camelCase. See [json-output.md](json-output.md) for per-command schemas.
 
-## What CI should not do (yet)
+## What CI should not do
 
-The reference runtime is for evaluation and conformance testing — not production ETL. Do not rely on `dtcs run` in mission-critical deployment pipelines until your organization has evaluated maturity. See [adoption/overview.md](../adoption/overview.md) and [non-goals.md](../implementation/non-goals.md).
+Do not put `dtcs run` on the critical path of production ETL. Use contracts for validation/compat gates; execute transforms in your own engine. See [limits.md](limits.md) and [adoption/overview.md](../adoption/overview.md).
 
 ## Next steps
 
 - [cli-guide.md](cli-guide.md) — all commands and exit codes
 - [troubleshooting.md](troubleshooting.md) — common failures
 - [getting-started.md](getting-started.md) — local walkthrough
+- [cookbook.md](cookbook.md) — short recipes

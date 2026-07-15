@@ -138,7 +138,11 @@ fn execute_step(
                 if rule.phase != *phase {
                     continue;
                 }
-                for row_index in 0..row_count {
+                // Use current workspace size for the rule target so filters/projects
+                // that shrink datasets do not over-iterate the original input count.
+                let rule_row_count =
+                    rule_target_row_count(workspaces, &rule.target).unwrap_or(row_count);
+                for row_index in 0..rule_row_count {
                     let value = resolve_target(workspaces, &rule.target, row_index)?;
                     match crate::runtime::rules::evaluate_rule_outcome(
                         rule,
@@ -221,4 +225,10 @@ fn find_rule<'a>(
         .iter()
         .find(|rule| rule.id == rule_id)
         .ok_or_else(|| format!("unknown rule '{rule_id}'"))
+}
+
+fn rule_target_row_count(workspaces: &BTreeMap<String, Dataset>, target: &str) -> Option<usize> {
+    let interface_ids: Vec<String> = workspaces.keys().cloned().collect();
+    let qualified = super::model::parse_qualified_field_with_interfaces(target, &interface_ids)?;
+    workspaces.get(&qualified.interface_id).map(Dataset::len)
 }

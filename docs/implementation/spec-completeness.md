@@ -1,5 +1,7 @@
 # SPEC Completeness Matrix (0.11.0)
 
+> **Maturity:** Spec is `1.0.0-draft`; tooling is alpha. **Covered / Full** in this matrix means reference-implementation evidence against the **draft** SPEC — not that DTCS 1.0 is finalized.
+
 Chapter-by-chapter coverage of [`SPEC.md`](../SPEC.md) by the DTCS reference implementation at **`0.11.0`**.
 
 Coverage ratings:

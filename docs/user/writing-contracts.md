@@ -2,7 +2,7 @@
 
 A DTCS transformation contract is a YAML or JSON document describing **what** a data transformation means — inputs, outputs, semantics, and lineage — without prescribing an execution engine.
 
-This guide walks through [`examples/customer_normalize.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_normalize.dtcs.yaml). For normative rules, see [SPEC.md](../SPEC.md) Chapter 3 (COM), Chapters 5–6, and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative) (standard library catalog). Coverage status: [spec-completeness.md](../implementation/spec-completeness.md).
+This guide uses field tables and snippets. For end-to-end samples after you clone (or download from GitHub), see [`examples/minimal.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/minimal.dtcs.yaml) and the 0.11 flagship [`examples/customer_pipeline.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml). Normative rules: [SPEC.md](../SPEC.md) Chapter 3 (COM), Chapters 5–6, and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative). Coverage: [spec-completeness.md](../implementation/spec-completeness.md).
 
 ## Minimal structure
 

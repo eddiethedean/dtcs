@@ -32,6 +32,9 @@ enum StdlibDefinition {
         #[serde(default)]
         #[serde(rename = "targetNullableAllowed")]
         target_nullable_allowed: Option<bool>,
+        #[serde(default)]
+        #[serde(rename = "targetKind")]
+        target_kind: Option<String>,
     },
     #[serde(rename = "rule")]
     Rule {
@@ -217,16 +220,6 @@ fn validate_stdlib_action(
     index: &FieldIndex,
 ) {
     let object_ref = format!("semanticActions.{}.target", action.id);
-    let Some(field) = resolve_field(
-        index,
-        &action.target,
-        &object_ref,
-        ctx,
-        codes::INVALID_SEMANTIC_ACTION,
-        DiagnosticCategory::Semantic,
-    ) else {
-        return;
-    };
     let parsed = match parse_stdlib_definition(definition) {
         Ok(value) => value,
         Err(err) => {
@@ -259,8 +252,61 @@ fn validate_stdlib_action(
     let Some(StdlibDefinition::SemanticAction {
         target_type,
         target_nullable_allowed,
+        target_kind,
     }) = parsed
     else {
+        return;
+    };
+
+    // Dataset operators target an interface id (for example `customer_raw`), not a field.
+    if target_kind.as_deref() == Some("dataset") {
+        match index.resolve(&action.target) {
+            TargetResolution::Interface { .. } => {}
+            TargetResolution::Field(_) => {
+                ctx.error(
+                    codes::INVALID_SEMANTIC_ACTION,
+                    DiagnosticCategory::Semantic,
+                    format!(
+                        "{} targets a dataset interface; '{}' looks like a field path",
+                        action.action, action.target
+                    ),
+                    Some(&object_ref),
+                    Some("Use an input/output interface identifier as the target"),
+                );
+            }
+            TargetResolution::Ambiguous(_) => {
+                ctx.error(
+                    codes::AMBIGUOUS_REFERENCE,
+                    DiagnosticCategory::Semantic,
+                    format!("target '{}' matches multiple declarations", action.target),
+                    Some(&object_ref),
+                    Some("Use a unique interface identifier"),
+                );
+            }
+            TargetResolution::NotFound => {
+                ctx.error(
+                    codes::INVALID_SEMANTIC_ACTION,
+                    DiagnosticCategory::Semantic,
+                    format!(
+                        "target '{}' is not a declared input or output interface",
+                        action.target
+                    ),
+                    Some(&object_ref),
+                    Some("Target a declared interface identifier"),
+                );
+            }
+        }
+        return;
+    }
+
+    let Some(field) = resolve_field(
+        index,
+        &action.target,
+        &object_ref,
+        ctx,
+        codes::INVALID_SEMANTIC_ACTION,
+        DiagnosticCategory::Semantic,
+    ) else {
         return;
     };
 
@@ -463,6 +509,9 @@ fn parameter_value_matches_type(value: &serde_json::Value, expected: &str) -> bo
         "string" => value.as_str().is_some(),
         "decimal" => value.as_f64().is_some() || value_as_integer(value).is_some(),
         "boolean" => value.as_bool().is_some(),
+        "list<string>" => value
+            .as_array()
+            .is_some_and(|items| items.iter().all(|item| item.as_str().is_some())),
         _ => false,
     }
 }
@@ -827,9 +876,11 @@ mod tests {
             Some(StdlibDefinition::SemanticAction {
                 target_type,
                 target_nullable_allowed,
+                target_kind,
             }) => {
                 assert_eq!(target_type.as_deref(), Some("string"));
                 assert_eq!(target_nullable_allowed, Some(false));
+                assert_eq!(target_kind, None);
             }
             other => panic!("unexpected: {other:?}"),
         }

@@ -1,75 +1,128 @@
 # Python API reference
 
-Public functions exported from `dtcs` (see [`python/dtcs/__init__.py`](https://github.com/eddiethedean/dtcs/blob/main/python/dtcs/__init__.py)).
+Package: [`dtcs` on PyPI](https://pypi.org/project/dtcs/). Source: [`python/dtcs/__init__.py`](https://github.com/eddiethedean/dtcs/blob/main/python/dtcs/__init__.py).
 
-## Version
+CLI JSON shapes in [json-output.md](../user/json-output.md) use the same camelCase keys as Python dicts.
 
-| Function | Description |
-|----------|-------------|
-| `SPEC_VERSION` | DTCS specification version string |
-| `__version__` | Installed package version |
+## Install
+
+```bash
+pip install 'dtcs==0.11.0'
+```
+
+```python
+import dtcs
+print(dtcs.__version__)   # package version, e.g. "0.11.0"
+print(dtcs.SPEC_VERSION)  # "1.0.0-draft"
+```
+
+## Errors and validity
+
+Most APIs return **dicts** that may include a `diagnostics` list (and sometimes other fields). They do not raise for validation failures.
+
+| Helper | Behavior |
+|--------|----------|
+| `is_valid(report)` | `True` when no diagnostic has error severity. Missing `severity` is treated as an error. |
+
+```python
+report = dtcs.parse_and_validate(yaml_bytes)
+if not dtcs.is_valid(report):
+    for d in report["diagnostics"]:
+        print(d["severity"], d["id"], d["message"])
+```
 
 ## Parse and validate
 
-| Function | Description |
-|----------|-------------|
-| `parse(content, format="yaml")` | Parse a DTCS document |
-| `parse_file(path)` | Parse from a file path |
-| `validate(contract, registry_path=None)` | Validate a parsed contract |
-| `validate_with_registry(contract, registry_path)` | Validate with merged vendor registry |
-| `parse_and_validate(content, format="yaml")` | Parse and validate in one step |
-| `validate_result(result, registry_path=None)` | Merge parse and validation diagnostics |
-| `is_valid(report)` | True when no error-severity diagnostics |
+| Function | Arguments | Returns |
+|----------|-----------|---------|
+| `parse(content, format="yaml")` | `bytes`/`str`, format `yaml`\|`json` | `{contract?, diagnostics}` |
+| `parse_file(path)` | filesystem path | `{contract?, diagnostics}` |
+| `validate(contract, registry_path=None)` | COM dict | validation report |
+| `validate_with_registry(contract, registry_path)` | COM dict + vendor registry path | validation report |
+| `parse_and_validate(content, format="yaml")` | document bytes | combined report |
+| `validate_result(result, registry_path=None)` | parse result dict | merge parse + validate diagnostics |
+| `is_valid(report)` | any report-like dict | `bool` |
+
+### Example
+
+```python
+import urllib.request
+import dtcs
+
+url = "https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml"
+content = urllib.request.urlopen(url).read()
+report = dtcs.parse_and_validate(content)
+assert dtcs.is_valid(report)
+contract = dtcs.parse(content)["contract"]
+assert contract["dtcsVersion"] == "1.0.0"
+```
 
 ## Analysis and planning
 
-| Function | Description |
-|----------|-------------|
-| `analyze(contract, registry_path=None)` | Static semantic analysis |
-| `plan_lower(contract, registry_path=None)` | Lower to transformation plan |
-| `plan_validate(plan, registry_path=None)` | Validate a transformation plan |
-| `plan_optimize(plan, registry_path=None, *, validate=True)` | Optimize a plan |
-| `plan_equivalent(before, after)` | Semantic plan equivalence |
-| `plan_topological_order(contract, plan)` | Topological execution order |
-| `metadata_validate(contract)` | Metadata-only validation |
-| `version_validate(contract)` | Version identifier validation |
+| Function | Returns (typical) |
+|----------|-------------------|
+| `analyze(contract, registry_path=None)` | analysis diagnostics report |
+| `plan_lower(contract, registry_path=None)` | `{plan, diagnostics}` |
+| `plan_validate(plan, registry_path=None)` | report |
+| `plan_optimize(plan, registry_path=None, *, validate=True)` | `{plan, diagnostics}` |
+| `plan_equivalent(before, after)` | `bool` |
+| `plan_topological_order(contract, plan)` | ordered node id list |
+| `metadata_validate(contract)` / `version_validate(contract)` | focused reports |
 
 ## Compatibility and lineage
 
-| Function | Description |
-|----------|-------------|
-| `compat_analyze(source, target, scope=None)` | Compatibility between contracts |
-| `evolve_analyze(older, newer)` | Evolution analysis |
-| `lineage_analyze(contract, impact=None, dependency=None)` | Dataset-level lineage |
-| `inspect(contract)` | Human-readable summary |
+| Function | Notes |
+|----------|-------|
+| `compat_analyze(source, target, scope=None)` | classification of target vs source |
+| `evolve_analyze(older, newer)` | same-identity revision analysis |
+| `lineage_analyze(contract, impact=None, dependency=None)` | dataset lineage |
+| `inspect(contract)` | summary dict (`inputs`, `outputs`, `semanticActions`, `rules`, …) |
 
 ## Registry
 
-| Function | Description |
-|----------|-------------|
-| `registry_list(registry_path=None)` | List registry entries |
-| `registry_resolve(id, registry_path=None)` | Resolve an identifier |
-| `registry_load(path)` | Load a registry document |
+| Function | Notes |
+|----------|-------|
+| `registry_list(registry_path=None)` | entry list |
+| `registry_resolve(id, registry_path=None)` | single entry or `None` |
+| `registry_load(path)` | load document |
 
 ## Execution pipeline
 
-| Function | Description |
-|----------|-------------|
-| `capability_reference_profile()` | Embedded `dtcs:reference` profile |
-| `capability_match(plan, profile=None)` | Match plan against capabilities |
-| `compile_plan(plan)` | Compile to execution plan |
-| `execution_validate(plan)` | Validate execution plan |
-| `runtime_execute(execution_plan, inputs)` | Execute with runtime inputs |
+| Function | Notes |
+|----------|-------|
+| `capability_reference_profile()` | embedded `dtcs:reference` |
+| `capability_match(plan, profile=None)` | `{supported, …}` |
+| `compile_plan(plan)` | `{plan, diagnostics}` execution plan |
+| `execution_validate(plan)` | report |
+| `runtime_execute(execution_plan, inputs)` | `{outputs, diagnostics}` |
 
-`runtime_execute` returns `{outputs, diagnostics}`. Output/input cell values may include JSON `null`, or tagged tokens `{"$dtcs":"missing"}` and `{"$dtcs":"invalid"}` (optional `reason`). **Do not coerce** missing/invalid to `None`/null. Parsed contracts may include `guarantees`, `compatibility`, lineage `operation`/`flow`, and SemanticAction `parameters`.
+`inputs` map interface id → list of row dicts. Cell values may be JSON `null`, or `{"$dtcs":"missing"}` / `{"$dtcs":"invalid"}`. **Do not coerce** missing/invalid to `None`.
 
-## Conformance (Phase 0.10+)
+```python
+import json, dtcs
 
-| Function | Description |
-|----------|-------------|
-| `conformance_declare(profile=None)` | Ch 23 §9 capability declaration JSON |
-| `conformance_run(profile=None)` | Offline conformance report (`None` or `all` runs every profile) |
+parsed = dtcs.parse_file("examples/customer_pipeline.dtcs.yaml")
+contract = parsed["contract"]
+plan = dtcs.plan_lower(contract)["plan"]
+compiled = dtcs.compile_plan(plan)["plan"]
+inputs = json.loads(open("tests/fixtures/runtime/customer_pipeline_input.json").read())
+result = dtcs.runtime_execute(compiled, inputs)
+assert dtcs.is_valid(result)
+assert len(result["outputs"]["customer_clean"]) == 2
+```
 
-Analyzer-focused suites exercise `analyzeValid`, `compatLevel`, and `evolveValid` (see [conformance.md](../user/conformance.md)).
+## Conformance
 
-See [conformance.md](../user/conformance.md) for CLI equivalents and report interpretation. Migrating from 0.10.x: [faq.md](../user/faq.md#migration-to-0110).
+| Function | Notes |
+|----------|-------|
+| `conformance_declare(profile=None)` | Ch 23 capability declaration |
+| `conformance_run(profile=None)` | offline report (`None`/`"all"` runs every profile) |
+
+## Typing
+
+The wheel does not yet ship `py.typed` / `.pyi` stubs. Treat return values as JSON-compatible dicts/lists.
+
+## See also
+
+- [Rust API](rust.md) · [WASM](wasm.md) · [Node](node.md)
+- [migration-0.11.md](../user/migration-0.11.md)

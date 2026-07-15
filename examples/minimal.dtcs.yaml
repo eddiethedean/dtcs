@@ -1,0 +1,50 @@
+# Smallest copy-pasteable DTCS contract for install checks.
+# Document dtcsVersion must be exactly "1.0.0" (Spec is still 1.0.0-draft).
+dtcsVersion: "1.0.0"
+id: "demo.minimal"
+name: "Minimal Demo"
+version: "0.1.0"
+
+metadata:
+  description: "Smallest valid DTCS contract for install checks"
+  classification: internal
+  governance:
+    owner: "docs"
+    steward: "docs"
+  provenance:
+    author: "docs"
+    createdAt: "2026-01-01T00:00:00Z"
+
+inputs:
+  - id: "people"
+    schema:
+      fields:
+        - name: "person_id"
+          type: "string"
+          nullable: false
+        - name: "display_name"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "people_normalized"
+    schema:
+      fields:
+        - name: "normalized_id"
+          type: "string"
+          nullable: false
+        - name: "normalized_name"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "lower_display_name"
+    action: "dtcs:lowercase"
+    target: "people.display_name"
+
+lineage:
+  mappings:
+    - output: "people_normalized"
+      inputs: ["people"]
+      operation: "dtcs:derive"
+      flow: derived

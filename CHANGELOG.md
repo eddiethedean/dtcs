@@ -4,7 +4,14 @@
 
 ### Documentation
 
+- Adoption pass: no-clone getting started, concepts/migration/glossary/cookbook, SECURITY.md, multi-language API pages, MkDocs nav restructure, maturity “Covered” wording.
 - Hosted documentation via Read the Docs (`mkdocs.yml`, `.readthedocs.yaml`); preview with `mkdocs serve`.
+
+### Fixed
+
+- Dataset semantic actions (`dtcs:filter` / `dtcs:project`, …) accept interface targets; compile includes them in execution steps.
+- Rule parameter type `list<string>` accepted for `dtcs:one_of`.
+- Postcondition rules iterate the current target workspace row count after filters.
 
 ## Migration summary
 

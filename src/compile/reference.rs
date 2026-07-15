@@ -270,18 +270,12 @@ fn node_step(
 }
 
 fn target_interface(plan: &TransformationPlan, target: &str) -> Option<InterfaceKind> {
-    let qualified = parse_qualified_field(target)?;
-    if plan
-        .inputs
-        .iter()
-        .any(|input| input.id == qualified.interface_id)
-    {
+    let interface_id = parse_qualified_field(target)
+        .map(|qualified| qualified.interface_id)
+        .unwrap_or_else(|| target.to_string());
+    if plan.inputs.iter().any(|input| input.id == interface_id) {
         Some(InterfaceKind::Input)
-    } else if plan
-        .outputs
-        .iter()
-        .any(|output| output.id == qualified.interface_id)
-    {
+    } else if plan.outputs.iter().any(|output| output.id == interface_id) {
         Some(InterfaceKind::Output)
     } else {
         None

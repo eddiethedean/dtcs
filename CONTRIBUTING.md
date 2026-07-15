@@ -100,6 +100,8 @@ Pull requests that affect normative behavior should cite the SPEC chapter and se
 
 ## Releasing
 
+Maintainer checklist (versions, WASM/npm, dual conformance manifests): [docs/implementation/release-runbook.md](docs/implementation/release-runbook.md).
+
 Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a semver tag is pushed:
 
 ```bash

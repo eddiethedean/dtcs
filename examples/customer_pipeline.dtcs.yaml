@@ -1,0 +1,95 @@
+# Flagship 0.11 example: dataset operators with parameters, lineage flow,
+# and parameterized rules. Shared I/O field names may emit ambiguous-reference
+# warnings; action/rule targets remain interface-qualified where required.
+dtcsVersion: "1.0.0"
+id: "customer.pipeline"
+name: "Customer Pipeline"
+version: "0.3.0"
+
+metadata:
+  description: "Normalize, filter, and project customer records"
+  classification: internal
+  governance:
+    owner: "data-platform"
+    steward: "customer-analytics"
+  provenance:
+    author: "platform-team"
+    createdAt: "2026-01-01T00:00:00Z"
+
+inputs:
+  - id: "customer_raw"
+    schema:
+      fields:
+        - name: "customer_id"
+          type: "string"
+          nullable: false
+        - name: "email"
+          type: "string"
+          nullable: false
+        - name: "region"
+          type: "string"
+          nullable: false
+        - name: "status"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "customer_clean"
+    schema:
+      fields:
+        - name: "customer_id"
+          type: "string"
+          nullable: false
+        - name: "email"
+          type: "string"
+          nullable: false
+        - name: "region"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "normalize_email"
+    action: "dtcs:lowercase"
+    target: "customer_raw.email"
+  - id: "active_only"
+    action: "dtcs:filter"
+    target: "customer_raw"
+    parameters:
+      field: "status"
+      equals: "active"
+  - id: "select_export_fields"
+    action: "dtcs:project"
+    target: "customer_raw"
+    parameters:
+      fields:
+        - "customer_id"
+        - "email"
+        - "region"
+
+rules:
+  - id: "status_allowed"
+    rule: "dtcs:one_of"
+    target: "customer_raw.status"
+    phase: "precondition"
+    parameters:
+      values: ["active", "inactive", "pending"]
+  - id: "email_required"
+    rule: "dtcs:not_null"
+    target: "customer_clean.email"
+    phase: "postcondition"
+
+semantics:
+  ordering:
+    mode: explicit
+    order:
+      - "normalize_email"
+      - "active_only"
+      - "select_export_fields"
+
+lineage:
+  mappings:
+    - id: "raw_to_clean"
+      output: "customer_clean"
+      inputs: ["customer_raw"]
+      operation: "dtcs:derive"
+      flow: filtered

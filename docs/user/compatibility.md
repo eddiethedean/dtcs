@@ -1,6 +1,6 @@
 # Compatibility and Evolution
 
-Phase 0.3 adds read-only analysis for comparing contracts and tracking safe evolution.
+Compatibility and evolution analysis are read-only: they compare contracts without mutating documents.
 
 ## When to use which command
 
