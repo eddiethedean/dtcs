@@ -411,6 +411,53 @@ pub fn run_portable_plan_migrate_case(
             };
         }
     }
+    if fixture.expect_error.is_none() {
+        let Some(mode) = plan.error_mode.as_deref() else {
+            return ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some("plan missing errorMode after migrate".into()),
+            };
+        };
+        match plan.requirements.get("errorMode").and_then(|v| v.as_str()) {
+            Some(req) if req == mode => {}
+            Some(req) => {
+                return ConformanceTestResult {
+                    id: test_id.into(),
+                    profile: profile_id.into(),
+                    passed: false,
+                    message: Some(format!(
+                        "requirements.errorMode '{req}' != top-level errorMode '{mode}'"
+                    )),
+                };
+            }
+            None => {
+                return ConformanceTestResult {
+                    id: test_id.into(),
+                    profile: profile_id.into(),
+                    passed: false,
+                    message: Some("migrated plan missing requirements.errorMode pin".into()),
+                };
+            }
+        }
+        for pin in [
+            "regexGrammar",
+            "formatGrammar",
+            "unicodeVersion",
+            "timezoneData",
+            "randomAlgorithm",
+        ] {
+            if !plan.requirements.contains_key(pin) {
+                return ConformanceTestResult {
+                    id: test_id.into(),
+                    profile: profile_id.into(),
+                    passed: false,
+                    message: Some(format!("migrated plan missing requirements.{pin} pin")),
+                };
+            }
+        }
+    }
     ConformanceTestResult {
         id: test_id.into(),
         profile: profile_id.into(),

@@ -64,7 +64,7 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
-    /// Export a portable transformation plan (`dtcs.transform-plan/1`).
+    /// Export a portable transformation plan (`dtcs.transform-plan/2`).
     ExportPortable {
         /// Path to a DTCS document.
         path: PathBuf,

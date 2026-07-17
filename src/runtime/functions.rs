@@ -353,13 +353,13 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             for map in maps {
                 for (key, value) in map {
                     match policy {
-                        None | Some("right") => {
+                        "right" => {
                             out.insert(key, value);
                         }
-                        Some("left") => {
+                        "left" => {
                             out.entry(key).or_insert(value);
                         }
-                        Some("error") => {
+                        "error" => {
                             if out.contains_key(&key) {
                                 return Err(format!(
                                     "dtcs:map_concat duplicate key '{key}' under collisionPolicy error"
@@ -367,7 +367,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                             }
                             out.insert(key, value);
                         }
-                        Some(other) => {
+                        other => {
                             return Err(format!(
                                 "dtcs:map_concat unsupported collisionPolicy '{other}'"
                             ));
@@ -390,7 +390,12 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             _ => Err("dtcs:object_values requires object".into()),
         },
         "dtcs:variance" | "dtcs:stddev" => {
-            let (nums, population) = stats_numbers_and_mode(args)?;
+            let (nums, population) = match stats_numbers_and_mode(args)? {
+                StatsNumbers::Invalid => {
+                    return Ok(RuntimeValue::invalid("non-finite decimal"));
+                }
+                StatsNumbers::Ok { nums, population } => (nums, population),
+            };
             if nums.len() < 2 {
                 return Ok(RuntimeValue::Null);
             }
@@ -406,11 +411,16 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         }
         "dtcs:covariance" => {
             let (xs, ys, population) = covariance_args(args)?;
-            let pairs: Vec<(f64, f64)> = xs
-                .iter()
-                .zip(ys.iter())
-                .filter_map(|(x, y)| Some((x.as_decimal()?, y.as_decimal()?)))
-                .collect();
+            let mut pairs = Vec::new();
+            for (x, y) in xs.iter().zip(ys.iter()) {
+                match (finite_decimal(x), finite_decimal(y)) {
+                    (Ok(None), _) | (_, Ok(None)) => continue,
+                    (Ok(Some(a)), Ok(Some(b))) => pairs.push((a, b)),
+                    (Err(_), _) | (_, Err(_)) => {
+                        return Ok(RuntimeValue::invalid("non-finite decimal"));
+                    }
+                }
+            }
             if pairs.len() < 2 {
                 return Ok(RuntimeValue::Null);
             }
@@ -428,11 +438,16 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             let (RuntimeValue::List(xs), RuntimeValue::List(ys)) = (&args[0], &args[1]) else {
                 return Err("dtcs:correlation requires two lists".into());
             };
-            let pairs: Vec<(f64, f64)> = xs
-                .iter()
-                .zip(ys.iter())
-                .filter_map(|(x, y)| Some((x.as_decimal()?, y.as_decimal()?)))
-                .collect();
+            let mut pairs = Vec::new();
+            for (x, y) in xs.iter().zip(ys.iter()) {
+                match (finite_decimal(x), finite_decimal(y)) {
+                    (Ok(None), _) | (_, Ok(None)) => continue,
+                    (Ok(Some(a)), Ok(Some(b))) => pairs.push((a, b)),
+                    (Err(_), _) | (_, Err(_)) => {
+                        return Ok(RuntimeValue::invalid("non-finite decimal"));
+                    }
+                }
+            }
             if pairs.len() < 2 {
                 return Ok(RuntimeValue::Null);
             }
@@ -454,19 +469,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             }
             Ok(RuntimeValue::Decimal(num / (dx.sqrt() * dy.sqrt())))
         }
-        "dtcs:median" => {
-            let mut nums: Vec<f64> = args.iter().filter_map(RuntimeValue::as_decimal).collect();
-            if nums.is_empty() {
-                return Ok(RuntimeValue::Null);
-            }
-            nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-            let mid = nums.len() / 2;
-            Ok(RuntimeValue::Decimal(if nums.len() % 2 == 0 {
-                (nums[mid - 1] + nums[mid]) / 2.0
-            } else {
-                nums[mid]
-            }))
-        }
+        "dtcs:median" => nearest_rank_quantile_from_values(args, 0.5),
         "dtcs:quantile" => {
             let q = args
                 .last()
@@ -475,17 +478,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             if !(0.0..=1.0).contains(&q) {
                 return Err("dtcs:quantile requires quantile in [0,1]".into());
             }
-            let mut nums: Vec<f64> = args[..args.len().saturating_sub(1)]
-                .iter()
-                .filter_map(RuntimeValue::as_decimal)
-                .collect();
-            if nums.is_empty() {
-                return Ok(RuntimeValue::Null);
-            }
-            nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-            // nearest-rank
-            let rank = ((q * nums.len() as f64).ceil() as usize).max(1);
-            Ok(RuntimeValue::Decimal(nums[rank - 1]))
+            nearest_rank_quantile_from_values(&args[..args.len().saturating_sub(1)], q)
         }
         "dtcs:first" => Ok(args.first().cloned().unwrap_or(RuntimeValue::Null)),
         "dtcs:last" => Ok(args.last().cloned().unwrap_or(RuntimeValue::Null)),
@@ -495,18 +488,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             }
             Ok(RuntimeValue::List(args.to_vec()))
         }
-        "dtcs:collect_set" => {
-            let mut out = Vec::new();
-            for value in args {
-                if !out.iter().any(|existing| existing == value) {
-                    out.push(value.clone());
-                }
-                if out.len() > 1_000_000 {
-                    return Err("collect_set exceeds collectionElements budget".into());
-                }
-            }
-            Ok(RuntimeValue::List(out))
-        }
+        "dtcs:collect_set" => Ok(RuntimeValue::List(collect_set_values(args)?)),
         "dtcs:cast" | "dtcs:try_cast" => {
             if callee == "dtcs:cast" && args.len() != 2 {
                 return Err(format!("{callee} requires value and target type"));
@@ -601,7 +583,10 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             _ => Err("dtcs:map_values requires map".into()),
         },
         "dtcs:to_timezone" | "dtcs:from_utc" => {
-            let timestamp = string_arg(args, 0, callee)?;
+            let timestamp = args
+                .first()
+                .and_then(RuntimeValue::as_str)
+                .ok_or_else(|| format!("{callee} requires datetime string"))?;
             let zone = parse_timezone(string_arg(args, 1, callee)?)?;
             let instant = DateTime::parse_from_rfc3339(timestamp)
                 .map_err(|_| format!("{callee} requires an RFC 3339 timestamp"))?;
@@ -869,7 +854,10 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             let value = args.first().ok_or("dtcs:abs requires one argument")?;
             match value {
                 RuntimeValue::Null => Ok(RuntimeValue::Null),
-                RuntimeValue::Integer(i) => Ok(RuntimeValue::Integer(i.abs())),
+                RuntimeValue::Integer(i) => i
+                    .checked_abs()
+                    .map(RuntimeValue::Integer)
+                    .ok_or_else(|| "dtcs:abs overflow on i64::MIN".to_string()),
                 RuntimeValue::Decimal(d) => Ok(RuntimeValue::Decimal(d.abs())),
                 other => Err(format!("dtcs:abs requires numeric, got {other:?}")),
             }
@@ -1501,7 +1489,8 @@ fn eval_between(
     ))
 }
 
-fn compare_ordered_values(
+/// Total-order comparison used by list_sort, collect_set, and between.
+pub(crate) fn compare_ordered_values(
     left: &RuntimeValue,
     right: &RuntimeValue,
 ) -> Result<std::cmp::Ordering, String> {
@@ -1546,17 +1535,10 @@ fn eval_index_access(
         RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
         RuntimeValue::List(items) => {
             let idx = index.as_integer().ok_or("list index must be an integer")?;
-            if idx < 0 {
-                return if null_on_oob {
-                    Ok(RuntimeValue::Null)
-                } else {
-                    Err("list index must be non-negative".into())
-                };
-            }
-            match items.get(idx as usize) {
-                Some(v) => Ok(v.clone()),
+            match resolve_list_index(idx, items.len()) {
+                Some(resolved) => Ok(items[resolved].clone()),
                 None if null_on_oob => Ok(RuntimeValue::Null),
-                None => Err(format!("list index {idx} out of bounds")),
+                None => Ok(RuntimeValue::invalid("list index out of bounds")),
             }
         }
         RuntimeValue::Map(map) => {
@@ -1570,6 +1552,21 @@ fn eval_index_access(
         other => Err(format!(
             "index/element_at requires list or map, got {other:?}"
         )),
+    }
+}
+
+pub(crate) fn resolve_list_index(index: i64, len: usize) -> Option<usize> {
+    if index >= 0 {
+        let idx = index as usize;
+        (idx < len).then_some(idx)
+    } else {
+        let magnitude = index.checked_neg()?;
+        let from_end = magnitude as usize;
+        if from_end > 0 && from_end <= len {
+            Some(len - from_end)
+        } else {
+            None
+        }
     }
 }
 
@@ -1652,7 +1649,26 @@ fn stats_mode_from_string(value: &str) -> Result<bool, String> {
     }
 }
 
-fn stats_numbers_and_mode(args: &[RuntimeValue]) -> Result<(Vec<f64>, bool), String> {
+enum StatsNumbers {
+    Ok { nums: Vec<f64>, population: bool },
+    Invalid,
+}
+
+fn finite_decimal(value: &RuntimeValue) -> Result<Option<f64>, ()> {
+    if matches!(
+        value,
+        RuntimeValue::Null | RuntimeValue::Missing(_) | RuntimeValue::Invalid(_)
+    ) {
+        return Ok(None);
+    }
+    match value.as_decimal() {
+        Some(n) if n.is_finite() => Ok(Some(n)),
+        Some(_) => Err(()),
+        None => Ok(None),
+    }
+}
+
+fn stats_numbers_and_mode(args: &[RuntimeValue]) -> Result<StatsNumbers, String> {
     let mut population = false;
     let mut nums = Vec::new();
     for (index, arg) in args.iter().enumerate() {
@@ -1662,11 +1678,13 @@ fn stats_numbers_and_mode(args: &[RuntimeValue]) -> Result<(Vec<f64>, bool), Str
                 continue;
             }
         }
-        if let Some(n) = arg.as_decimal() {
-            nums.push(n);
+        match finite_decimal(arg) {
+            Ok(Some(n)) => nums.push(n),
+            Ok(None) => {}
+            Err(()) => return Ok(StatsNumbers::Invalid),
         }
     }
-    Ok((nums, population))
+    Ok(StatsNumbers::Ok { nums, population })
 }
 
 fn covariance_args(
@@ -1688,24 +1706,17 @@ fn covariance_args(
     Ok((xs, ys, population))
 }
 
-type MapConcatParts<'a> = (Vec<IndexMap<String, RuntimeValue>>, Option<&'a str>);
+type MapConcatParts<'a> = (Vec<IndexMap<String, RuntimeValue>>, &'a str);
 
 fn split_map_concat_args(args: &[RuntimeValue]) -> Result<MapConcatParts<'_>, String> {
-    if args.is_empty() {
-        return Ok((Vec::new(), None));
-    }
     let last_is_policy = matches!(
         args.last(),
         Some(RuntimeValue::String(s)) if matches!(s.as_str(), "error" | "left" | "right")
     );
-    let map_count = if last_is_policy {
-        args.len() - 1
-    } else {
-        args.len()
-    };
-    if map_count >= 2 && !last_is_policy {
+    if !last_is_policy {
         return Err("map_concat requires collisionPolicy error|left|right".into());
     }
+    let map_count = args.len() - 1;
     let mut maps = Vec::with_capacity(map_count);
     for value in &args[..map_count] {
         let RuntimeValue::Map(map) = value else {
@@ -1713,12 +1724,53 @@ fn split_map_concat_args(args: &[RuntimeValue]) -> Result<MapConcatParts<'_>, St
         };
         maps.push(map.clone());
     }
-    let policy = if last_is_policy {
-        args.last().and_then(RuntimeValue::as_str)
-    } else {
-        None
-    };
+    let policy = args
+        .last()
+        .and_then(RuntimeValue::as_str)
+        .ok_or_else(|| "map_concat requires collisionPolicy error|left|right".to_string())?;
     Ok((maps, policy))
+}
+
+/// Unique values in canonical ascending order for collect_set.
+pub(crate) fn collect_set_values(values: &[RuntimeValue]) -> Result<Vec<RuntimeValue>, String> {
+    let mut out = Vec::new();
+    for value in values {
+        if !out.iter().any(|existing| existing == value) {
+            out.push(value.clone());
+        }
+        if out.len() > 1_000_000 {
+            return Err("collect_set exceeds collectionElements budget".into());
+        }
+    }
+    out.sort_by(|a, b| compare_ordered_values(a, b).unwrap_or(std::cmp::Ordering::Equal));
+    Ok(out)
+}
+
+/// Nearest-rank quantile; median is `q = 0.5`.
+pub(crate) fn nearest_rank_quantile_from_values(
+    values: &[RuntimeValue],
+    q: f64,
+) -> Result<RuntimeValue, String> {
+    let mut nums = Vec::new();
+    for value in values {
+        match finite_decimal(value) {
+            Ok(Some(n)) => nums.push(n),
+            Ok(None) => {}
+            Err(()) => return Ok(RuntimeValue::invalid("non-finite decimal")),
+        }
+    }
+    if nums.is_empty() {
+        return Ok(RuntimeValue::Null);
+    }
+    nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let rank = if q <= 0.0 {
+        1
+    } else if q >= 1.0 {
+        nums.len()
+    } else {
+        ((q * nums.len() as f64).ceil() as usize).max(1)
+    };
+    Ok(RuntimeValue::Decimal(nums[rank - 1]))
 }
 
 fn regex_extract_all_advancing(

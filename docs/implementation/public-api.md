@@ -133,10 +133,10 @@ let transformation_plan = result.plan.expect("plan");
 let validation = plan::validate(&transformation_plan);
 assert!(validation.is_valid());
 
-// Phase 0.12 — portable export
+// Phase 0.13 — portable export (plan v2 / kernel /2)
 let portable = dtcs::export_portable_plan(
     &transformation_plan,
-    "dtcs:profile/portable-relational-kernel/1",
+    "dtcs:profile/portable-relational-kernel/2",
 )?;
 ```
 
@@ -149,7 +149,7 @@ assert dtcs.is_valid({"diagnostics": result["diagnostics"]})
 plan = result["plan"]
 assert dtcs.is_valid(dtcs.plan_validate(plan))
 portable = dtcs.plan_export_portable(plan)
-assert portable["identity"] == "dtcs.transform-plan/1"
+assert portable["planIdentity"] == "dtcs.transform-plan/2"
 assert len(dtcs.plan_fingerprint(portable)) == 64
 ```
 

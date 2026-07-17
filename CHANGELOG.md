@@ -24,7 +24,7 @@ DTCS 3.0 / tools 0.13 release. Spec `3.0.0` (draft); tooling alpha.
 ### Features
 
 - **Reference runtime (A.9 family identifiers):** string-advanced, conversion, statistics, complex-values HOFs, reshape (including pivot), set / sample / `random_split`, nested field actions, IANA temporal with policies, seeded nondeterminism via `xorshift64star/1`, and window/2 (`ntile`, `percent_rank`, `cume_dist`, `nth_value`).
-- **Plan v2:** canonical `dtcs.transform-plan/2` with deterministic v1 migrate; fingerprint pins (`unicode-15.1`, `dtcs-regex/1`, `iana-2025b`, `xorshift64star/1`); explicit `errorMode`.
+- **Plan v2:** canonical `dtcs.transform-plan/2` with deterministic v1 migrate; fingerprint pins (`unicode-15.1`, `dtcs-regex/1`, `dtcs-format/1`, `iana-2025b`, `xorshift64star/1`); explicit `errorMode`.
 - Category-aware registry lookup (Actions and Functions may share an identifier such as `dtcs:trim`); bounded lambda AST / HOFs (`transform`, `filter_values`, `exists`, `forall`).
 - Rich Portable Analytics profile declarations (Ch 27 / A.9).
 

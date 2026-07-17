@@ -1028,38 +1028,14 @@ fn reduce_values(values: &[RuntimeValue], op: &str) -> Result<RuntimeValue, Stri
                 RuntimeValue::Decimal(var.sqrt())
             }
         }
-        "median" => {
-            let mut nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
-            if nums.is_empty() {
-                RuntimeValue::Null
-            } else {
-                nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-                let mid = nums.len() / 2;
-                RuntimeValue::Decimal(if nums.len() % 2 == 0 {
-                    (nums[mid - 1] + nums[mid]) / 2.0
-                } else {
-                    nums[mid]
-                })
-            }
-        }
+        "median" => crate::runtime::functions::nearest_rank_quantile_from_values(values, 0.5)?,
         "collect_list" => {
             if values.len() > 1_000_000 {
                 return Err("collect_list exceeds collectionElements budget".into());
             }
             RuntimeValue::List(values.to_vec())
         }
-        "collect_set" => {
-            let mut out = Vec::new();
-            for value in values {
-                if !out.iter().any(|existing| existing == value) {
-                    out.push(value.clone());
-                }
-                if out.len() > 1_000_000 {
-                    return Err("collect_set exceeds collectionElements budget".into());
-                }
-            }
-            RuntimeValue::List(out)
-        }
+        "collect_set" => RuntimeValue::List(crate::runtime::functions::collect_set_values(values)?),
         other => {
             return Err(format!("unsupported aggregate op '{other}'"));
         }
@@ -1493,7 +1469,10 @@ fn resolve_frame_bounds(
 
 fn range_shift(value: &RuntimeValue, offset: i64) -> Result<RuntimeValue, String> {
     match value {
-        RuntimeValue::Integer(i) => Ok(RuntimeValue::Integer(i + offset)),
+        RuntimeValue::Integer(i) => i
+            .checked_add(offset)
+            .map(RuntimeValue::Integer)
+            .ok_or_else(|| "range frame integer offset overflow".to_string()),
         RuntimeValue::Decimal(d) => Ok(RuntimeValue::Decimal(d + offset as f64)),
         RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(value.clone()),
         other => Err(format!(
@@ -1715,6 +1694,16 @@ fn apply_explode(
         .get("includePosition")
         .and_then(Value::as_bool)
         .unwrap_or(output_names.len() == 2);
+    let position_name = if include_position {
+        Some(
+            output_names
+                .get(1)
+                .cloned()
+                .unwrap_or_else(|| "position".into()),
+        )
+    } else {
+        None
+    };
     let max_expansion = parameters
         .get("maxExpansion")
         .and_then(Value::as_u64)
@@ -1723,6 +1712,21 @@ fn apply_explode(
         .get(target)
         .cloned()
         .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    for row in &dataset {
+        if row.contains_key(&output_names[0]) {
+            return Err(format!(
+                "dtcs:explode output field '{}' already exists",
+                output_names[0]
+            ));
+        }
+        if let Some(name) = &position_name {
+            if row.contains_key(name) {
+                return Err(format!(
+                    "dtcs:explode position field '{name}' already exists"
+                ));
+            }
+        }
+    }
     let mut out = Vec::new();
     for row in dataset {
         let value = lookup_field(&row, field);
@@ -1754,12 +1758,8 @@ fn apply_explode(
         for (position, item) in items.into_iter().enumerate() {
             let mut next = row.clone();
             next.insert(output_names[0].clone(), item);
-            if include_position {
-                let name = output_names
-                    .get(1)
-                    .cloned()
-                    .unwrap_or_else(|| "position".into());
-                next.insert(name, RuntimeValue::Integer(position as i64));
+            if let Some(name) = &position_name {
+                next.insert(name.clone(), RuntimeValue::Integer(position as i64));
             }
             out.push(next);
         }
@@ -1844,6 +1844,9 @@ fn apply_sample(
         .get("count")
         .and_then(Value::as_u64)
         .map(|value| value as usize);
+    if fraction.is_none() && count.is_none() {
+        return Err("dtcs:sample requires fraction or count".into());
+    }
     let seed = parameters
         .get("seed")
         .and_then(Value::as_u64)
@@ -1894,6 +1897,9 @@ fn apply_pivot(
         .get("maxColumns")
         .and_then(Value::as_u64)
         .unwrap_or(10_000) as usize;
+    if categories.is_empty() {
+        return Err("pivot categories must be a non-empty array".into());
+    }
     if categories.len() > max_columns {
         return Err(format!(
             "pivot categories ({}) exceed maxColumns ({max_columns})",
@@ -1927,11 +1933,18 @@ fn apply_pivot(
             base
         });
         let cat = match row.get(&pivot_field) {
+            None => {
+                return Err(format!("pivot value missing for field '{pivot_field}'"));
+            }
+            Some(RuntimeValue::Null | RuntimeValue::Missing(_) | RuntimeValue::Invalid(_)) => {
+                return Err(format!(
+                    "pivot rejects null/missing/invalid values for field '{pivot_field}'"
+                ));
+            }
             Some(value) => stringify_category_runtime(value),
-            None => continue,
         };
         let Some(cat_index) = categories.iter().position(|c| c == &cat) else {
-            continue;
+            return Err(format!("pivot value '{cat}' is not in declared categories"));
         };
         let column = &category_names[cat_index];
         if let Some(v) = row.get(&value_field) {
@@ -2106,7 +2119,13 @@ fn apply_drop_nested_fields(
     Ok(())
 }
 
-fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> {
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum NestedPathSegment {
+    Field(String),
+    Index(usize),
+}
+
+fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<NestedPathSegment>, String> {
     match value {
         Some(Value::Array(items)) => {
             let mut path = Vec::with_capacity(items.len());
@@ -2120,14 +2139,26 @@ fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> 
                                     obj.get("name").and_then(Value::as_str).ok_or_else(|| {
                                         "field path segment requires name".to_string()
                                     })?;
-                                path.push(name.to_string());
+                                path.push(NestedPathSegment::Field(name.to_string()));
                             }
                             "index" => {
-                                let index =
-                                    obj.get("index").and_then(Value::as_u64).ok_or_else(|| {
-                                        "index path segment requires non-negative index".to_string()
-                                    })?;
-                                path.push(index.to_string());
+                                if let Some(Value::Number(n)) = obj.get("index") {
+                                    if let Some(i) = n.as_i64() {
+                                        if i < 0 {
+                                            return Err(
+                                                "index path segment requires non-negative index"
+                                                    .into(),
+                                            );
+                                        }
+                                        path.push(NestedPathSegment::Index(i as usize));
+                                        continue;
+                                    }
+                                    if let Some(u) = n.as_u64() {
+                                        path.push(NestedPathSegment::Index(u as usize));
+                                        continue;
+                                    }
+                                }
+                                return Err("index path segment requires non-negative index".into());
                             }
                             other => {
                                 return Err(format!(
@@ -2160,113 +2191,149 @@ fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> 
 
 fn set_nested_path(
     row: &mut Row,
-    path: &[String],
+    path: &[NestedPathSegment],
     value: RuntimeValue,
     create_parents: bool,
 ) -> Result<(), String> {
     if path.is_empty() {
         return Err("empty nested path".into());
     }
-    if path.len() == 1 {
-        row.insert(path[0].clone(), value);
-        return Ok(());
-    }
-    let head = &path[0];
-    if create_parents {
-        let child = row
-            .entry(head.clone())
-            .or_insert_with(|| RuntimeValue::Map(IndexMap::new()));
-        match child {
-            RuntimeValue::Map(map) => {
-                let mut nested = map.clone();
-                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
-                *child = RuntimeValue::Map(nested);
-                Ok(())
-            }
-            _ => Err(format!("path segment '{head}' is not a map")),
+    match &path[0] {
+        NestedPathSegment::Field(name) if path.len() == 1 => {
+            row.insert(name.clone(), value);
+            Ok(())
         }
-    } else {
-        match row.get_mut(head) {
-            Some(RuntimeValue::Map(map)) => {
-                let mut nested = map.clone();
-                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
-                row.insert(head.clone(), RuntimeValue::Map(nested));
-                Ok(())
-            }
-            Some(_) => Err(format!("path segment '{head}' is not a map")),
-            None => Err(format!("missing parent path segment '{head}'")),
+        NestedPathSegment::Index(_) if path.len() == 1 => {
+            Err("root nested path cannot be an index segment".into())
         }
+        NestedPathSegment::Field(name) => {
+            if create_parents {
+                let child = row
+                    .entry(name.clone())
+                    .or_insert_with(|| RuntimeValue::Map(IndexMap::new()));
+                set_nested_value(child, &path[1..], value, create_parents)
+            } else {
+                match row.get_mut(name) {
+                    Some(child) => set_nested_value(child, &path[1..], value, create_parents),
+                    None => Err(format!("missing parent path segment '{name}'")),
+                }
+            }
+        }
+        NestedPathSegment::Index(index) => Err(format!(
+            "root nested path cannot start with index segment {index}"
+        )),
     }
 }
 
-fn set_nested_map(
-    map: &mut IndexMap<String, RuntimeValue>,
-    path: &[String],
+fn set_nested_value(
+    current: &mut RuntimeValue,
+    path: &[NestedPathSegment],
     value: RuntimeValue,
     create_parents: bool,
 ) -> Result<(), String> {
-    if path.len() == 1 {
-        map.insert(path[0].clone(), value);
+    if path.is_empty() {
+        *current = value;
         return Ok(());
     }
-    let head = &path[0];
-    if create_parents {
-        let child = map
-            .entry(head.clone())
-            .or_insert_with(|| RuntimeValue::Map(IndexMap::new()));
-        match child {
-            RuntimeValue::Map(inner) => {
-                let mut nested = inner.clone();
-                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
-                *child = RuntimeValue::Map(nested);
-                Ok(())
+    let (head, rest) = path.split_first().unwrap();
+    match head {
+        NestedPathSegment::Field(name) => {
+            let map = match current {
+                RuntimeValue::Map(map) => map,
+                other => {
+                    return Err(format!(
+                        "path segment '{name}' requires a map parent, got {other:?}"
+                    ))
+                }
+            };
+            if rest.is_empty() {
+                map.insert(name.clone(), value);
+                return Ok(());
             }
-            _ => Err(format!("path segment '{head}' is not a map")),
+            if create_parents {
+                let child = map
+                    .entry(name.clone())
+                    .or_insert_with(|| RuntimeValue::Map(IndexMap::new()));
+                set_nested_value(child, rest, value, create_parents)
+            } else {
+                match map.get_mut(name) {
+                    Some(child) => set_nested_value(child, rest, value, create_parents),
+                    None => Err(format!("missing parent path segment '{name}'")),
+                }
+            }
         }
-    } else {
-        match map.get_mut(head) {
-            Some(RuntimeValue::Map(inner)) => {
-                let mut nested = inner.clone();
-                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
-                map.insert(head.clone(), RuntimeValue::Map(nested));
-                Ok(())
+        NestedPathSegment::Index(index) => {
+            let list = match current {
+                RuntimeValue::List(list) => list,
+                other => {
+                    return Err(format!(
+                        "path index {index} requires a list parent, got {other:?}"
+                    ))
+                }
+            };
+            if *index >= list.len() {
+                return Err(format!("list index {index} out of bounds"));
             }
-            Some(_) => Err(format!("path segment '{head}' is not a map")),
-            None => Err(format!("missing parent path segment '{head}'")),
+            if rest.is_empty() {
+                list[*index] = value;
+                return Ok(());
+            }
+            set_nested_value(&mut list[*index], rest, value, create_parents)
         }
     }
 }
 
-fn take_nested_path(row: &mut Row, path: &[String]) -> Result<Option<RuntimeValue>, String> {
-    if path.is_empty() {
-        return Err("empty nested path".into());
-    }
-    if path.len() == 1 {
-        return Ok(row.remove(&path[0]));
-    }
-    let Some(RuntimeValue::Map(map)) = row.get_mut(&path[0]) else {
-        return Ok(None);
-    };
-    let mut nested = map.clone();
-    let taken = take_nested_map(&mut nested, &path[1..])?;
-    row.insert(path[0].clone(), RuntimeValue::Map(nested));
-    Ok(taken)
-}
-
-fn take_nested_map(
-    map: &mut IndexMap<String, RuntimeValue>,
-    path: &[String],
+fn take_nested_path(
+    row: &mut Row,
+    path: &[NestedPathSegment],
 ) -> Result<Option<RuntimeValue>, String> {
-    if path.len() == 1 {
-        return Ok(map.shift_remove(&path[0]));
+    if path.is_empty() {
+        return Err("empty nested path".into());
     }
-    let Some(RuntimeValue::Map(inner)) = map.get_mut(&path[0]) else {
+    match &path[0] {
+        NestedPathSegment::Field(name) if path.len() == 1 => Ok(row.remove(name)),
+        NestedPathSegment::Index(_) => Ok(None),
+        NestedPathSegment::Field(name) => match row.get_mut(name) {
+            Some(child) => take_nested_value(child, &path[1..]),
+            None => Ok(None),
+        },
+    }
+}
+
+fn take_nested_value(
+    current: &mut RuntimeValue,
+    path: &[NestedPathSegment],
+) -> Result<Option<RuntimeValue>, String> {
+    if path.is_empty() {
         return Ok(None);
-    };
-    let mut nested = inner.clone();
-    let taken = take_nested_map(&mut nested, &path[1..])?;
-    map.insert(path[0].clone(), RuntimeValue::Map(nested));
-    Ok(taken)
+    }
+    let (head, rest) = path.split_first().unwrap();
+    match head {
+        NestedPathSegment::Field(name) => {
+            let RuntimeValue::Map(map) = current else {
+                return Ok(None);
+            };
+            if rest.is_empty() {
+                return Ok(map.shift_remove(name));
+            }
+            match map.get_mut(name) {
+                Some(child) => take_nested_value(child, rest),
+                None => Ok(None),
+            }
+        }
+        NestedPathSegment::Index(index) => {
+            let RuntimeValue::List(list) = current else {
+                return Ok(None);
+            };
+            if *index >= list.len() {
+                return Ok(None);
+            }
+            if rest.is_empty() {
+                return Ok(Some(list.remove(*index)));
+            }
+            take_nested_value(&mut list[*index], rest)
+        }
+    }
 }
 
 fn canonical_row(row: &Row) -> String {

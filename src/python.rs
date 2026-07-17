@@ -474,7 +474,7 @@ fn runtime_execute(
     value_to_py(py, &crate::runtime::execute(&plan, &inputs))
 }
 
-/// Export a transformation plan to the portable envelope (`dtcs.transform-plan/1`).
+/// Export a transformation plan to the portable envelope (`dtcs.transform-plan/2`).
 #[pyfunction]
 #[pyo3(signature = (plan, profile=None))]
 fn plan_export_portable(

@@ -1038,3 +1038,141 @@ fn portable_plan_pins_requirements_and_error_mode() {
     );
     assert!(portable.fingerprint().is_ok());
 }
+
+#[test]
+fn abs_rejects_i64_min_overflow() {
+    let err = call_function("dtcs:abs", &[RuntimeValue::Integer(i64::MIN)]).unwrap_err();
+    assert!(err.contains("overflow"), "unexpected error: {err}");
+}
+
+#[test]
+fn index_and_element_at_support_negative_indexes() {
+    let list = RuntimeValue::List(vec![
+        RuntimeValue::Integer(10),
+        RuntimeValue::Integer(20),
+        RuntimeValue::Integer(30),
+    ]);
+    assert_eq!(
+        call_function("dtcs:index", &[list.clone(), RuntimeValue::Integer(-1)]).unwrap(),
+        RuntimeValue::Integer(30)
+    );
+    assert_eq!(
+        call_function(
+            "dtcs:element_at",
+            &[list.clone(), RuntimeValue::Integer(-2)]
+        )
+        .unwrap(),
+        RuntimeValue::Integer(20)
+    );
+    assert!(
+        call_function("dtcs:index", &[list.clone(), RuntimeValue::Integer(99)])
+            .unwrap()
+            .is_invalid()
+    );
+    assert_eq!(
+        call_function("dtcs:element_at", &[list, RuntimeValue::Integer(-99)]).unwrap(),
+        RuntimeValue::Null
+    );
+}
+
+#[test]
+fn nested_list_index_path_mutates_list_elements() {
+    let mut nested = BTreeMap::new();
+    nested.insert(
+        "t".into(),
+        vec![btreemap! {
+            "items" => RuntimeValue::List(vec![
+                RuntimeValue::Map({
+                    let mut m = indexmap::IndexMap::new();
+                    m.insert("n".into(), RuntimeValue::Integer(1));
+                    m
+                }),
+                RuntimeValue::Map({
+                    let mut m = indexmap::IndexMap::new();
+                    m.insert("n".into(), RuntimeValue::Integer(2));
+                    m
+                }),
+            ])
+        }],
+    );
+    let mut params = IndexMap::new();
+    params.insert(
+        "assignments".into(),
+        json!([{
+            "path": [
+                {"kind":"field","name":"items"},
+                {"kind":"index","index":1},
+                {"kind":"field","name":"n"}
+            ],
+            "value": 99
+        }]),
+    );
+    apply_dataset_action("dtcs:with_nested_fields", "t", &params, &mut nested).unwrap();
+    match nested["t"][0].get("items") {
+        Some(RuntimeValue::List(items)) => match &items[1] {
+            RuntimeValue::Map(map) => {
+                assert_eq!(map.get("n"), Some(&RuntimeValue::Integer(99)));
+            }
+            other => panic!("expected map element, got {other:?}"),
+        },
+        other => panic!("expected list, got {other:?}"),
+    }
+
+    let mut bad = IndexMap::new();
+    bad.insert(
+        "assignments".into(),
+        json!([{
+            "path": [{"kind":"field","name":"items"},{"kind":"index","index":-1}],
+            "value": 1
+        }]),
+    );
+    assert!(apply_dataset_action("dtcs:with_nested_fields", "t", &bad, &mut nested).is_err());
+}
+
+#[test]
+fn median_even_length_matches_quantile_half() {
+    let values = [
+        RuntimeValue::Decimal(1.0),
+        RuntimeValue::Decimal(2.0),
+        RuntimeValue::Decimal(3.0),
+        RuntimeValue::Decimal(4.0),
+    ];
+    let median = call_function("dtcs:median", &values).unwrap();
+    let mut quantile_args = values.to_vec();
+    quantile_args.push(RuntimeValue::Decimal(0.5));
+    let quantile = call_function("dtcs:quantile", &quantile_args).unwrap();
+    assert_eq!(median, quantile);
+    assert_eq!(median, RuntimeValue::Decimal(2.0));
+}
+
+#[test]
+fn sample_requires_fraction_or_count() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "s".into(),
+        vec![btreemap! { "i" => RuntimeValue::Integer(1) }],
+    );
+    let params = IndexMap::new();
+    let err = apply_dataset_action("dtcs:sample", "s", &params, &mut workspaces).unwrap_err();
+    assert!(
+        err.contains("fraction") || err.contains("count"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn explode_rejects_output_field_collision() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![btreemap! {
+            "items" => RuntimeValue::List(vec![RuntimeValue::Integer(1)]),
+            "item" => RuntimeValue::Integer(0)
+        }],
+    );
+    let mut params = IndexMap::new();
+    params.insert("expr".into(), json!("items"));
+    params.insert("as".into(), json!(["item"]));
+    let err = apply_dataset_action("dtcs:explode", "t", &params, &mut workspaces).unwrap_err();
+    assert!(err.contains("already exists"), "unexpected error: {err}");
+}

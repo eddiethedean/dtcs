@@ -47,7 +47,10 @@ fn evaluate_expr_on_row_scoped(
             let inner = evaluate_expr_on_row_scoped(expr, row, lambda_params)?;
             match op {
                 UnaryOp::Negate => match inner {
-                    RuntimeValue::Integer(v) => Ok(RuntimeValue::Integer(-v)),
+                    RuntimeValue::Integer(v) => v
+                        .checked_neg()
+                        .map(RuntimeValue::Integer)
+                        .ok_or_else(|| "negate overflow on i64::MIN".to_string()),
                     RuntimeValue::Decimal(v) => Ok(RuntimeValue::Decimal(-v)),
                     other => Err(format!("negate unsupported for {other:?}")),
                 },
@@ -125,12 +128,13 @@ fn resolve_field_ref(
                     FieldLookup::Present(value) => value,
                 });
             }
-            if let Some((param, _)) = target.split_once('.') {
+            if let Some((param, rest)) = target.split_once('.') {
                 if params.iter().any(|p| p == param) {
-                    return Ok(match lookup_field(row, param) {
-                        FieldLookup::Missing => RuntimeValue::missing(),
+                    let base = match lookup_field(row, param) {
+                        FieldLookup::Missing => return Ok(RuntimeValue::missing()),
                         FieldLookup::Present(value) => value,
-                    });
+                    };
+                    return walk_lambda_path(&base, rest);
                 }
             }
             Ok(RuntimeValue::missing())
@@ -144,6 +148,39 @@ fn resolve_field_ref(
         }
         Some(other) => Err(format!("unsupported fieldRef scope '{other}'")),
     }
+}
+
+fn walk_lambda_path(value: &RuntimeValue, path: &str) -> Result<RuntimeValue, String> {
+    let mut current = value.clone();
+    for segment in path.split('.') {
+        current = match &current {
+            RuntimeValue::Null | RuntimeValue::Missing(_) => {
+                return Ok(RuntimeValue::missing());
+            }
+            RuntimeValue::Map(map) => map
+                .get(segment)
+                .cloned()
+                .unwrap_or_else(RuntimeValue::missing),
+            RuntimeValue::List(items) => {
+                let index: i64 = segment
+                    .parse()
+                    .map_err(|_| format!("lambda path segment '{segment}' is not a list index"))?;
+                match crate::runtime::functions::resolve_list_index(index, items.len()) {
+                    Some(resolved) => items[resolved].clone(),
+                    None => RuntimeValue::missing(),
+                }
+            }
+            other => {
+                return Err(format!(
+                    "lambda path segment '{segment}' requires map or list, got {other:?}"
+                ));
+            }
+        };
+        if matches!(current, RuntimeValue::Missing(_)) {
+            return Ok(current);
+        }
+    }
+    Ok(current)
 }
 
 /// Evaluate an expression AST against a row workspace context.
@@ -182,7 +219,10 @@ fn evaluate_expr_with_interfaces(
             let inner = evaluate_expr_with_interfaces(expr, workspaces, row_index, interface_ids)?;
             match op {
                 UnaryOp::Negate => match inner {
-                    RuntimeValue::Integer(v) => Ok(RuntimeValue::Integer(-v)),
+                    RuntimeValue::Integer(v) => v
+                        .checked_neg()
+                        .map(RuntimeValue::Integer)
+                        .ok_or_else(|| "negate overflow on i64::MIN".to_string()),
                     RuntimeValue::Decimal(v) => Ok(RuntimeValue::Decimal(-v)),
                     other => Err(format!("negate unsupported for {other:?}")),
                 },

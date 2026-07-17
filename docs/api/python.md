@@ -140,7 +140,7 @@ assert portable["planIdentity"] == "dtcs.transform-plan/2"
 assert isinstance(fp, str) and len(fp) == 64
 ```
 
-The Rust CLI exposes the same export as `dtcs export-portable`. The Python CLI (`python -m dtcs`) does **not** yet wrap this subcommand — use the functions above.
+The Rust and Python CLIs expose the same export as `dtcs export-portable` (also `python -m dtcs export-portable`).
 
 ## Conformance
 

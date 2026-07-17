@@ -141,7 +141,11 @@ impl PortablePlan {
         let mut plan: Self = serde_json::from_slice(content)
             .map_err(|error| format!("invalid portable plan JSON: {error}"))?;
         match plan.plan_identity.as_str() {
-            TRANSFORM_PLAN_IDENTITY => {}
+            TRANSFORM_PLAN_IDENTITY => {
+                if plan.error_mode.is_none() {
+                    return Err("portable plan errorMode is required".into());
+                }
+            }
             LEGACY_TRANSFORM_PLAN_IDENTITY => {
                 plan.plan_identity = TRANSFORM_PLAN_IDENTITY.into();
                 plan.profile = migrate_profile_identifier(&plan.profile).into();
@@ -151,14 +155,20 @@ impl PortablePlan {
                     "migratedFrom".into(),
                     Value::String(LEGACY_TRANSFORM_PLAN_IDENTITY.into()),
                 );
+                plan.error_mode = Some("fail".into());
+                plan.requirements
+                    .insert("errorMode".into(), Value::String("fail".into()));
             }
             other => return Err(format!("unsupported plan identity '{other}'")),
         }
-        if plan.error_mode.is_none() {
-            plan.error_mode = Some("fail".into());
-        }
-        let mode = plan.error_mode.as_deref().unwrap_or("fail");
+        let mode = plan
+            .error_mode
+            .as_deref()
+            .ok_or_else(|| "portable plan errorMode is required".to_string())?;
         insert_fingerprint_pins(&mut plan.requirements, mode);
+        // Keep requirements.errorMode aligned with the top-level mode.
+        plan.requirements
+            .insert("errorMode".into(), Value::String(mode.into()));
         plan.validate_budgets()?;
         Ok(plan)
     }
@@ -288,6 +298,13 @@ impl PortablePlan {
             other => {
                 return Err(format!(
                     "unsupported errorMode '{other}'; expected fail|invalid|null|route"
+                ));
+            }
+        }
+        if let Some(req_mode) = self.requirements.get("errorMode").and_then(Value::as_str) {
+            if req_mode != mode.as_str() {
+                return Err(format!(
+                    "requirements.errorMode '{req_mode}' conflicts with top-level errorMode '{mode}'"
                 ));
             }
         }

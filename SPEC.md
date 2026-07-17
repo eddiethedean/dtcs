@@ -5689,10 +5689,10 @@ executable objects in portable plans.
 
 The DTCS 3.0 profile catalog is:
 
--   `dtcs:profile/portable-relational-kernel/2` --- Standard after plan-v1
-    migration fixtures pass
--   `dtcs:profile/portable-relational/2` --- Standard after plan-v1
-    migration fixtures pass
+-   `dtcs:profile/portable-relational-kernel/2` --- Candidate until two-compiler
+    graduation criteria are met
+-   `dtcs:profile/portable-relational/2` --- Candidate until two-compiler
+    graduation criteria are met
 -   `dtcs:profile/portable-string-advanced/1` --- Experimental
 -   `dtcs:profile/portable-conversion/1` --- Experimental
 -   `dtcs:profile/portable-statistics/1` --- Experimental

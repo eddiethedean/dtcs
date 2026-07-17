@@ -7,9 +7,9 @@ Vendor-neutral **data transformation contracts** in YAML/JSON — the *semantics
 ## Try it
 
 ```bash
-pip install 'dtcs==0.12.0'
+pip install 'dtcs==0.13.0'
 dtcs version
-# → dtcs 0.12.0
+# → dtcs 0.13.0
 # → spec 3.0.0
 ```
 
@@ -21,6 +21,7 @@ Then: [Getting started](user/getting-started.md) (validate in minutes) · [Adopt
 |----------|------------|
 | **New users** | [getting-started](user/getting-started.md) → [concepts](user/concepts.md) → [writing contracts](user/writing-contracts.md) |
 | **Evaluators / architects** | [adoption/overview](adoption/overview.md) · [limits](user/limits.md) |
+| **Upgrading to 0.13 / Spec 3.0** | [migration-0.13](user/migration-0.13.md) |
 | **Upgrading to 0.12 / Spec 2.0** | [migration-0.12](user/migration-0.12.md) · [Portable Relational](user/migration-portable-relational.md) |
 | **Contributors** | [CONTRIBUTING](https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md) · [architecture](implementation/architecture.md) |
 | **Spec authors** | [editorial/baseline](editorial/baseline.md) · [SPEC](SPEC.md) |
@@ -50,7 +51,8 @@ Then: [Getting started](user/getting-started.md) (validate in minutes) · [Adopt
 | [error-taxonomy](user/error-taxonomy.md) | Raises vs diagnostics vs exit codes |
 | [diagnostic-catalog](user/diagnostic-catalog.md) | Common diagnostic codes |
 | [extensions-and-registries](user/extensions-and-registries.md) | Vendor catalogs |
-| [migration-0.12](user/migration-0.12.md) | Upgrade to tools 0.12 / Spec 2.0 |
+| [migration-0.13](user/migration-0.13.md) | Upgrade to tools 0.13 / Spec 3.0 |
+| [migration-0.12](user/migration-0.12.md) | Historical: tools 0.12 / Spec 2.0 |
 | [migration-portable-relational](user/migration-portable-relational.md) | Portable Relational compatibility |
 | [migration-0.11](user/migration-0.11.md) | Historical: 0.10.x → 0.11.x |
 | [limits](user/limits.md) | Runtime / deployment limits |

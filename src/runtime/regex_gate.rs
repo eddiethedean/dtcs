@@ -11,15 +11,6 @@ pub fn validate_dtcs_regex(pattern: &str) -> Result<(), String> {
         ("(?!", "negative lookahead"),
         ("(?<=", "lookbehind"),
         ("(?<!", "negative lookbehind"),
-        ("\\1", "backreference"),
-        ("\\2", "backreference"),
-        ("\\3", "backreference"),
-        ("\\4", "backreference"),
-        ("\\5", "backreference"),
-        ("\\6", "backreference"),
-        ("\\7", "backreference"),
-        ("\\8", "backreference"),
-        ("\\9", "backreference"),
         ("*+", "possessive quantifier"),
         ("++", "possessive quantifier"),
         ("?+", "possessive quantifier"),
@@ -29,11 +20,36 @@ pub fn validate_dtcs_regex(pattern: &str) -> Result<(), String> {
             return Err(format!("pattern uses {name} which is outside dtcs-regex/1"));
         }
     }
+    if has_numeric_backreference(pattern) {
+        return Err("pattern uses backreference which is outside dtcs-regex/1".into());
+    }
     // Named backrefs like \k<name>
     if pattern.contains("\\k<") {
         return Err("pattern uses named backreference outside dtcs-regex/1".into());
     }
     Ok(())
+}
+
+/// A backslash+digit with an odd number of consecutive preceding backslashes is a backref.
+/// Even counts (e.g. `\\1`) are a literal backslash followed by digit.
+fn has_numeric_backreference(pattern: &str) -> bool {
+    let bytes = pattern.as_bytes();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'\\' {
+            let start = i;
+            while i < bytes.len() && bytes[i] == b'\\' {
+                i += 1;
+            }
+            let backslashes = i - start;
+            if i < bytes.len() && bytes[i].is_ascii_digit() && backslashes % 2 == 1 {
+                return true;
+            }
+            continue;
+        }
+        i += 1;
+    }
+    false
 }
 
 /// Compile a portable regex after grammar validation.
@@ -55,5 +71,12 @@ mod tests {
     #[test]
     fn rejects_lookahead() {
         assert!(validate_dtcs_regex(r"a(?=b)").is_err());
+    }
+
+    #[test]
+    fn rejects_backreference_but_allows_literal_backslash_digit() {
+        assert!(validate_dtcs_regex(r"(a)\1").is_err());
+        assert!(validate_dtcs_regex(r"\\1").is_ok());
+        assert!(validate_dtcs_regex(r"\\\1").is_err());
     }
 }

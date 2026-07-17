@@ -1,6 +1,6 @@
 # Migrating to 0.11.0 (historical)
 
-> **Archived.** Current tools are **0.12.0** (Spec **2.0.0**). For new upgrades use [migration-0.12.md](migration-0.12.md). Do **not** pin `dtcs==0.11.0` for new work.
+> **Archived.** Current tools are **0.13.0** (Spec **3.0.0**). For new upgrades use [migration-0.13.md](migration-0.13.md). Do **not** pin `dtcs==0.11.0` for new work.
 
 Upgrade playbook from **0.10.x** tools to **0.11.x**. At that time Spec was still `1.0.0-draft` and document `dtcsVersion` was typically `"1.0.0"`.
 

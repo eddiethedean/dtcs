@@ -2,12 +2,12 @@
 
 ## Supported versions
 
-Security fixes are accepted against the latest published reference-implementation release on the default branch (`main`). Older patch lines may not receive backports while the Spec remains `2.0.0` and tools remain alpha.
+Security fixes are accepted against the latest published reference-implementation release on the default branch (`main`). Older patch lines may not receive backports while the Spec remains `3.0.0` and tools remain alpha.
 
 | Component | Status |
 |-----------|--------|
-| Spec | Draft (`2.0.0`) |
-| Tools (`dtcs` CLI / crates.io / PyPI) | Alpha (`0.12.x`) |
+| Spec | Draft (`3.0.0`) |
+| Tools (`dtcs` CLI / crates.io / PyPI) | Alpha (`0.13.x`) |
 
 ## Reporting a vulnerability
 
@@ -24,7 +24,7 @@ We will acknowledge receipt and coordinate a fix and disclosure timeline.
 ## What this project does and does not provide
 
 - The validator and reference runtime perform **no network I/O** when processing local contracts (except optional registry URI loading you explicitly enable).
-- Release **signatures / attestations are not yet published** for every artifact. Pin versions (`pip install dtcs==0.12.0`, `cargo install dtcs --version 0.12.0`) and verify checksums from your package index / CI provenance when required by policy.
+- Release **signatures / attestations are not yet published** for every artifact. Pin versions (`pip install dtcs==0.13.0`, `cargo install dtcs --version 0.13.0`) and verify checksums from your package index / CI provenance when required by policy.
 - The reference runtime is **not** a hardened multi-tenant execution service. Do not treat `dtcs run` as a production sandbox for untrusted contracts or PII at scale.
 
 ## Automated checks

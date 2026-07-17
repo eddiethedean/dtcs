@@ -10,7 +10,7 @@ Pre-built wheels are published for common platforms and Python 3.9–3.13. If pi
 
 1. Ensure you are on a supported Python version.
 2. Install Rust 1.75+ and [maturin](https://www.maturin.rs/).
-3. Or pin a released version: `pip install dtcs==0.12.0`.
+3. Or pin a released version: `pip install dtcs==0.13.0`.
 
 See [faq.md](faq.md#pip-install-dtcs-fails-to-build-what-do-i-do).
 
@@ -58,7 +58,7 @@ dtcs diagnostics my_contract.yaml --json
 
 | Diagnostic | Likely cause | Fix |
 |------------|--------------|-----|
-| `dtcs:unsupported-version` | `dtcsVersion` not in the supported set | Set `dtcsVersion: "2.0.0"` (preferred) or `"1.0.0"` / `"1.0.0-draft"` (patch variants like `1.0.1` / `2.0.1` are rejected) |
+| `dtcs:unsupported-version` | `dtcsVersion` not in the supported set | Set `dtcsVersion: "3.0.0"` (preferred) or `"2.0.0"` / `"1.0.0"` / `"1.0.0-draft"` (patch variants like `1.0.1` / `2.0.1` / `3.0.1` are rejected) |
 | `dtcs:missing-lineage` | Output without lineage mapping | Add `lineage.mappings` entry for each output |
 | `dtcs:unresolved-reference` | Field path does not exist | Use `interface.field` format matching an input/output `id` |
 | `dtcs:invalid-type` | Malformed type expression | Use `list<string>`, not bare `list` |

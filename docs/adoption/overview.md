@@ -2,7 +2,7 @@
 
 This document helps architects and enterprise evaluators assess DTCS for their organization.
 
-> **Not production-certified.** Spec `2.0.0` is a **draft**. Tools `0.12.0` are **alpha**. Tables labeled **Covered** mean the reference implementation *exercises* that draft area — they are **not** a green-light procurement matrix or an external certification.
+> **Not production-certified.** Spec `3.0.0` is a **draft**. Tools `0.13.0` are **alpha**. Tables labeled **Covered** mean the reference implementation *exercises* that draft area — they are **not** a green-light procurement matrix or an external certification.
 
 ## What DTCS provides
 
@@ -20,11 +20,11 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 ## Reference implementation maturity
 
-> **Maturity:** Spec `2.0.0` (draft) · tools alpha (`0.12.0`). **Covered** means the reference implementation exercises that draft area — not production certification of the standard.
+> **Maturity:** Spec `3.0.0` (draft) · tools alpha (`0.13.0`). **Covered** means the reference implementation exercises that draft area — not production certification of the standard.
 
 | Component | Reference impl coverage |
 |-----------|-------------------------|
-| Specification | Draft (`2.0.0`, 26 chapters + Appendix A catalog) |
+| Specification | Draft (`3.0.0`, 27 chapters + Appendix A catalog) |
 | Parser (YAML/JSON) | Covered |
 | Seven-phase validation | Covered |
 | Metadata validation | Covered |
@@ -42,17 +42,18 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Compilation | Covered (Phase 0.9) |
 | Reference runtime | Covered (Phase 0.9; full catalog + null tokens in 0.11) |
 | Portable Relational (0.12) | Covered (joins, windows, datetime, complex access, portable plans) |
-| Conformance certification (Ch 23) | Covered (Phase 0.10 + portable semantic-family profiles in 0.12) |
+| Rich Portable Analytics (0.13 / Ch 27) | Covered (plan v2, kernel/relational `/2` Candidate, A.9 Experimental families) |
+| Conformance certification (Ch 23) | Covered (Phase 0.10 + portable semantic-family profiles in 0.12–0.13) |
 | SPEC completeness matrix | Covered (Phase 0.11+) |
 
-*Released reference implementation: `0.12.0`.*
+*Released reference implementation: `0.13.0`.*
 
 See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) for the full milestone plan and [spec-completeness.md](../implementation/spec-completeness.md) for the chapter matrix.
 
 ## Pip-first evaluator path (no clone)
 
 ```bash
-pip install 'dtcs==0.12.0'
+pip install 'dtcs==0.13.0'
 dtcs version
 dtcs conformance run --profile all
 ```
@@ -73,7 +74,7 @@ Then follow [getting-started.md](../user/getting-started.md) for a pasteable val
 10. **Compilation** — produce execution plans from transformation plans (`dtcs compile`)
 11. **Reference execution** — run contracts end-to-end with sample inputs (`dtcs run`)
 12. **Conformance certification** — offline profiles via `dtcs conformance declare` / `dtcs conformance run` (including portable profiles)
-13. **Portable plan export** — Rust CLI `dtcs export-portable`; Python `plan_export_portable`
+13. **Portable plan export** — `dtcs export-portable` (Rust and Python CLIs); Python `plan_export_portable`
 14. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
@@ -115,7 +116,7 @@ Rust and Python packages install the same `dtcs` CLI.
 
 **Pip-first (no clone):**
 
-- [ ] `pip install 'dtcs==0.12.0'` and `dtcs version` shows Spec `2.0.0`
+- [ ] `pip install 'dtcs==0.13.0'` and `dtcs version` shows Spec `3.0.0`
 - [ ] Validate the curlable minimal sample ([getting-started.md](../user/getting-started.md))
 - [ ] Run the no-clone `hello` contract with `dtcs run`
 - [ ] Run offline conformance: `dtcs conformance run --profile all`

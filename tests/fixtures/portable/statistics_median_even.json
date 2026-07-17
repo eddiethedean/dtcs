@@ -1,0 +1,27 @@
+{
+  "id": "statistics-median-even",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          {
+            "as": "m",
+            "expr": "dtcs:median(1.0, 2.0, 3.0, 4.0)"
+          },
+          {
+            "as": "q",
+            "expr": "dtcs:quantile(1.0, 2.0, 3.0, 4.0, 0.5)"
+          }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "x": 1 }]
+  },
+  "expected": {
+    "t": [{ "x": 1, "m": 2.0, "q": 2.0 }]
+  }
+}

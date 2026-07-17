@@ -259,7 +259,7 @@ Success emits an execution plan document (same shape as the Rust `ExecutionPlan`
 {
   "target": {
     "engineId": "dtcs:reference",
-    "engineVersion": "0.12.0",
+    "engineVersion": "0.13.0",
     "capabilityVersion": "1.0.0"
   },
   "identity": {
@@ -353,15 +353,15 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.12.0",
-  "dtcsVersion": "2.0.0",
+  "implementationVersion": "0.13.0",
+  "dtcsVersion": "3.0.0",
   "primaryProfile": "integrated-platform",
   "profiles": [
     {
       "id": "integrated-platform",
       "implementationClass": "integratedPlatform",
-      "dtcsVersion": "2.0.0",
-      "implementationVersion": "0.12.0",
+      "dtcsVersion": "3.0.0",
+      "implementationVersion": "0.13.0",
       "supportedRegistries": ["dtcs:builtin"],
       "supportedExtensions": ["acme"],
       "optionalCapabilities": ["planOptimization", "referenceRuntime"]
@@ -375,7 +375,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.12.0",
+  "implementationVersion": "0.13.0",
   "profiles": ["integrated-platform"],
   "results": [
     {
@@ -399,21 +399,21 @@ Success emits a single registry entry (same object shape as list items, may incl
 
 ```json
 {
-  "crateVersion": "0.12.0",
-  "specVersion": "2.0.0"
+  "crateVersion": "0.13.0",
+  "specVersion": "3.0.0"
 }
 ```
 
 ## export-portable
 
-Rust CLI `dtcs export-portable` emits a portable plan document (pretty JSON). With `--fingerprint`, it emits a bare SHA-256 hex string instead.
+Rust and Python CLIs (`dtcs export-portable`) emit a portable plan document (pretty JSON). With `--fingerprint`, they emit a bare SHA-256 hex string instead.
 
 Typical portable plan fields:
 
 ```json
 {
-  "identity": "dtcs.transform-plan/1",
-  "profile": "dtcs:profile/portable-relational-kernel/1",
+  "planIdentity": "dtcs.transform-plan/2",
+  "profile": "dtcs:profile/portable-relational-kernel/2",
   "nodes": [],
   "registryVersions": {}
 }

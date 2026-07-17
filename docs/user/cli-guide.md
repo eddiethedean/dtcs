@@ -17,7 +17,7 @@ Both the Rust crate (`cargo install dtcs`) and the Python package (`pip install 
 | `match <path>` | Match a transformation plan against engine capabilities |
 | `compile <path>` | Compile a transformation plan to an execution plan |
 | `run <path>` | Execute a contract end-to-end using the reference runtime |
-| `export-portable <path>` | Export a portable transform plan (`dtcs.transform-plan/1`) — **Rust CLI** |
+| `export-portable <path>` | Export a portable transform plan (`dtcs.transform-plan/2`) |
 | `lineage <path>` | Analyze dataset-level lineage |
 | `registry list` | List identifier registry entries |
 | `registry resolve <id>` | Resolve a registry identifier |
@@ -40,7 +40,7 @@ Optional `--registry <path>` merges a vendor catalog (YAML/JSON) with the embedd
 | `match` | yes | yes |
 | `compile` | yes | yes |
 | `run` | yes | yes |
-| `export-portable` | yes | **no** (use Python API `plan_export_portable`) |
+| `export-portable` | yes | yes |
 | `compat` | yes | yes |
 | `evolve` | yes | yes |
 | `lineage` | yes | yes |
@@ -191,20 +191,20 @@ Validates and lowers a contract, compiles it, and executes it with the reference
 
 ## export-portable
 
-> **Rust CLI only** (`cargo install dtcs`). The Python package exposes the same capability via `plan_export_portable` / `plan_fingerprint` (see [api/python.md](../api/python.md#portable-plans)). `python -m dtcs` does not yet implement this subcommand.
+Available on both the Rust CLI and the Python CLI (`pip install dtcs` / `python -m dtcs`). The Python package also exposes `plan_export_portable` / `plan_fingerprint` (see [api/python.md](../api/python.md#portable-plans)).
 
 ```bash
 dtcs export-portable contract.yaml
-dtcs export-portable contract.yaml --profile dtcs:profile/portable-relational/1
+dtcs export-portable contract.yaml --profile dtcs:profile/portable-relational/2
 dtcs export-portable contract.yaml --fingerprint
 ```
 
-Lowers a validated contract to a transformation plan, then exports the portable envelope (`identity: dtcs.transform-plan/1`) for engine interchange.
+Lowers a validated contract to a transformation plan, then exports the portable envelope (`planIdentity: dtcs.transform-plan/2`) for engine interchange.
 
 | Flag | Effect |
 |------|--------|
 | `--registry` | Merge a vendor catalog for lowering |
-| `--profile` | Portable profile id (default: `dtcs:profile/portable-relational-kernel/1`) |
+| `--profile` | Portable profile id (default: `dtcs:profile/portable-relational-kernel/2`) |
 | `--fingerprint` | Emit only the SHA-256 semantic fingerprint string |
 
 | Exit code | Meaning |

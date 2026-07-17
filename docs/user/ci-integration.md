@@ -40,7 +40,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install dtcs==0.12.0
+      - run: pip install dtcs==0.13.0
       - run: |
           curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml \
             -o contract.dtcs.yaml

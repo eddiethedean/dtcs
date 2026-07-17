@@ -76,4 +76,5 @@ test("node bindings smoke test", async (t) => {
   const declaration = dtcs.conformanceDeclare();
   assert.equal(declaration.primaryProfile, "integrated-platform");
   assert.equal(declaration.profiles.length, 23);
+  assert.equal(dtcs.specVersion(), "3.0.0");
 });

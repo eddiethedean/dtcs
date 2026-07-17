@@ -621,6 +621,40 @@
       "assertion": {
         "kind": "portablePlanMigrate"
       }
+    },
+    {
+      "id": "portable-plan-bad-identity",
+      "profiles": [
+        "dtcs:profile/portable-relational-kernel/2"
+      ],
+      "fixture": "portable/plan_bad_identity.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portablePlanMigrate"
+      }
+    },
+    {
+      "id": "portable-statistics-median-even",
+      "profiles": [
+        "dtcs:profile/portable-statistics/1"
+      ],
+      "fixture": "portable/statistics_median_even.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-complex-negative-index",
+      "profiles": [
+        "dtcs:profile/portable-complex-values/1",
+        "dtcs:profile/portable-complex-types/1"
+      ],
+      "fixture": "portable/complex_negative_index.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     }
   ]
 }

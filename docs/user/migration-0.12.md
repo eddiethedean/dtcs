@@ -1,5 +1,7 @@
 # Migrating to 0.12.0 / Spec 2.0
 
+> **Historical.** Current tools are **0.13.0** (Spec **3.0.0**). For new upgrades use [migration-0.13.md](migration-0.13.md).
+
 Upgrade playbook from **0.11.x** tools to **0.12.0**, and from document `dtcsVersion` `"1.0.0"` to preferred `"2.0.0"`.
 
 For Portable Relational semantics (joins, aggs, windows, datetime), also read [migration-portable-relational.md](migration-portable-relational.md). Version axes: [versioning.md](versioning.md).

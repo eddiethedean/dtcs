@@ -1,0 +1,21 @@
+{
+  "id": "complex-negative-index",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "last", "expr": "dtcs:element_at(items, -1)" },
+          { "as": "oob", "expr": "dtcs:element_at(items, -99)" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "items": [10, 20, 30] }]
+  },
+  "expected": {
+    "t": [{ "items": [10, 20, 30], "last": 30, "oob": null }]
+  }
+}

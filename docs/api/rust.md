@@ -2,7 +2,7 @@
 
 Crate: [`dtcs` on crates.io](https://crates.io/crates/dtcs).
 
-**Generated API docs:** [https://docs.rs/dtcs](https://docs.rs/dtcs/0.12.0)
+**Generated API docs:** [https://docs.rs/dtcs](https://docs.rs/dtcs/0.13.0)
 
 This page is a consumer-oriented map. Implementer design notes live in [public-api.md](../implementation/public-api.md). Versions: [versioning.md](../user/versioning.md).
 
@@ -10,7 +10,7 @@ This page is a consumer-oriented map. Implementer design notes live in [public-a
 
 ```toml
 [dependencies]
-dtcs = "0.12"
+dtcs = "0.13"
 ```
 
 ## Common entry points
@@ -21,7 +21,7 @@ dtcs = "0.12"
 | `validate` / `validate_with_registry` | Validation report |
 | `check_contract` | Static semantic analysis |
 | `lower_plan` / `optimize_plan` / `plan_equivalent` | Transformation plans |
-| `export_portable_plan` | Portable transform-plan envelope (`dtcs.transform-plan/1`) |
+| `export_portable_plan` | Portable transform-plan envelope (`dtcs.transform-plan/2`) |
 | `analyze_compatibility` / `analyze_evolution` / `analyze_lineage` | Compatibility and lineage |
 | `match_plan` / `compile` / `execute` | Capability match, compile, runtime |
 | `reference_portable_manifest` / `validate_capability_accuracy` | Portable capability manifests |
@@ -52,7 +52,7 @@ For plan → portable export, see `export_portable_plan` on docs.rs and the CLI 
 ## CLI
 
 ```bash
-cargo install dtcs --version 0.12.0
+cargo install dtcs --version 0.13.0
 dtcs validate contract.dtcs.yaml
 dtcs export-portable contract.dtcs.yaml --fingerprint
 ```
@@ -69,4 +69,4 @@ Library APIs return `DiagnosticReport` / structured results rather than panickin
 
 - [Python API](python.md) · [WASM](wasm.md) · [Node](node.md)
 - [architecture.md](../implementation/architecture.md)
-- [migration-0.12.md](../user/migration-0.12.md)
+- [migration-0.13.md](../user/migration-0.13.md)

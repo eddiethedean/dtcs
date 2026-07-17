@@ -8,7 +8,7 @@ The Data Transformation Contract Standard (DTCS) is a vendor-neutral specificati
 
 ### What does the reference implementation do today?
 
-Through version **0.12.0**, the reference tools can:
+Through version **0.13.0**, the reference tools can:
 
 - Parse YAML/JSON into the Canonical Object Model (including `guarantees`, `compatibility`, nested extensions)
 - Validate contracts with structured diagnostics
@@ -20,14 +20,14 @@ Through version **0.12.0**, the reference tools can:
 - Analyze dataset-level lineage with `operation` and `flow` (dependency graph, impact, governance)
 - Run static semantic and expression analysis (Ch 7–8), including null/missing/invalid distinction
 - Lower, optimize, match, compile, and execute contracts end-to-end with the reference runtime
-- Export portable plans (`dtcs.transform-plan/1`) and run Portable Relational Profile semantics (joins, window frames, datetime, complex access)
-- Certify conformance across implementation-class and portable semantic-family profiles (Ch 23)
+- Export portable plans (`dtcs.transform-plan/2`, default profile `portable-relational-kernel/2`) and run Portable Relational / Rich Portable Analytics semantics
+- Certify conformance across implementation-class and portable semantic-family profiles (Ch 23 / Ch 27)
 
 The reference runtime is suitable for evaluation and conformance testing — not production ETL. See [non-goals.md](../implementation/non-goals.md).
 
 ### Is DTCS production-ready?
 
-The specification is a **draft** (`2.0.0`). The reference implementation is **alpha** (PyPI classifier: Development Status :: 3 - Alpha). It is suitable for evaluation, CI validation, and contract authoring — not yet for mission-critical execution pipelines.
+The specification is a **draft** (`3.0.0`). The reference implementation is **alpha** (PyPI classifier: Development Status :: 3 - Alpha). It is suitable for evaluation, CI validation, and contract authoring — not yet for mission-critical execution pipelines.
 
 ## Installation
 
@@ -42,8 +42,8 @@ Pre-built wheels are published for common platforms. If pip tries to compile fro
 ### How do I install a specific version?
 
 ```bash
-pip install dtcs==0.12.0
-cargo install dtcs --version 0.12.0
+pip install dtcs==0.13.0
+cargo install dtcs --version 0.13.0
 ```
 
 ## Contracts
@@ -70,10 +70,10 @@ See [writing-contracts.md](writing-contracts.md).
 
 ### What is the difference between `version` and `dtcsVersion`?
 
-- `dtcsVersion` — which specification version the document conforms to (prefer `"2.0.0"`; see [versioning.md](versioning.md))
+- `dtcsVersion` — which specification version the document conforms to (prefer `"3.0.0"`; see [versioning.md](versioning.md))
 - `version` — the revision of this specific contract (semver-like)
 
-Supported `dtcsVersion` values: `"2.0.0"`, `"1.0.0"`, `"1.0.0-draft"`.
+Supported `dtcsVersion` values: `"3.0.0"`, `"2.0.0"`, `"1.0.0"`, `"1.0.0-draft"`.
 
 ### What are null vs missing vs invalid values?
 
@@ -102,20 +102,24 @@ No. All analysis is read-only.
 
 Contracts may also declare a COM-level `compatibility` policy (`policy`, `forward`, `backward`, `notes`) separate from analysis results. See [compatibility.md](compatibility.md).
 
-## Spec 2.0 and tools 0.12
+## Spec 3.0 and tools 0.13
 
-### What is Spec 2.0?
+### What is Spec 3.0?
 
-DTCS **2.0.0** (draft) is the current normative Spec. It supersedes `1.0.0-draft` and includes the Portable Relational Profile. Prefer document `dtcsVersion: "2.0.0"`. See [versioning.md](versioning.md) and [migration-0.12.md](migration-0.12.md).
+DTCS **3.0.0** (draft) is the current normative Spec. It adds Rich Portable Analytics (Ch 27 / A.9), canonical `dtcs.transform-plan/2`, and related profile families. Prefer document `dtcsVersion: "3.0.0"`. Spec **2.0.0** remains accepted for compatibility. See [versioning.md](versioning.md) and [migration-0.13.md](migration-0.13.md).
 
-### How do I upgrade to 0.12.0?
+### How do I upgrade to 0.13.0?
 
-Dedicated guide: **[migration-0.12.md](migration-0.12.md)**. Portable Relational compatibility tables: [migration-portable-relational.md](migration-portable-relational.md).
+Dedicated guide: **[migration-0.13.md](migration-0.13.md)**.
 
 ```bash
-pip install 'dtcs==0.12.0'
-# or: cargo install dtcs --version 0.12.0
+pip install 'dtcs==0.13.0'
+# or: cargo install dtcs --version 0.13.0
 ```
+
+### How do I upgrade to 0.12.0? (historical)
+
+Guide: **[migration-0.12.md](migration-0.12.md)**. Portable Relational compatibility tables: [migration-portable-relational.md](migration-portable-relational.md). Prefer 0.13 for new work.
 
 ## Migration to 0.11.0 (historical)
 
@@ -125,7 +129,7 @@ Notable changes from that era: lineage `operation`/`flow` defaults, dataset acti
 
 ### How do I upgrade between versions?
 
-Prefer [migration-0.12.md](migration-0.12.md) and the [CHANGELOG](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md). Pin with `pip install dtcs==0.12.0` or `cargo install dtcs --version 0.12.0`.
+Prefer [migration-0.13.md](migration-0.13.md) and the [CHANGELOG](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md). Pin with `pip install dtcs==0.13.0` or `cargo install dtcs --version 0.13.0`.
 
 ## Contributing
 
