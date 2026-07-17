@@ -93,7 +93,11 @@ pub(crate) fn validate_semantics(
             );
             continue;
         }
-        let Some(entry) = registry::resolve(registry_doc, &action.action) else {
+        let Some(entry) = registry::resolve_category(
+            registry_doc,
+            &action.action,
+            RegistryCategory::SemanticAction,
+        ) else {
             ctx.error(
                 codes::INVALID_SEMANTIC_ACTION,
                 DiagnosticCategory::Semantic,
@@ -103,16 +107,6 @@ pub(crate) fn validate_semantics(
             );
             continue;
         };
-        if entry.category != RegistryCategory::SemanticAction {
-            ctx.error(
-                codes::INVALID_SEMANTIC_ACTION,
-                DiagnosticCategory::Semantic,
-                format!("unsupported standard semantic action '{}'", action.action),
-                Some(&format!("semanticActions.{}.action", action.id)),
-                Some("Use a standardized semantic action identifier"),
-            );
-            continue;
-        }
         validate_stdlib_action(ctx, action, entry.definition.as_deref(), &index);
     }
 
@@ -127,7 +121,9 @@ pub(crate) fn validate_semantics(
             );
             continue;
         }
-        let Some(entry) = registry::resolve(registry_doc, &rule.rule) else {
+        let Some(entry) =
+            registry::resolve_category(registry_doc, &rule.rule, RegistryCategory::Rule)
+        else {
             if rule.rule.starts_with("dtcs:") {
                 ctx.error(
                     codes::INVALID_RULE,
@@ -139,16 +135,6 @@ pub(crate) fn validate_semantics(
             }
             continue;
         };
-        if entry.category != RegistryCategory::Rule {
-            ctx.error(
-                codes::INVALID_RULE,
-                DiagnosticCategory::Semantic,
-                format!("unsupported standard rule '{}'", rule.rule),
-                Some(&format!("rules.{}.rule", rule.id)),
-                Some("Use a standardized rule identifier"),
-            );
-            continue;
-        }
         validate_stdlib_rule(ctx, rule, entry.definition.as_deref(), &index);
     }
 
@@ -165,7 +151,11 @@ pub(crate) fn validate_semantics(
             );
             continue;
         }
-        let Some(entry) = registry::resolve(registry_doc, &function.function) else {
+        let Some(entry) = registry::resolve_category(
+            registry_doc,
+            &function.function,
+            RegistryCategory::Function,
+        ) else {
             if function.function.starts_with("dtcs:") {
                 ctx.error(
                     codes::INVALID_FUNCTION,
@@ -177,16 +167,6 @@ pub(crate) fn validate_semantics(
             }
             continue;
         };
-        if entry.category != RegistryCategory::Function {
-            ctx.error(
-                codes::INVALID_FUNCTION,
-                DiagnosticCategory::Semantic,
-                format!("unsupported standard function '{}'", function.function),
-                Some(&format!("functions.{}.function", function.id)),
-                Some("Use a standardized function identifier"),
-            );
-            continue;
-        }
         validate_stdlib_function(ctx, function, entry.definition.as_deref());
     }
 

@@ -5103,6 +5103,22 @@ pattern behavior. Unsupported constructs SHALL fail capability analysis.
 Implementations SHALL enforce declared regex complexity and input-length
 budgets.
 
+### 4.1 Portable regex grammar and Unicode version
+
+Version 1 of the portable regex grammar is `dtcs-regex/1`. It uses the
+regular-language subset implemented by RE2-style engines: literals, Unicode
+scalar escapes, character classes, grouping, alternation, quantifiers, named
+and numbered captures, anchors, and flags `i`, `m`, and `s`. Look-around,
+backreferences, recursive patterns, conditional patterns, and embedded
+host-language code SHALL be rejected. The Unicode data version is `15.1`.
+
+Capture group zero is the complete match; numbered captures are assigned by
+opening-parenthesis order. `regex_extract` returns null when no match exists;
+`regex_extract_all` returns an empty list. `regex_replace` interprets `$0` and
+`$1` through `$99` as capture references. For an empty match, scanning advances
+by one Unicode code point after emitting that match. The maximum pattern length
+is 16 KiB and the maximum input length is 1 MiB by default.
+
 ## 5. Conversion and Parsing Profile
 
 Profile `dtcs:profile/portable-conversion/1` contains `dtcs:cast`,
@@ -5138,6 +5154,20 @@ overflow, result nullability, and order sensitivity. Approximate modes SHALL
 also declare algorithm identity, error bounds, merge behavior, and
 determinism. Collection aggregates SHALL enforce an explicit size limit.
 
+### 6.1 Exact statistics decision
+
+The initial portable statistics profile supports exact computation only.
+`quantile` SHALL use nearest-rank values sorted in ascending total numeric
+order, with `p` in `[0, 1]`; `p = 0` selects the first value and `p = 1` the
+last. Approximate quantiles SHALL fail capability analysis. Variance and
+covariance SHALL use the numerically stable two-pass algorithm. Population mode
+uses divisor `n`; sample mode uses `n - 1` and returns null below two valid
+observations. Correlation is Pearson and returns null when either variance is
+zero. Null, missing, and invalid inputs are excluded; NaN and infinity produce
+invalid. Median is `quantile(p = 0.5)`. `first`, `last`, and `collect_list`
+require declared ordering; `collect_set` uses total-value equality and
+canonical ascending order. The default collection limit is 1,000,000 values.
+
 ## 7. Complex-Value Profile
 
 Profile `dtcs:profile/portable-complex-values/1` contains constructors
@@ -5158,6 +5188,16 @@ evaluation, and resource budgets. A plan SHALL state its duplicate-key and
 collision policies. An implementation SHALL NOT substitute host-language map
 or object behavior when it differs from those policies.
 
+### 7.1 Concrete collection decisions
+
+Lists use zero-based indexes. Negative indexes count from the end; an index
+outside the resulting range returns null for `element_at` and invalid for
+`index`. Maps and objects preserve insertion order. Duplicate keys are invalid
+for constructors and `map_from_entries`; `map_concat` requires an explicit
+`collisionPolicy` of `error`, `left`, or `right`. Object field order follows
+constructor order. A collection may contain at most 1,000,000 elements unless
+a lower plan limit is declared.
+
 ## 8. Generator and Reshape Profile
 
 Profile `dtcs:profile/portable-reshape/1` contains `dtcs:explode`,
@@ -5173,6 +5213,22 @@ artifact. Ordinary validation and planning SHALL NOT read source rows to
 discover an unbounded output schema. Pivot and unpivot SHALL define category
 ordering, output naming, duplicate-cell aggregation, null categories, and
 collision behavior.
+
+### 8.1 Pivot and reshape decisions
+
+`pivot.categories` is required and SHALL be a non-empty ordered array of
+literal scalar values. Runtime category discovery is not permitted. A pivot
+column name is the canonical JSON scalar representation of its category unless
+`categoryNames` supplies an equal-length array of unique names. Null categories
+are rejected. The default duplicate-cell policy is `error`; a plan may select a
+declared aggregate Function instead. A pivot SHALL declare `maxColumns`, which
+defaults to 10,000. `unpivot` emits rows in declared `fields` order.
+
+`explode` emits list elements in list order and map entries in insertion order.
+For maps, the element is a two-item `[key, value]` list. Position begins at
+zero. Null, missing, invalid, and empty inputs emit zero rows unless
+`outer: true`, in which case they emit one row with null element and position
+zero. Field collisions are errors.
 
 ## 9. Extended Relational Profile
 
@@ -5207,6 +5263,15 @@ An implementation unable to provide compatible data SHALL reject the
 requirement rather than silently use host timezone data. Month-end, leap-day,
 ambiguous-time, and nonexistent-time behavior SHALL be explicit.
 
+### 10.1 IANA and calendar decisions
+
+The required timezone-data release is IANA `2025b`. `to_utc` requires
+`ambiguousTimePolicy` (`earlier`, `later`, or `error`) and
+`nonexistentTimePolicy` (`shiftForward` or `error`); both default to `error`.
+Calendar month and year addition clamps the day to the final day of the target
+month. Leap-day addition therefore yields February 28 in a non-leap target
+year. ISO weeks begin Monday. Temporal precision is nanoseconds.
+
 ## 11. Controlled Nondeterminism Profile
 
 Profile `dtcs:profile/portable-nondeterministic/1` contains `dtcs:random`,
@@ -5223,6 +5288,15 @@ Determinism classification SHALL affect fingerprints, caching, retries,
 incremental execution, and idempotency analysis. Optimizers SHALL NOT
 duplicate, reorder, or eliminate a call when doing so changes observable
 results.
+
+### 11.1 Random, UUID, and run-context decisions
+
+Seeded `random`, `random_normal`, `sample`, and `random_split` use
+`xorshift64star/1` with an unsigned 64-bit seed. A seeded call is
+`seeded-stable`; an unseeded random call is `nondeterministic`. `uuid` produces
+canonical lower-case RFC 4122 UUID version 4 strings. `run_id` and
+`run_timestamp` are `run-stable` for one Execution Plan invocation; the latter
+is UTC RFC 3339 with nanosecond precision.
 
 ## 12. Window Profile Version 2
 
@@ -5241,6 +5315,17 @@ than ambiguous dotted strings. Actions `dtcs:with_nested_fields`,
 missing-parent behavior, automatic parent creation, list traversal, field
 order, collisions, nullability, and compatibility impact. Logical schema
 changes SHALL remain distinct from physical storage-schema mutation.
+
+### 13.1 Structural path decisions
+
+A nested path is an ordered array of segments. A field segment is
+`{"kind":"field","name":"name"}`; a list segment is
+`{"kind":"index","index":0}`. Dotted strings are invalid. Negative list
+indexes are invalid in schema actions. `with_nested_fields` defaults to
+`createParents: false`; with it enabled only missing object parents are
+created. Traversing a null, missing, or non-object parent is invalid. Rename
+and drop preserve object field order; collisions are errors unless an action
+declares `collisionPolicy: "replace"`.
 
 ## 14. Error and Value-State Semantics
 

@@ -4,6 +4,7 @@
 
 | Version | Breaking or notable changes |
 |---------|----------------------------|
+| **0.13.0** | **DTCS 3.0 Rich Portable Analytics:** Spec `3.0.0`; canonical portable plan `dtcs.transform-plan/2` with v1 migration; category-aware duplicate registry identifiers; lambda Expressions; advanced string/regex, conversion, complex-value, reshape, set, sampling, temporal, nondeterministic, and window-v2 profile declarations. |
 | **0.12.0** | **Portable Relational Profile (R1–R4):** operator registry; widened actions (entry v2, legacy params still valid); portable plan `dtcs.transform-plan/1`; rich joins/unions/aggs; differential conformance fixtures; window frames; datetime (fixed-offset); complex access ops; SPEC `2.0.0`. See [docs/user/migration-portable-relational.md](docs/user/migration-portable-relational.md). |
 | **0.11.0** | **Lineage:** mapping `operation` defaults to `dtcs:derive`; `flow` enum (`preserved`\|`derived`\|`aggregated`\|`filtered`\|`partitioned`\|`discarded`). **Actions:** SemanticAction `parameters` map required for dataset operators (`fields`, join keys, etc.). **COM:** first-class `guarantees` and `compatibility` fields; nested extension preservation. **Null semantics:** runtime distinguishes null vs missing (`{"$dtcs":"missing"}`) vs invalid (`{"$dtcs":"invalid", reason?}`). **Stdlib:** full Ch 17–19 catalog (dataset ops + `abs`/`min`/`max`/`contains`/`is_null`/`is_missing` + `one_of`/`equals`). |
 | **0.10.1** | Test suite verification (P2/P3): plan behavioral oracles, format equivalence, determinism, `RuntimeInvalid` conformance, binding smoke parity, automated security probe. |
@@ -15,6 +16,23 @@
 | **0.2.0** | Extended validation (metadata, types, expressions, I/O interfaces). |
 
 For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/troubleshooting.md](docs/user/troubleshooting.md).
+
+## 0.13.0
+
+DTCS 3.0 / tools 0.13 release.
+
+### Features
+
+- Canonical `dtcs.transform-plan/2` output with deterministic migration of valid v1 envelopes.
+- 3.0 capability declarations: protocol/profile claims, semantic environments, modes, budgets, and guarantees.
+- Category-aware registry lookup so standard Semantic Actions and Functions may share an identifier such as `dtcs:trim`.
+- Bounded lambda AST nodes and reference-runtime support for `transform`, `filter_values`, `exists`, and `forall`.
+- Reference-runtime support for core advanced string/regex, conversion, complex-value, explode, unpivot, set-operation, and seeded sampling behavior.
+- Rich Portable Analytics profile declarations and initial conformance coverage.
+
+### Compatibility
+
+DTCS 1.0 and 2.0 contracts remain accepted. Valid `dtcs.transform-plan/1` envelopes are accepted and migrated to v2 without changing their envelope semantics. New profile families remain experimental or candidate until their independent-conformance criteria are met.
 
 ## 0.12.0
 

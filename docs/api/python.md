@@ -13,7 +13,7 @@ pip install 'dtcs==0.12.0'
 ```python
 import dtcs
 print(dtcs.__version__)   # package version, e.g. "0.12.0"
-print(dtcs.SPEC_VERSION)  # "2.0.0"
+print(dtcs.SPEC_VERSION)  # "3.0.0"
 ```
 
 ## Errors and validity
@@ -62,7 +62,7 @@ content = urllib.request.urlopen(url).read()
 report = dtcs.parse_and_validate(content)
 assert dtcs.is_valid(report)
 contract = dtcs.parse(content)["contract"]
-assert contract["dtcsVersion"] == "2.0.0"
+assert contract["dtcsVersion"] == "3.0.0"
 ```
 
 ## Analysis and planning

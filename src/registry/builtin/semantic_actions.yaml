@@ -164,3 +164,87 @@ entries:
     status: "standard"
     definition: |
       {"kind":"semanticAction","category":"transformation","targetKind":"lineage","deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+  dtcs:explode:
+    name: "Explode"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"reshape","targetKind":"dataset","parameters":["expr","as","outer","includePosition","maxExpansion"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined","profile":"dtcs:profile/portable-reshape/1"}
+  dtcs:pivot:
+    name: "Pivot"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"reshape","targetKind":"dataset","parameters":["groupBy","pivot","categories","aggregates","maxColumns"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined","profile":"dtcs:profile/portable-reshape/1"}
+  dtcs:unpivot:
+    name: "Unpivot"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"reshape","targetKind":"dataset","parameters":["fields","nameField","valueField"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined","profile":"dtcs:profile/portable-reshape/1"}
+  dtcs:intersect:
+    name: "Intersect"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"set","targetKind":"dataset","parameters":["other","mode","alignment"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined","profile":"dtcs:profile/portable-relational-extended/1"}
+  dtcs:except:
+    name: "Except"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"set","targetKind":"dataset","parameters":["other","mode","alignment"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined","profile":"dtcs:profile/portable-relational-extended/1"}
+  dtcs:sample:
+    name: "Sample"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"sampling","targetKind":"dataset","parameters":["fraction","count","replacement","seed","rowIdentity"],"deterministic":false,"lineageBehavior":"filter","nullBehavior":"defined","profile":"dtcs:profile/portable-relational-extended/1"}
+  dtcs:random_split:
+    name: "Random Split"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"sampling","targetKind":"dataset","parameters":["weights","seed","outputs","rowIdentity"],"deterministic":false,"lineageBehavior":"partition","nullBehavior":"defined","profile":"dtcs:profile/portable-relational-extended/1"}
+  dtcs:repartition:
+    name: "Repartition"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"partitioning","targetKind":"dataset","parameters":["keys"],"deterministic":true,"lineageBehavior":"partition","nullBehavior":"defined","profile":"dtcs:profile/portable-relational-extended/1"}
+  dtcs:coalesce_partitions:
+    name: "Coalesce Partitions"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"partitioning","targetKind":"dataset","parameters":["count"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined","profile":"dtcs:profile/portable-relational-extended/1"}
+  dtcs:with_nested_fields:
+    name: "With Nested Fields"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["assignments","createParents","collisionPolicy"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+  dtcs:rename_nested_fields:
+    name: "Rename Nested Fields"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["mapping","collisionPolicy"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
+  dtcs:drop_nested_fields:
+    name: "Drop Nested Fields"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["paths","missingPolicy"],"deterministic":true,"lineageBehavior":"discard","nullBehavior":"defined"}

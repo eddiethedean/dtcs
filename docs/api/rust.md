@@ -27,7 +27,7 @@ dtcs = "0.12"
 | `reference_portable_manifest` / `validate_capability_accuracy` | Portable capability manifests |
 | `conformance_run` / `conformance_declare` | Ch 23 certification |
 | `resolve_registry` / `default_registry` | Identifier catalog |
-| `SPEC_VERSION` | Spec version string (`"2.0.0"`) |
+| `SPEC_VERSION` | Spec version string (`"3.0.0"`) |
 
 Exact signatures: see docs.rs for the installed crate version.
 
@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contract = parsed.contract.expect("parse produced a contract");
     let report = validate(&contract);
     assert!(!report.has_errors());
-    assert_eq!(dtcs::SPEC_VERSION, "2.0.0");
+    assert_eq!(dtcs::SPEC_VERSION, "3.0.0");
     Ok(())
 }
 ```

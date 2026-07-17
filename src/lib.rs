@@ -110,7 +110,10 @@ pub use plan::{
     equivalent, equivalent as plan_equivalent, export_portable_plan, lower as lower_plan, optimize,
     optimize as optimize_plan, validate as validate_plan, OptimizeOptions, OptimizeResult,
     PlanResult, PortablePlan, RegistryVersions, TransformationPlan, COMPLEX_TYPES_PROFILE,
-    KERNEL_PROFILE, RELATIONAL_PROFILE, TRANSFORM_PLAN_IDENTITY, WINDOW_PROFILE,
+    COMPLEX_VALUES_PROFILE, CONVERSION_PROFILE, KERNEL_PROFILE, LEGACY_TRANSFORM_PLAN_IDENTITY,
+    NONDETERMINISTIC_PROFILE, RELATIONAL_EXTENDED_PROFILE, RELATIONAL_PROFILE, RESHAPE_PROFILE,
+    STATISTICS_PROFILE, STRING_ADVANCED_PROFILE, TEMPORAL_IANA_PROFILE, TRANSFORM_PLAN_IDENTITY,
+    WINDOW_PROFILE,
 };
 pub use registry::{
     default_registry, is_known_action, is_known_function, is_known_operator, is_known_profile,

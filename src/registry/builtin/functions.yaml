@@ -360,3 +360,255 @@ entries:
     status: "standard"
     definition: |
       {"kind":"function","family":"window","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:ltrim:
+    name: "Left Trim"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":2,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:rtrim:
+    name: "Right Trim"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":2,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:trim:
+    name: "Trim Function"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":2,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:normalize_whitespace:
+    name: "Normalize Whitespace Function"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:split:
+    name: "Split"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string"],"returnType":"list<string>","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:join_strings:
+    name: "Join Strings"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["list<string>","string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:pad_left:
+    name: "Pad Left"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string","integer"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:pad_right:
+    name: "Pad Right"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string","integer"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:repeat:
+    name: "Repeat"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string","integer"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:reverse:
+    name: "Reverse"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:position:
+    name: "Position"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:regex_matches:
+    name: "Regex Matches"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:regex_contains:
+    name: "Regex Contains"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:regex_replace:
+    name: "Regex Replace"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":3,"maxArgs":3,"argTypes":["string"],"returnType":"string","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-string-advanced/1"}
+  dtcs:cast:
+    name: "Cast"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":3,"argTypes":["string","integer","decimal","boolean"],"returnType":"sameAsTarget","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-conversion/1"}
+  dtcs:parse_decimal:
+    name: "Parse Decimal"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-conversion/1"}
+  dtcs:parse_boolean:
+    name: "Parse Boolean"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-conversion/1"}
+  dtcs:list:
+    name: "List Constructor"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","list","map","object"],"returnType":"list","returnNullable":false,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:map:
+    name: "Map Constructor"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","list","map","object"],"returnType":"map","returnNullable":false,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:size:
+    name: "Collection Size"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["list","map","object","string"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:list_contains:
+    name: "List Contains"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["list"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:list_concat:
+    name: "List Concat"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["list"],"returnType":"list","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:map_keys:
+    name: "Map Keys"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["map","object"],"returnType":"list<string>","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:map_values:
+    name: "Map Values"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["map","object"],"returnType":"list","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-complex-values/1"}
+  dtcs:transform:
+    name: "Transform Values"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["list"],"returnType":"list","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-complex-values/1","lambdaSupport":true}
+  dtcs:filter_values:
+    name: "Filter Values"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["list"],"returnType":"list","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-complex-values/1","lambdaSupport":true}
+  dtcs:exists:
+    name: "Exists"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["list"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-complex-values/1","lambdaSupport":true}
+  dtcs:forall:
+    name: "For All"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["list"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-complex-values/1","lambdaSupport":true}
+  dtcs:to_timezone:
+    name: "To IANA Timezone"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["datetime","string"],"returnType":"datetime","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-temporal-iana/1","timezoneData":"iana"}
+  dtcs:from_utc:
+    name: "From UTC"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["datetime","string"],"returnType":"datetime","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-temporal-iana/1","timezoneData":"iana"}
+  dtcs:to_utc:
+    name: "To UTC"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["datetime","string"],"returnType":"datetime","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","profile":"dtcs:profile/portable-temporal-iana/1","timezoneData":"iana"}
+  dtcs:random:
+    name: "Random"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":1,"argTypes":["integer"],"returnType":"decimal","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-nondeterministic/1","randomAlgorithm":"xorshift64star/1"}
+  dtcs:random_normal:
+    name: "Normal Random"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":3,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-nondeterministic/1","randomAlgorithm":"xorshift64star/1"}
+  dtcs:uuid:
+    name: "UUID v4"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"string","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-nondeterministic/1","uuidVersion":4}
+  dtcs:run_id:
+    name: "Run Identifier"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"string","returnNullable":false,"deterministic":false,"runStable":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-nondeterministic/1"}
+  dtcs:run_timestamp:
+    name: "Run Timestamp"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"datetime","returnNullable":false,"deterministic":false,"runStable":true,"nullBehavior":"defined","profile":"dtcs:profile/portable-nondeterministic/1"}

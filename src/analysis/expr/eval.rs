@@ -7,7 +7,7 @@ use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, Span, UnaryOp};
 pub fn evaluate(expr: &Expr) -> Option<LiteralValue> {
     match expr {
         Expr::Literal { value, .. } => Some(value.clone()),
-        Expr::FieldRef { .. } | Expr::Call { .. } => None,
+        Expr::FieldRef { .. } | Expr::Call { .. } | Expr::Lambda { .. } => None,
         Expr::Unary { op, expr, .. } => {
             let inner = evaluate(expr)?;
             match op {

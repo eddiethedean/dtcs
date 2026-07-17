@@ -11,6 +11,8 @@ use super::model::CapabilityGap;
 /// Requirements extracted from a transformation plan.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct PlanRequirements {
+    /// Required expression-language features.
+    pub language_features: BTreeSet<String>,
     /// Required logical types.
     pub logical_types: BTreeSet<String>,
     /// Required semantic actions.
@@ -80,6 +82,18 @@ impl PlanRequirements {
             if !supports_type(required, &categories.logical_types) {
                 gaps.push(CapabilityGap {
                     category: "logicalTypes".into(),
+                    required: required.clone(),
+                });
+            }
+        }
+        for required in &self.language_features {
+            if !categories
+                .language_features
+                .iter()
+                .any(|feature| feature == required)
+            {
+                gaps.push(CapabilityGap {
+                    category: "languageFeatures".into(),
                     required: required.clone(),
                 });
             }
@@ -191,6 +205,10 @@ fn collect_expr_requirements(ast: &expr::ast::Expr, req: &mut PlanRequirements) 
             for arg in args {
                 collect_expr_requirements(arg, req);
             }
+        }
+        expr::ast::Expr::Lambda { body, .. } => {
+            req.language_features.insert("lambdaExpressions".into());
+            collect_expr_requirements(body, req);
         }
     }
 }

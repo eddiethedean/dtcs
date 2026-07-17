@@ -307,6 +307,7 @@ impl<'a> Parser<'a> {
                 } else {
                     Ok(Expr::FieldRef {
                         target: name,
+                        scope: None,
                         span: token.span,
                     })
                 }
@@ -408,7 +409,8 @@ fn end_span(expr: &Expr) -> usize {
         | Expr::FieldRef { span, .. }
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
-        | Expr::Call { span, .. } => span.end,
+        | Expr::Call { span, .. }
+        | Expr::Lambda { span, .. } => span.end,
     }
 }
 
@@ -418,7 +420,8 @@ fn expr_span_start(expr: &Expr) -> usize {
         | Expr::FieldRef { span, .. }
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
-        | Expr::Call { span, .. } => span.start,
+        | Expr::Call { span, .. }
+        | Expr::Lambda { span, .. } => span.start,
     }
 }
 
@@ -428,7 +431,8 @@ fn join_span(left: &Expr, right: &Expr, op_span: &Span) -> Span {
         | Expr::FieldRef { span, .. }
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
-        | Expr::Call { span, .. } => span.start,
+        | Expr::Call { span, .. }
+        | Expr::Lambda { span, .. } => span.start,
     };
     Span {
         start,
@@ -442,7 +446,8 @@ fn right_span_end(expr: &Expr) -> usize {
         | Expr::FieldRef { span, .. }
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
-        | Expr::Call { span, .. } => span.end,
+        | Expr::Call { span, .. }
+        | Expr::Lambda { span, .. } => span.end,
     }
 }
 

@@ -199,7 +199,11 @@ fn check_determinism(
         if !function.function.starts_with("dtcs:") {
             continue;
         }
-        let Some(entry) = registry::resolve(registry_doc, &function.function) else {
+        let Some(entry) = registry::resolve_category(
+            registry_doc,
+            &function.function,
+            RegistryCategory::Function,
+        ) else {
             continue;
         };
         if entry.category != RegistryCategory::Function {

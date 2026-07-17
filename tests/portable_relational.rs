@@ -50,6 +50,104 @@ fn registry_exposes_portable_kernel_entries() {
 }
 
 #[test]
+fn registry_exposes_dtcs_3_analytics_profiles_and_entries() {
+    for profile in [
+        dtcs::STRING_ADVANCED_PROFILE,
+        dtcs::CONVERSION_PROFILE,
+        dtcs::COMPLEX_VALUES_PROFILE,
+        dtcs::RESHAPE_PROFILE,
+        dtcs::RELATIONAL_EXTENDED_PROFILE,
+        dtcs::TEMPORAL_IANA_PROFILE,
+        dtcs::NONDETERMINISTIC_PROFILE,
+    ] {
+        assert!(is_known_profile(profile), "missing profile {profile}");
+    }
+    for function in [
+        "dtcs:trim",
+        "dtcs:regex_matches",
+        "dtcs:cast",
+        "dtcs:list",
+        "dtcs:transform",
+    ] {
+        assert!(is_known_function(function), "missing function {function}");
+    }
+    for action in [
+        "dtcs:explode",
+        "dtcs:unpivot",
+        "dtcs:intersect",
+        "dtcs:except",
+        "dtcs:sample",
+    ] {
+        assert!(is_known_action(action), "missing action {action}");
+    }
+}
+
+#[test]
+fn rich_string_and_complex_functions_have_portable_runtime_behavior() {
+    assert_eq!(
+        call_function("dtcs:trim", &[RuntimeValue::String("  DTCS  ".into())]).unwrap(),
+        RuntimeValue::String("DTCS".into())
+    );
+    assert_eq!(
+        call_function(
+            "dtcs:regex_replace",
+            &[
+                RuntimeValue::String("a1b2".into()),
+                RuntimeValue::String("\\d".into()),
+                RuntimeValue::String("_".into())
+            ]
+        )
+        .unwrap(),
+        RuntimeValue::String("a_b_".into())
+    );
+    let list = call_function(
+        "dtcs:list",
+        &[RuntimeValue::Integer(1), RuntimeValue::Integer(2)],
+    )
+    .unwrap();
+    assert_eq!(
+        call_function("dtcs:size", std::slice::from_ref(&list)).unwrap(),
+        RuntimeValue::Integer(2)
+    );
+    assert_eq!(
+        call_function("dtcs:list_contains", &[list, RuntimeValue::Integer(2)]).unwrap(),
+        RuntimeValue::Boolean(true)
+    );
+}
+
+#[test]
+fn structured_lambda_transforms_list_values() {
+    let node = json!({
+        "kind": "call",
+        "callee": "dtcs:transform",
+        "args": [
+            {"kind":"literal","value":{"type":"integer","value":1},"span":{"start":0,"end":1}},
+            {"kind":"lambda","parameters":["element"],"body":{"kind":"fieldRef","name":"element","scope":"lambda","span":{"start":0,"end":7}},"span":{"start":0,"end":7}}
+        ],
+        "span": {"start":0,"end":8}
+    });
+    let _ast = dtcs::from_structured_node(&node).expect("structured lambda parses");
+    let mut row = Row::new();
+    row.insert(
+        "items".into(),
+        RuntimeValue::List(vec![RuntimeValue::Integer(1), RuntimeValue::Integer(2)]),
+    );
+    // Replace the literal with the runtime list to exercise the lambda scope.
+    let node = json!({
+        "kind": "call", "callee": "dtcs:transform",
+        "args": [
+            {"kind":"fieldRef","name":"items","span":{"start":0,"end":5}},
+            {"kind":"lambda","parameters":["element"],"body":{"kind":"fieldRef","name":"element","scope":"lambda","span":{"start":0,"end":7}},"span":{"start":0,"end":7}}
+        ], "span":{"start":0,"end":8}
+    });
+    let ast = dtcs::from_structured_node(&node).expect("structured lambda parses");
+    assert_eq!(
+        dtcs::runtime::expr::evaluate_expr_on_row(&ast, &row).expect("lambda evaluates"),
+        RuntimeValue::List(vec![RuntimeValue::Integer(1), RuntimeValue::Integer(2)])
+    );
+}
+
+#[test]
 fn dataset_action_classification_includes_new_ops() {
     assert!(is_dataset_action("dtcs:with_fields"));
     assert!(is_dataset_action("dtcs:distinct"));
@@ -169,11 +267,34 @@ fn portable_plan_export_and_fingerprint() {
     let portable = export_portable_plan(&plan, KERNEL_PROFILE).expect("portable");
     assert_eq!(portable.plan_identity, TRANSFORM_PLAN_IDENTITY);
     assert_eq!(portable.profile, KERNEL_PROFILE);
-    assert_eq!(portable.registry_versions.actions.as_deref(), Some("2.0.0"));
+    assert_eq!(portable.registry_versions.actions.as_deref(), Some("3.0.0"));
     let fp1 = portable.fingerprint().unwrap();
     let fp2 = portable.fingerprint().unwrap();
     assert_eq!(fp1, fp2);
     assert_eq!(fp1.len(), 64);
+}
+
+#[test]
+fn portable_plan_v1_migrates_to_v2_without_losing_envelope_data() {
+    let source = serde_json::json!({
+        "planIdentity": "dtcs.transform-plan/1",
+        "profile": "dtcs:profile/portable-relational-kernel/1",
+        "specificationVersion": "2.0.0",
+        "transformation": "legacy",
+        "actions": [],
+        "rules": []
+    });
+    let migrated = dtcs::PortablePlan::from_json_migrating(
+        &serde_json::to_vec(&source).expect("serialize v1 plan"),
+    )
+    .expect("migrate v1 plan");
+    assert_eq!(migrated.plan_identity, dtcs::TRANSFORM_PLAN_IDENTITY);
+    assert_eq!(migrated.profile, dtcs::KERNEL_PROFILE);
+    assert_eq!(migrated.specification_version, dtcs::SPEC_VERSION);
+    assert_eq!(
+        migrated.requirements.get("migratedFrom"),
+        Some(&serde_json::Value::String("dtcs.transform-plan/1".into()))
+    );
 }
 
 #[test]

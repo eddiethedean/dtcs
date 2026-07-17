@@ -51,6 +51,15 @@ pub(crate) fn simplify_expression(expr: &Expr) -> Expr {
                 right: Box::new(right),
             }
         }
+        Expr::Lambda {
+            parameters,
+            body,
+            span,
+        } => Expr::Lambda {
+            parameters: parameters.clone(),
+            body: Box::new(simplify_expression(body)),
+            span: span.clone(),
+        },
         other => other.clone(),
     }
 }
@@ -189,6 +198,7 @@ mod tests {
             span: Span { start: 0, end: 3 },
             left: Box::new(Expr::FieldRef {
                 target: "in.value".into(),
+                scope: None,
                 span: Span { start: 0, end: 8 },
             }),
             right: Box::new(Expr::Literal {

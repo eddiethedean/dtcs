@@ -18,7 +18,7 @@ npm install @eddiethedean/dtcs-wasm@0.12.0
 | `parseDocument(content, format)` | `Uint8Array`/`string`, `"yaml"`\|`"json"` | `{ contract, report }` (Map-like in some hosts) |
 | `validateContract(contract)` | plain COM object | `{ diagnostics }` — check severities; does not throw on invalid |
 | `conformanceDeclare(profile?)` | optional profile id | capability declaration object |
-| `specVersion()` | — | `"2.0.0"` |
+| `specVersion()` | — | `"3.0.0"` |
 
 **Not included in WASM builds** (size): full `conformanceRun`, plan/optimize/compile/run, `export-portable`. Use the Rust CLI or Python package for certification and execution.
 

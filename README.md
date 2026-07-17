@@ -8,7 +8,7 @@
 
 DTCS is a **draft** standard and toolkit for writing **vendor-neutral data transformation contracts** in YAML/JSON — the *semantics* of transforms, not a Spark, Polars, or SQL engine.
 
-**Status:** Spec `2.0.0` (draft) · Tools `0.12.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
+**Status:** Spec `3.0.0` (draft) · Tools `0.13.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
 
 [Documentation](https://dtcs.readthedocs.io/) · [Getting started](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
@@ -19,8 +19,8 @@ DTCS is a **draft** standard and toolkit for writing **vendor-neutral data trans
 ```bash
 pip install dtcs
 dtcs version
-# → dtcs 0.12.0
-# → spec 2.0.0
+# → dtcs 0.13.0
+# → spec 3.0.0
 
 curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml \
   -o contract.dtcs.yaml
@@ -29,22 +29,22 @@ dtcs validate contract.dtcs.yaml
 # → exit 0
 ```
 
-Or paste the same file from [`examples/minimal.dtcs.yaml`](examples/minimal.dtcs.yaml). Prefer `dtcsVersion: "2.0.0"`; `"1.0.0"` remains accepted for compatibility.
+Or paste the same file from [`examples/minimal.dtcs.yaml`](examples/minimal.dtcs.yaml). Prefer `dtcsVersion: "3.0.0"`; prior versions remain accepted for compatibility.
 
 **Bindings:** Python (`pip install dtcs`), WASM (`@eddiethedean/dtcs-wasm`), Node (`@eddiethedean/dtcs`). See [docs/api/](docs/api/).
 
 ## What this repository contains
 
-- **[SPEC.md](SPEC.md)** — normative DTCS 2.0 draft (26 chapters + Appendix A, including Portable Relational)
+- **[SPEC.md](SPEC.md)** — normative DTCS 3.0 draft (27 chapters + Appendix A, including Rich Portable Analytics)
 - **Reference tools** — parse, validate, analyze, plan, optimize, match, compile, and run contracts (Rust CLI + Python; limited WASM/Node surface)
 
 | | |
 |---|---|
-| **Spec status** | Draft (`2.0.0`) |
-| **Reference tools** | `0.12.0` (alpha) — validator through reference runtime, portable relational profiles, and conformance |
-| **Document `dtcsVersion`** | `"2.0.0"` preferred; `"1.0.0"` / `"1.0.0-draft"` still accepted |
+| **Spec status** | Draft (`3.0.0`) |
+| **Reference tools** | `0.13.0` (alpha) — validator through reference runtime, portable profiles, and conformance |
+| **Document `dtcsVersion`** | `"3.0.0"` preferred; prior supported versions remain accepted |
 
-Coverage tables labeled “Covered” or “Complete” mean the **reference implementation exercises that draft SPEC area**, not that DTCS 2.0 is finalized or production-certified.
+Coverage tables labeled “Covered” or “Complete” mean the **reference implementation exercises that draft SPEC area**, not that DTCS 3.0 is finalized or production-certified.
 
 ## Next steps (after `valid`)
 
@@ -75,7 +75,7 @@ Requires Rust + [maturin](https://www.maturin.rs/). See [CONTRIBUTING.md](CONTRI
 
 | Path | Purpose |
 |------|---------|
-| [SPEC.md](SPEC.md) | Full DTCS 2.0.0 draft specification |
+| [SPEC.md](SPEC.md) | Full DTCS 3.0.0 draft specification |
 | [docs/user/](docs/user/) | User guides |
 | [docs/adoption/](docs/adoption/) | Evaluator / security materials |
 | [docs/api/](docs/api/) | Python, Rust, WASM, Node API docs |

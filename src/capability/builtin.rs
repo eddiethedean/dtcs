@@ -1,5 +1,7 @@
 //! Embedded `dtcs:reference` capability profile.
 
+use std::collections::BTreeMap;
+
 use crate::model::{COMPOSITE_TYPES, PRIMITIVE_TYPES};
 use crate::registry::default_registry;
 
@@ -54,6 +56,7 @@ pub const REFERENCE_LANGUAGE_FEATURES: &[&str] = &[
     "nullMissingInvalidDistinction",
     "collectionOperators",
     "temporalLiterals",
+    "lambdaExpressions",
 ];
 
 /// Supported optimization capabilities.
@@ -110,8 +113,26 @@ pub fn reference_profile() -> EngineCapabilityDeclaration {
     EngineCapabilityDeclaration {
         engine_id: REFERENCE_ENGINE_ID.into(),
         engine_version: env!("CARGO_PKG_VERSION").into(),
-        capability_version: "1.0.0".into(),
+        capability_version: "2.0.0".into(),
         categories: CapabilityCategories {
+            plan_protocols: vec![
+                crate::plan::LEGACY_TRANSFORM_PLAN_IDENTITY.into(),
+                crate::plan::TRANSFORM_PLAN_IDENTITY.into(),
+            ],
+            profiles: vec![
+                crate::plan::KERNEL_PROFILE.into(),
+                crate::plan::RELATIONAL_PROFILE.into(),
+                crate::plan::WINDOW_PROFILE.into(),
+                crate::plan::COMPLEX_VALUES_PROFILE.into(),
+                crate::plan::STRING_ADVANCED_PROFILE.into(),
+                crate::plan::CONVERSION_PROFILE.into(),
+                crate::plan::STATISTICS_PROFILE.into(),
+                crate::plan::RESHAPE_PROFILE.into(),
+                crate::plan::RELATIONAL_EXTENDED_PROFILE.into(),
+                crate::plan::TEMPORAL_IANA_PROFILE.into(),
+                crate::plan::NONDETERMINISTIC_PROFILE.into(),
+            ],
+            partial_profiles: BTreeMap::new(),
             language_features: REFERENCE_LANGUAGE_FEATURES
                 .iter()
                 .map(|f| (*f).to_string())
@@ -133,6 +154,50 @@ pub fn reference_profile() -> EngineCapabilityDeclaration {
                 .map(|f| (*f).to_string())
                 .collect(),
             extension_support: vec!["vendorNamespacedPreserve".into()],
+            semantic_versions: BTreeMap::from([
+                ("regexGrammar".into(), "dtcs-regex/1".into()),
+                ("formatGrammar".into(), "dtcs-format/1".into()),
+                ("unicode".into(), "unicode-16.0".into()),
+                ("timezoneData".into(), "iana-system".into()),
+                ("randomAlgorithm".into(), "xorshift64star/1".into()),
+            ]),
+            resource_limits: BTreeMap::from([
+                (
+                    "planBytes".into(),
+                    crate::plan::MAX_PORTABLE_PLAN_BYTES as u64,
+                ),
+                (
+                    "planDepth".into(),
+                    crate::plan::MAX_PORTABLE_PLAN_DEPTH as u64,
+                ),
+                (
+                    "planNodes".into(),
+                    crate::plan::MAX_PORTABLE_PLAN_NODES as u64,
+                ),
+                ("collectionElements".into(), 1_000_000),
+                ("generatedRows".into(), 1_000_000),
+                ("regexInputBytes".into(), 1_048_576),
+            ]),
+            semantic_modes: BTreeMap::from([
+                (
+                    "error".into(),
+                    vec!["fail".into(), "invalid".into(), "null".into()],
+                ),
+                (
+                    "determinism".into(),
+                    vec![
+                        "deterministic".into(),
+                        "run-stable".into(),
+                        "seeded-stable".into(),
+                        "nondeterministic".into(),
+                    ],
+                ),
+            ]),
+            guarantees: vec![
+                "canonicalPlanV2".into(),
+                "stableOrderingWhenDeclared".into(),
+                "partitionIndependentSeededRandom".into(),
+            ],
         },
     }
 }

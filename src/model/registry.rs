@@ -51,6 +51,8 @@ pub enum RegistryEntryStatus {
     Draft,
     /// Published for experimental use.
     Experimental,
+    /// Candidate entry awaiting independent conformance evidence.
+    Candidate,
     /// Normative standard entry.
     Standard,
     /// Still valid but discouraged.
@@ -66,6 +68,7 @@ impl RegistryEntryStatus {
         match self {
             Self::Draft => "draft",
             Self::Experimental => "experimental",
+            Self::Candidate => "candidate",
             Self::Standard => "standard",
             Self::Deprecated => "deprecated",
             Self::Obsolete => "obsolete",
@@ -195,6 +198,14 @@ impl RegistryDocument {
         self.entries.get(id)
     }
 
+    /// Returns an entry by identifier and registry category.
+    #[must_use]
+    pub fn get_category(&self, id: &str, category: RegistryCategory) -> Option<&RegistryEntry> {
+        self.entries
+            .values()
+            .find(|entry| entry.id == id && entry.category == category)
+    }
+
     /// Inserts or replaces an entry, keyed by `entry.id`.
     pub fn insert(&mut self, entry: RegistryEntry) {
         self.entries.insert(entry.id.clone(), entry);
@@ -243,6 +254,14 @@ impl RegistryDocument {
     pub(crate) fn merge_trusted(&mut self, other: &RegistryDocument) {
         for (id, entry) in &other.entries {
             if id.starts_with("dtcs:") && self.entries.contains_key(id) {
+                if self
+                    .entries
+                    .get(id)
+                    .is_some_and(|existing| existing.category != entry.category)
+                {
+                    self.entries
+                        .insert(format!("{}:{id}", entry.category.as_str()), entry.clone());
+                }
                 continue;
             }
             self.entries.insert(id.clone(), entry.clone());

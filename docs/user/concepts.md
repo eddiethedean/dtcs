@@ -6,7 +6,7 @@ Two-page mental model for DTCS. Normative detail lives in [SPEC.md](../SPEC.md).
 
 A **Transformation Contract** is a YAML/JSON document that declares:
 
-1. **Identity** — `id`, `name`, `version`, and `dtcsVersion` (prefer `"2.0.0"`; `"1.0.0"` / `"1.0.0-draft"` still accepted)
+1. **Identity** — `id`, `name`, `version`, and `dtcsVersion` (prefer `"3.0.0"`; prior supported versions remain accepted)
 2. **Interfaces** — named `inputs` / `outputs` with schemas
 3. **Semantics** — `semanticActions`, optional `functions`, `expressions`, and `rules`
 4. **Lineage** — how each output relates to inputs (`operation`, `flow`)
@@ -51,7 +51,7 @@ At runtime, JSON `null`, missing fields, and invalid values are distinct. Encode
 
 ## Maturity
 
-**Versions:** Spec `2.0.0` (draft) · Tools `0.12.0` (alpha). Document `dtcsVersion` should be `"2.0.0"`; `"1.0.0"` and `"1.0.0-draft"` remain accepted. Coverage tables mean the **reference implementation exercises** draft chapters — not that DTCS 2.0 is finalized or production-certified. See [versioning.md](versioning.md).
+**Versions:** Spec `3.0.0` (draft) · Tools `0.13.0` (alpha). Document `dtcsVersion` should be `"3.0.0"`; prior supported versions remain accepted. Coverage tables mean the **reference implementation exercises** draft chapters — not that DTCS 3.0 is finalized or production-certified. See [versioning.md](versioning.md).
 
 ## Next
 

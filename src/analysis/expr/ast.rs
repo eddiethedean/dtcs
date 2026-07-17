@@ -4,7 +4,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Span {
     pub start: usize,
@@ -19,7 +19,10 @@ pub enum Expr {
         span: Span,
     },
     FieldRef {
+        #[serde(alias = "name")]
         target: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        scope: Option<String>,
         span: Span,
     },
     Unary {
@@ -36,6 +39,12 @@ pub enum Expr {
     Call {
         callee: String,
         args: Vec<Expr>,
+        span: Span,
+    },
+    Lambda {
+        parameters: Vec<String>,
+        body: Box<Expr>,
+        #[serde(default)]
         span: Span,
     },
 }

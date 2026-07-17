@@ -32,6 +32,16 @@ pub fn resolve<'a>(registry: &'a RegistryDocument, id: &str) -> Option<&'a Regis
     registry.get(id)
 }
 
+/// Resolve an identifier in a particular registry category.
+#[must_use]
+pub fn resolve_category<'a>(
+    registry: &'a RegistryDocument,
+    id: &str,
+    category: RegistryCategory,
+) -> Option<&'a RegistryEntry> {
+    registry.get_category(id, category)
+}
+
 /// Resolve an identifier in the default (builtin) registry.
 #[must_use]
 pub fn resolve_default(id: &str) -> Option<&'static RegistryEntry> {
@@ -59,31 +69,31 @@ pub fn load_uri_merged(uri: &str) -> Result<RegistryDocument, DiagnosticReport> 
 /// Returns `true` when `action` is a recognized semantic action identifier.
 #[must_use]
 pub fn is_known_action(action: &str) -> bool {
-    resolve_default(action).is_some_and(|entry| entry.category == RegistryCategory::SemanticAction)
+    resolve_category(default_registry(), action, RegistryCategory::SemanticAction).is_some()
 }
 
 /// Returns `true` when `rule` is a recognized rule identifier.
 #[must_use]
 pub fn is_known_rule(rule: &str) -> bool {
-    resolve_default(rule).is_some_and(|entry| entry.category == RegistryCategory::Rule)
+    resolve_category(default_registry(), rule, RegistryCategory::Rule).is_some()
 }
 
 /// Returns `true` when `function` is a recognized function identifier.
 #[must_use]
 pub fn is_known_function(function: &str) -> bool {
-    resolve_default(function).is_some_and(|entry| entry.category == RegistryCategory::Function)
+    resolve_category(default_registry(), function, RegistryCategory::Function).is_some()
 }
 
 /// Returns `true` when `operator` is a recognized operator identifier.
 #[must_use]
 pub fn is_known_operator(operator: &str) -> bool {
-    resolve_default(operator).is_some_and(|entry| entry.category == RegistryCategory::Operator)
+    resolve_category(default_registry(), operator, RegistryCategory::Operator).is_some()
 }
 
 /// Returns `true` when `profile` is a recognized portable profile identifier.
 #[must_use]
 pub fn is_known_profile(profile: &str) -> bool {
-    resolve_default(profile).is_some_and(|entry| entry.category == RegistryCategory::Profile)
+    resolve_category(default_registry(), profile, RegistryCategory::Profile).is_some()
 }
 
 /// List entries from the default registry, optionally merged with a file.

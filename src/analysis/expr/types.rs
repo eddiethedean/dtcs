@@ -88,6 +88,11 @@ fn infer_expr(
         Expr::Call { callee, args, .. } => {
             infer_call_type(callee, args, index, functions, registry_doc)
         }
+        Expr::Lambda { .. } => Err((
+            codes::INVALID_TYPE,
+            DiagnosticCategory::Type,
+            "lambda expressions are valid only as arguments to lambda-enabled functions".into(),
+        )),
     }
 }
 
@@ -414,20 +419,14 @@ fn infer_registry_call_type(
     functions: &HashMap<&str, &Function>,
     registry_doc: &RegistryDocument,
 ) -> Result<InferredExprType, (&'static str, DiagnosticCategory, String)> {
-    let Some(entry) = registry::resolve(registry_doc, name) else {
+    let Some(entry) = registry::resolve_category(registry_doc, name, RegistryCategory::Function)
+    else {
         return Err((
             codes::UNKNOWN_REGISTRY_ENTRY,
             DiagnosticCategory::Reference,
             format!("unresolved registry function '{name}'"),
         ));
     };
-    if entry.category != RegistryCategory::Function {
-        return Err((
-            codes::INVALID_FUNCTION,
-            DiagnosticCategory::Type,
-            format!("'{name}' is not a function identifier"),
-        ));
-    }
     let Some(definition) = entry.definition.as_deref() else {
         return Err((
             codes::INVALID_FUNCTION,
@@ -604,7 +603,9 @@ fn function_return_nullable(function: &Function, registry_doc: &RegistryDocument
     if !function.function.starts_with("dtcs:") {
         return false;
     }
-    let Some(entry) = registry::resolve(registry_doc, &function.function) else {
+    let Some(entry) =
+        registry::resolve_category(registry_doc, &function.function, RegistryCategory::Function)
+    else {
         return false;
     };
     let Some(definition) = entry.definition.as_deref() else {

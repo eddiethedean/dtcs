@@ -134,5 +134,6 @@ fn collect_field_refs_inner(expr: &ast::Expr, out: &mut Vec<String>) {
                 collect_field_refs_inner(arg, out);
             }
         }
+        ast::Expr::Lambda { body, .. } => collect_field_refs_inner(body, out),
     }
 }

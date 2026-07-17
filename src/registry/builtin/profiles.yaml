@@ -1,6 +1,6 @@
 id: "dtcs:stdlib.profiles"
-version: "1.0.0"
-governingSpecification: "2.0.0"
+version: "2.0.0"
+governingSpecification: "3.0.0"
 publicationStatus: "standard"
 entries:
   dtcs:profile/portable-relational-kernel/1:
@@ -31,3 +31,80 @@ entries:
     status: "standard"
     definition: |
       {"kind":"profile","family":"portable-complex-types","extends":"dtcs:profile/portable-relational-kernel/1","requiredTypes":["list","map","object"],"typeAliases":{"array":"list","struct":"object"},"requiredOperators":["dtcs:field","dtcs:index","dtcs:element_at"],"unsupported":["explode","unnest","map_entries"],"planProfile":"dtcs.transform-plan/1"}
+  dtcs:profile/portable-relational-kernel/2:
+    name: "Portable Relational Kernel v2"
+    category: "profile"
+    version: "2.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"profile","family":"portable-relational-kernel","supersedes":"dtcs:profile/portable-relational-kernel/1","planProfile":"dtcs.transform-plan/2","requiredActions":["dtcs:project","dtcs:filter","dtcs:with_fields","dtcs:rename_fields","dtcs:drop_fields"]}
+  dtcs:profile/portable-relational/2:
+    name: "Portable Relational v2"
+    category: "profile"
+    version: "2.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"profile","family":"portable-relational","extends":"dtcs:profile/portable-relational-kernel/2","supersedes":"dtcs:profile/portable-relational/1","planProfile":"dtcs.transform-plan/2"}
+  dtcs:profile/portable-string-advanced/1:
+    name: "Portable Advanced String"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-string-advanced","planProfile":"dtcs.transform-plan/2","regexGrammar":"dtcs-regex/1","unicodeVersion":"unicode-16.0"}
+  dtcs:profile/portable-conversion/1:
+    name: "Portable Conversion"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-conversion","planProfile":"dtcs.transform-plan/2","formatGrammar":"dtcs-format/1"}
+  dtcs:profile/portable-statistics/1:
+    name: "Portable Statistics"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-statistics","planProfile":"dtcs.transform-plan/2"}
+  dtcs:profile/portable-complex-values/1:
+    name: "Portable Complex Values"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-complex-values","extends":"dtcs:profile/portable-complex-types/1","planProfile":"dtcs.transform-plan/2","lambdaSupport":true}
+  dtcs:profile/portable-reshape/1:
+    name: "Portable Reshape"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-reshape","planProfile":"dtcs.transform-plan/2","maxExpansionRequired":true}
+  dtcs:profile/portable-relational-extended/1:
+    name: "Portable Extended Relational"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-relational-extended","planProfile":"dtcs.transform-plan/2"}
+  dtcs:profile/portable-temporal-iana/1:
+    name: "Portable IANA Temporal"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-temporal-iana","planProfile":"dtcs.transform-plan/2","timezoneDataRequired":true}
+  dtcs:profile/portable-nondeterministic/1:
+    name: "Portable Controlled Nondeterminism"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-nondeterministic","planProfile":"dtcs.transform-plan/2","randomAlgorithmRequired":true}
+  dtcs:profile/portable-window/2:
+    name: "Portable Window v2"
+    category: "profile"
+    version: "2.0.0"
+    status: "candidate"
+    definition: |
+      {"kind":"profile","family":"portable-window","extends":"dtcs:profile/portable-relational/2","supersedes":"dtcs:profile/portable-window/1","planProfile":"dtcs.transform-plan/2"}

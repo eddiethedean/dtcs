@@ -2,7 +2,7 @@
 
 Vendor-neutral **data transformation contracts** in YAML/JSON — the *semantics* of transforms, not a Spark, Polars, or SQL engine.
 
-**Status:** Spec `2.0.0` (draft) · Tools `0.12.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
+**Status:** Spec `3.0.0` (draft) · Tools `0.13.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
 
 ## Try it
 
@@ -10,7 +10,7 @@ Vendor-neutral **data transformation contracts** in YAML/JSON — the *semantics
 pip install 'dtcs==0.12.0'
 dtcs version
 # → dtcs 0.12.0
-# → spec 2.0.0
+# → spec 3.0.0
 ```
 
 Then: [Getting started](user/getting-started.md) (validate in minutes) · [Adoption](adoption/overview.md) · [Versioning](user/versioning.md) · [SPEC](SPEC.md)

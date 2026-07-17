@@ -31,7 +31,7 @@ fn dtcs_bin() -> Command {
 
 #[test]
 fn spec_version_is_set() {
-    assert_eq!(SPEC_VERSION, "2.0.0");
+    assert_eq!(SPEC_VERSION, "3.0.0");
 }
 
 #[test]

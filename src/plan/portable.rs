@@ -1,4 +1,4 @@
-//! Portable Transformation Plan serialization (`dtcs.transform-plan/1`).
+//! Portable Transformation Plan serialization (`dtcs.transform-plan/2`).
 
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
@@ -8,19 +8,39 @@ use sha2::{Digest, Sha256};
 use super::model::TransformationPlan;
 
 /// Canonical portable plan serialization identity.
-pub const TRANSFORM_PLAN_IDENTITY: &str = "dtcs.transform-plan/1";
+pub const TRANSFORM_PLAN_IDENTITY: &str = "dtcs.transform-plan/2";
+
+/// Legacy DTCS 2.0 portable plan identity accepted for migration.
+pub const LEGACY_TRANSFORM_PLAN_IDENTITY: &str = "dtcs.transform-plan/1";
 
 /// Default portable relational kernel profile.
-pub const KERNEL_PROFILE: &str = "dtcs:profile/portable-relational-kernel/1";
+pub const KERNEL_PROFILE: &str = "dtcs:profile/portable-relational-kernel/2";
 
 /// Full portable relational profile.
-pub const RELATIONAL_PROFILE: &str = "dtcs:profile/portable-relational/1";
+pub const RELATIONAL_PROFILE: &str = "dtcs:profile/portable-relational/2";
 
 /// Portable window profile.
-pub const WINDOW_PROFILE: &str = "dtcs:profile/portable-window/1";
+pub const WINDOW_PROFILE: &str = "dtcs:profile/portable-window/2";
 
 /// Portable complex-types profile.
 pub const COMPLEX_TYPES_PROFILE: &str = "dtcs:profile/portable-complex-types/1";
+
+/// Rich complex-value profile.
+pub const COMPLEX_VALUES_PROFILE: &str = "dtcs:profile/portable-complex-values/1";
+/// Advanced string and regex profile.
+pub const STRING_ADVANCED_PROFILE: &str = "dtcs:profile/portable-string-advanced/1";
+/// Conversion and parsing profile.
+pub const CONVERSION_PROFILE: &str = "dtcs:profile/portable-conversion/1";
+/// Statistical aggregate profile.
+pub const STATISTICS_PROFILE: &str = "dtcs:profile/portable-statistics/1";
+/// Generator and reshape profile.
+pub const RESHAPE_PROFILE: &str = "dtcs:profile/portable-reshape/1";
+/// Extended relational profile.
+pub const RELATIONAL_EXTENDED_PROFILE: &str = "dtcs:profile/portable-relational-extended/1";
+/// IANA temporal profile.
+pub const TEMPORAL_IANA_PROFILE: &str = "dtcs:profile/portable-temporal-iana/1";
+/// Controlled nondeterminism profile.
+pub const NONDETERMINISTIC_PROFILE: &str = "dtcs:profile/portable-nondeterministic/1";
 
 /// Default security budgets for portable plans (Chapter 13 §12.1).
 pub const MAX_PORTABLE_PLAN_BYTES: usize = 8 * 1024 * 1024;
@@ -52,19 +72,19 @@ impl RegistryVersions {
     #[must_use]
     pub fn builtin() -> Self {
         Self {
-            actions: Some("2.0.0".into()),
-            functions: Some("2.0.0".into()),
+            actions: Some("3.0.0".into()),
+            functions: Some("3.0.0".into()),
             operators: Some("1.0.0".into()),
             types: Some("1.0.0".into()),
         }
     }
 }
 
-/// Canonical portable plan envelope (`dtcs.transform-plan/1`).
+/// Canonical portable plan envelope (`dtcs.transform-plan/2`).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PortablePlan {
-    /// Serialization identity (always `dtcs.transform-plan/1` when canonical).
+    /// Serialization identity (always `dtcs.transform-plan/2` when canonical).
     #[serde(default = "default_plan_identity")]
     pub plan_identity: String,
     /// Portable profile identifier.
@@ -107,6 +127,34 @@ fn default_plan_identity() -> String {
 }
 
 impl PortablePlan {
+    /// Parse and migrate a portable plan document to the canonical v2 envelope.
+    pub fn from_json_migrating(content: &[u8]) -> Result<Self, String> {
+        if content.len() > MAX_PORTABLE_PLAN_BYTES {
+            return Err(format!(
+                "portable plan exceeds byte budget ({} > {MAX_PORTABLE_PLAN_BYTES})",
+                content.len()
+            ));
+        }
+        let mut plan: Self = serde_json::from_slice(content)
+            .map_err(|error| format!("invalid portable plan JSON: {error}"))?;
+        match plan.plan_identity.as_str() {
+            TRANSFORM_PLAN_IDENTITY => {}
+            LEGACY_TRANSFORM_PLAN_IDENTITY => {
+                plan.plan_identity = TRANSFORM_PLAN_IDENTITY.into();
+                plan.profile = migrate_profile_identifier(&plan.profile).into();
+                plan.specification_version = crate::SPEC_VERSION.into();
+                plan.registry_versions = RegistryVersions::builtin();
+                plan.requirements.insert(
+                    "migratedFrom".into(),
+                    Value::String(LEGACY_TRANSFORM_PLAN_IDENTITY.into()),
+                );
+            }
+            other => return Err(format!("unsupported plan identity '{other}'")),
+        }
+        plan.validate_budgets()?;
+        Ok(plan)
+    }
+
     /// Export an internal COM plan to the portable envelope.
     #[must_use]
     pub fn from_transformation_plan(plan: &TransformationPlan, profile: &str) -> Self {
@@ -217,6 +265,15 @@ impl PortablePlan {
             return Err("portable plan rejects executable or host-language objects".into());
         }
         Ok(())
+    }
+}
+
+fn migrate_profile_identifier(profile: &str) -> &str {
+    match profile {
+        "dtcs:profile/portable-relational-kernel/1" => KERNEL_PROFILE,
+        "dtcs:profile/portable-relational/1" => RELATIONAL_PROFILE,
+        "dtcs:profile/portable-window/1" => WINDOW_PROFILE,
+        other => other,
     }
 }
 

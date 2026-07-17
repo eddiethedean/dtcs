@@ -20,7 +20,7 @@ The Node package depends on the WASM package; install both when developing from 
 | `validateContract(contract)` | Validate COM object → diagnostics report |
 | `conformanceDeclare(profile?)` | Capability declaration |
 | `conformanceDeclareAll` | Alias / helper in some builds — prefer `conformanceDeclare` in new code |
-| `specVersion` / `SPEC_VERSION` | Spec string `"2.0.0"` (naming differs by export style; both may exist) |
+| `specVersion` / `SPEC_VERSION` | Spec string `"3.0.0"` (naming differs by export style; both may exist) |
 
 There is **no** full offline `conformanceRun`, reference runtime, or `export-portable` in the npm package. Use `pip install dtcs` or the Rust `dtcs` CLI for those.
 

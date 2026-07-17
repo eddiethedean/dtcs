@@ -115,6 +115,13 @@ pub fn is_dataset_action(action_id: &str) -> bool {
             | "dtcs:limit"
             | "dtcs:partition"
             | "dtcs:window"
+            | "dtcs:explode"
+            | "dtcs:unpivot"
+            | "dtcs:intersect"
+            | "dtcs:except"
+            | "dtcs:sample"
+            | "dtcs:repartition"
+            | "dtcs:coalesce_partitions"
     )
 }
 
@@ -154,6 +161,12 @@ pub fn apply_dataset_action(
             Ok(())
         }
         "dtcs:window" => apply_window(target, parameters, workspaces),
+        "dtcs:explode" => apply_explode(target, parameters, workspaces),
+        "dtcs:unpivot" => apply_unpivot(target, parameters, workspaces),
+        "dtcs:intersect" => apply_set_operation(target, parameters, workspaces, true),
+        "dtcs:except" => apply_set_operation(target, parameters, workspaces, false),
+        "dtcs:repartition" | "dtcs:coalesce_partitions" => Ok(()),
+        "dtcs:sample" => apply_sample(target, parameters, workspaces),
         other => Err(format!("unsupported dataset semantic action '{other}'")),
     }
 }
@@ -1524,6 +1537,188 @@ fn keys_equal(a: &RuntimeValue, b: &RuntimeValue, null_safe: bool) -> bool {
         return false;
     }
     a == b
+}
+
+fn apply_explode(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let field = parameters
+        .get("expr")
+        .and_then(Value::as_str)
+        .ok_or("dtcs:explode requires string parameter 'expr'")?;
+    let output_names = param_string_list(parameters, "as")?;
+    if output_names.is_empty() || output_names.len() > 2 {
+        return Err("dtcs:explode parameter 'as' must contain one or two output names".into());
+    }
+    let outer = parameters
+        .get("outer")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let include_position = parameters
+        .get("includePosition")
+        .and_then(Value::as_bool)
+        .unwrap_or(output_names.len() == 2);
+    let max_expansion = parameters
+        .get("maxExpansion")
+        .and_then(Value::as_u64)
+        .unwrap_or(1_000_000) as usize;
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut out = Vec::new();
+    for row in dataset {
+        let value = lookup_field(&row, field);
+        let items: Vec<RuntimeValue> = match value {
+            FieldLookup::Present(RuntimeValue::List(items)) => items,
+            FieldLookup::Present(RuntimeValue::Map(map)) => map
+                .into_iter()
+                .map(|(key, value)| RuntimeValue::List(vec![RuntimeValue::String(key), value]))
+                .collect(),
+            FieldLookup::Present(
+                RuntimeValue::Null | RuntimeValue::Missing(_) | RuntimeValue::Invalid(_),
+            )
+            | FieldLookup::Missing
+                if outer =>
+            {
+                vec![RuntimeValue::Null]
+            }
+            FieldLookup::Present(
+                RuntimeValue::Null | RuntimeValue::Missing(_) | RuntimeValue::Invalid(_),
+            )
+            | FieldLookup::Missing => Vec::new(),
+            FieldLookup::Present(other) => {
+                return Err(format!("dtcs:explode requires list or map, got {other:?}"))
+            }
+        };
+        if out.len().saturating_add(items.len()) > max_expansion {
+            return Err("dtcs:explode exceeds maxExpansion budget".into());
+        }
+        for (position, item) in items.into_iter().enumerate() {
+            let mut next = row.clone();
+            next.insert(output_names[0].clone(), item);
+            if include_position {
+                let name = output_names
+                    .get(1)
+                    .cloned()
+                    .unwrap_or_else(|| "position".into());
+                next.insert(name, RuntimeValue::Integer(position as i64));
+            }
+            out.push(next);
+        }
+    }
+    workspaces.insert(target.into(), out);
+    Ok(())
+}
+
+fn apply_unpivot(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let fields = param_string_list(parameters, "fields")?;
+    let name_field = param_string(parameters, "nameField")?;
+    let value_field = param_string(parameters, "valueField")?;
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut out = Vec::new();
+    for row in dataset {
+        for field in &fields {
+            let mut next = row.clone();
+            let value = next.remove(field).unwrap_or_else(RuntimeValue::missing);
+            for other in &fields {
+                next.remove(other);
+            }
+            next.insert(name_field.clone(), RuntimeValue::String(field.clone()));
+            next.insert(value_field.clone(), value);
+            out.push(next);
+        }
+    }
+    workspaces.insert(target.into(), out);
+    Ok(())
+}
+
+fn apply_set_operation(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+    intersect: bool,
+) -> Result<(), String> {
+    let other = param_string(parameters, "other")?;
+    let mode = parameters
+        .get("mode")
+        .and_then(Value::as_str)
+        .unwrap_or("distinct");
+    let left = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let right = workspaces
+        .get(&other)
+        .ok_or_else(|| format!("unknown interface '{other}'"))?;
+    let right_set: BTreeSet<String> = right.iter().map(canonical_row).collect();
+    let mut seen = BTreeSet::new();
+    let out = left
+        .into_iter()
+        .filter(|row| {
+            let key = canonical_row(row);
+            let matched = right_set.contains(&key);
+            let keep = if intersect { matched } else { !matched };
+            keep && (mode == "all" || seen.insert(key))
+        })
+        .collect();
+    workspaces.insert(target.into(), out);
+    Ok(())
+}
+
+fn apply_sample(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let fraction = parameters.get("fraction").and_then(Value::as_f64);
+    let count = parameters
+        .get("count")
+        .and_then(Value::as_u64)
+        .map(|value| value as usize);
+    let seed = parameters
+        .get("seed")
+        .and_then(Value::as_u64)
+        .unwrap_or(0xD7C5_3A21);
+    let mut ranked: Vec<(u64, Row)> = dataset
+        .into_iter()
+        .enumerate()
+        .map(|(index, row)| (stable_sample_hash(seed, index as u64, &row), row))
+        .collect();
+    ranked.sort_by_key(|(hash, _)| *hash);
+    let take = count.unwrap_or_else(|| {
+        ((ranked.len() as f64) * fraction.unwrap_or(1.0).clamp(0.0, 1.0)).floor() as usize
+    });
+    workspaces.insert(
+        target.into(),
+        ranked.into_iter().take(take).map(|(_, row)| row).collect(),
+    );
+    Ok(())
+}
+
+fn canonical_row(row: &Row) -> String {
+    serde_json::to_string(row).unwrap_or_default()
+}
+
+fn stable_sample_hash(seed: u64, index: u64, row: &Row) -> u64 {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    seed.hash(&mut hasher);
+    index.hash(&mut hasher);
+    canonical_row(row).hash(&mut hasher);
+    hasher.finish()
 }
 
 fn param_string(parameters: &IndexMap<String, Value>, key: &str) -> Result<String, String> {

@@ -1,5 +1,7 @@
 //! Engine capability model (SPEC Chapter 14).
 
+use std::collections::BTreeMap;
+
 use serde::{Deserialize, Serialize};
 
 /// Engine capability declaration (Ch 14 §3–4).
@@ -20,6 +22,15 @@ pub struct EngineCapabilityDeclaration {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityCategories {
+    /// Accepted portable Transformation Plan protocol identities.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub plan_protocols: Vec<String>,
+    /// Complete semantic-family profile claims.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub profiles: Vec<String>,
+    /// Partial profile claims. Each value lists supported requirements.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub partial_profiles: BTreeMap<String, Vec<String>>,
     /// Language features (expression subset, null distinction, etc.).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub language_features: Vec<String>,
@@ -47,6 +58,18 @@ pub struct CapabilityCategories {
     /// Extension support declarations.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub extension_support: Vec<String>,
+    /// Versioned semantic environments and grammars.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub semantic_versions: BTreeMap<String, String>,
+    /// Resource budgets keyed by the normative budget name.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub resource_limits: BTreeMap<String, u64>,
+    /// Supported semantic modes keyed by registry entry or mode family.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub semantic_modes: BTreeMap<String, Vec<String>>,
+    /// Ordering and deterministic-execution guarantees.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub guarantees: Vec<String>,
 }
 
 /// A missing capability required by a plan.

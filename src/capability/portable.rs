@@ -121,7 +121,11 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
                 );
             }
             crate::model::RegistryCategory::Function => {
-                let experimental = entry.status == crate::model::RegistryEntryStatus::Experimental;
+                let experimental = matches!(
+                    entry.status,
+                    crate::model::RegistryEntryStatus::Experimental
+                        | crate::model::RegistryEntryStatus::Candidate
+                );
                 let (supported, tier, notes) = function_support(&entry.id, experimental);
                 functions.insert(
                     entry.id.clone(),

@@ -78,11 +78,17 @@ pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, Stri
             }
         },
         Expr::Call { callee, args, .. } => {
+            if is_lambda_function(callee) {
+                return evaluate_lambda_call(callee, args, row);
+            }
             let evaluated_args: Result<Vec<_>, _> = args
                 .iter()
                 .map(|arg| evaluate_expr_on_row(arg, row))
                 .collect();
             call_function(callee, &evaluated_args?)
+        }
+        Expr::Lambda { .. } => {
+            Err("lambda expressions may only be evaluated by a lambda-enabled function".into())
         }
     }
 }
@@ -183,6 +189,63 @@ fn evaluate_expr_with_interfaces(
                 .collect();
             call_function(callee, &evaluated_args?)
         }
+        Expr::Lambda { .. } => {
+            Err("lambda expressions may only be evaluated by a lambda-enabled function".into())
+        }
+    }
+}
+
+fn is_lambda_function(callee: &str) -> bool {
+    matches!(
+        callee,
+        "dtcs:transform" | "dtcs:filter_values" | "dtcs:exists" | "dtcs:forall"
+    )
+}
+
+fn evaluate_lambda_call(callee: &str, args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
+    if args.len() != 2 {
+        return Err(format!("{callee} requires a collection and lambda"));
+    }
+    let collection = evaluate_expr_on_row(&args[0], row)?;
+    let Expr::Lambda {
+        parameters, body, ..
+    } = &args[1]
+    else {
+        return Err(format!("{callee} requires a lambda as its second argument"));
+    };
+    if parameters.is_empty() || parameters.len() > 2 {
+        return Err("lambda requires one or two parameters".into());
+    }
+    let RuntimeValue::List(values) = collection else {
+        return Err(format!("{callee} requires a list"));
+    };
+    let mut mapped = Vec::with_capacity(values.len());
+    for (index, value) in values.iter().cloned().enumerate() {
+        let mut lambda_row = row.clone();
+        lambda_row.insert(parameters[0].clone(), value);
+        if let Some(index_name) = parameters.get(1) {
+            lambda_row.insert(index_name.clone(), RuntimeValue::Integer(index as i64));
+        }
+        mapped.push(evaluate_expr_on_row(body, &lambda_row)?);
+    }
+    match callee {
+        "dtcs:transform" => Ok(RuntimeValue::List(mapped)),
+        "dtcs:filter_values" => {
+            let mut out = Vec::new();
+            for (index, predicate) in mapped.into_iter().enumerate() {
+                if predicate.as_bool() == Some(true) {
+                    out.push(values[index].clone());
+                }
+            }
+            Ok(RuntimeValue::List(out))
+        }
+        "dtcs:exists" => Ok(RuntimeValue::Boolean(
+            mapped.iter().any(|value| value.as_bool() == Some(true)),
+        )),
+        "dtcs:forall" => Ok(RuntimeValue::Boolean(
+            mapped.iter().all(|value| value.as_bool() == Some(true)),
+        )),
+        _ => unreachable!(),
     }
 }
 

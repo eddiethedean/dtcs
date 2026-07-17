@@ -584,6 +584,7 @@ fn ast_span(expr: &Expr) -> Span {
         | Expr::FieldRef { span, .. }
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
-        | Expr::Call { span, .. } => span.clone(),
+        | Expr::Call { span, .. }
+        | Expr::Lambda { span, .. } => span.clone(),
     }
 }

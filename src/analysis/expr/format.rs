@@ -47,6 +47,13 @@ fn format_expr(expr: &Expr, parent_is_binary: bool) -> String {
             let rendered: Vec<String> = args.iter().map(|arg| format_expr(arg, false)).collect();
             format!("{}({})", callee, rendered.join(", "))
         }
+        Expr::Lambda {
+            parameters, body, ..
+        } => format!(
+            "({}) -> {}",
+            parameters.join(", "),
+            format_expr(body, false)
+        ),
     }
 }
 

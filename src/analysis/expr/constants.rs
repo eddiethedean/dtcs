@@ -10,5 +10,6 @@ pub fn is_constant(expr: &Expr) -> bool {
         Expr::Unary { expr, .. } => is_constant(expr),
         Expr::Binary { left, right, .. } => is_constant(left) && is_constant(right),
         Expr::Call { .. } => false,
+        Expr::Lambda { .. } => true,
     }
 }
