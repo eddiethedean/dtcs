@@ -1,0 +1,28 @@
+{
+  "id": "reshape-pivot",
+  "actions": [
+    {
+      "action": "dtcs:pivot",
+      "target": "t",
+      "parameters": {
+        "keys": ["k"],
+        "pivot": "p",
+        "value": "v",
+        "categories": ["x", "y"]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      { "k": "a", "p": "x", "v": 1 },
+      { "k": "a", "p": "y", "v": 2 },
+      { "k": "b", "p": "x", "v": 3 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "k": "a", "x": 1, "y": 2 },
+      { "k": "b", "x": 3, "y": null }
+    ]
+  }
+}

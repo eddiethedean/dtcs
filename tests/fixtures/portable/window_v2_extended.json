@@ -1,0 +1,36 @@
+{
+  "id": "window-v2-extended",
+  "actions": [
+    {
+      "action": "dtcs:window",
+      "target": "t",
+      "parameters": {
+        "orderBy": [{ "field": "ord" }],
+        "frame": {
+          "type": "rows",
+          "start": "unboundedPreceding",
+          "end": "unboundedFollowing"
+        },
+        "functions": [
+          { "as": "cd", "function": "cume_dist" },
+          { "as": "nth", "function": "nth_value", "field": "v", "n": 2, "ignoreNulls": true },
+          { "as": "fv", "function": "first_value", "field": "v", "ignoreNulls": true }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      { "ord": 1, "v": null },
+      { "ord": 2, "v": 5 },
+      { "ord": 3, "v": 6 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "ord": 1, "v": null, "cd": 0.3333333333333333, "nth": 6, "fv": 5 },
+      { "ord": 2, "v": 5, "cd": 0.6666666666666666, "nth": 6, "fv": 5 },
+      { "ord": 3, "v": 6, "cd": 1.0, "nth": 6, "fv": 5 }
+    ]
+  }
+}

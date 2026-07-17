@@ -2,6 +2,7 @@
 
 use std::collections::BTreeMap;
 
+use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};
 
 /// Result of looking up a field on a row (SPEC Chapter 8 §9).
@@ -46,8 +47,8 @@ pub enum RuntimeValue {
     Missing(MissingValue),
     /// Explicit invalid value (SPEC Chapter 8 §9).
     Invalid(InvalidValue),
-    /// String-keyed map (after `$dtcs` tokens).
-    Map(BTreeMap<String, RuntimeValue>),
+    /// String-keyed map (after `$dtcs` tokens). Insertion order is preserved.
+    Map(IndexMap<String, RuntimeValue>),
 }
 
 impl<'de> Deserialize<'de> for RuntimeValue {

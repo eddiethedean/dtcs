@@ -997,6 +997,16 @@ fn reduce_values(values: &[RuntimeValue], op: &str) -> Result<RuntimeValue, Stri
                 RuntimeValue::Decimal(var)
             }
         }
+        "var_pop" => {
+            let nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.is_empty() {
+                RuntimeValue::Null
+            } else {
+                let mean = nums.iter().sum::<f64>() / nums.len() as f64;
+                let var = nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / nums.len() as f64;
+                RuntimeValue::Decimal(var)
+            }
+        }
         "stddev" | "stddev_samp" => {
             let nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
             if nums.len() < 2 {
@@ -1005,6 +1015,16 @@ fn reduce_values(values: &[RuntimeValue], op: &str) -> Result<RuntimeValue, Stri
                 let mean = nums.iter().sum::<f64>() / nums.len() as f64;
                 let var =
                     nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (nums.len() - 1) as f64;
+                RuntimeValue::Decimal(var.sqrt())
+            }
+        }
+        "stddev_pop" => {
+            let nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.is_empty() {
+                RuntimeValue::Null
+            } else {
+                let mean = nums.iter().sum::<f64>() / nums.len() as f64;
+                let var = nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / nums.len() as f64;
                 RuntimeValue::Decimal(var.sqrt())
             }
         }
@@ -1268,7 +1288,8 @@ fn apply_window(
                         }
                         RuntimeValue::Decimal((last_eq as f64 + 1.0) / n)
                     }
-                    "sum" | "count" | "average" | "avg" | "min" | "max" | "variance" | "stddev"
+                    "sum" | "count" | "average" | "avg" | "min" | "max" | "variance"
+                    | "var_samp" | "var_pop" | "stddev" | "stddev_samp" | "stddev_pop"
                     | "median" | "first" | "last" | "collect_list" | "collect_set" => {
                         let expr = obj
                             .get("expr")
@@ -1854,7 +1875,21 @@ fn apply_pivot(
     let key_fields = param_string_list(parameters, "keys").unwrap_or_default();
     let pivot_field = param_string(parameters, "pivot")?;
     let value_field = param_string(parameters, "value")?;
-    let categories = param_string_list(parameters, "categories")?;
+    let categories = param_category_labels(parameters, "categories")?;
+    let category_names = match parameters.get("categoryNames") {
+        None => categories.clone(),
+        Some(value) => {
+            let names = param_string_list_from_value(value, "categoryNames")?;
+            if names.len() != categories.len() {
+                return Err("categoryNames must have the same length as categories".into());
+            }
+            names
+        }
+    };
+    let collision_policy = parameters
+        .get("collisionPolicy")
+        .and_then(Value::as_str)
+        .unwrap_or("error");
     let max_columns = parameters
         .get("maxColumns")
         .and_then(Value::as_u64)
@@ -1870,6 +1905,7 @@ fn apply_pivot(
         .cloned()
         .ok_or_else(|| format!("unknown interface '{target}'"))?;
     let mut groups: BTreeMap<String, Row> = BTreeMap::new();
+    let mut seen: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for row in dataset {
         let group_key = if key_fields.is_empty() {
             String::new()
@@ -1880,25 +1916,40 @@ fn apply_pivot(
                 .collect::<Vec<_>>()
                 .join("\0")
         };
-        let entry = groups.entry(group_key).or_insert_with(|| {
+        let entry = groups.entry(group_key.clone()).or_insert_with(|| {
             let mut base = Row::new();
             for f in &key_fields {
                 base.insert(f.clone(), row.get(f).cloned().unwrap_or(RuntimeValue::Null));
             }
-            for cat in &categories {
-                base.insert(cat.clone(), RuntimeValue::Null);
+            for name in &category_names {
+                base.insert(name.clone(), RuntimeValue::Null);
             }
             base
         });
         let cat = match row.get(&pivot_field) {
-            Some(RuntimeValue::String(s)) => s.clone(),
-            Some(other) => format!("{other:?}"),
+            Some(value) => stringify_category_runtime(value),
             None => continue,
         };
-        if categories.iter().any(|c| c == &cat) {
-            if let Some(v) = row.get(&value_field) {
-                entry.insert(cat, v.clone());
+        let Some(cat_index) = categories.iter().position(|c| c == &cat) else {
+            continue;
+        };
+        let column = &category_names[cat_index];
+        if let Some(v) = row.get(&value_field) {
+            let group_seen = seen.entry(group_key).or_default();
+            if !group_seen.insert(column.clone()) {
+                match collision_policy {
+                    "error" => {
+                        return Err(format!(
+                            "pivot collision for category '{column}' under collisionPolicy error"
+                        ));
+                    }
+                    "last" => {}
+                    other => {
+                        return Err(format!("unsupported pivot collisionPolicy '{other}'"));
+                    }
+                }
             }
+            entry.insert(column.clone(), v.clone());
         }
     }
     workspaces.insert(target.into(), groups.into_values().collect());
@@ -1969,6 +2020,10 @@ fn apply_with_nested_fields(
         .get("assignments")
         .and_then(Value::as_array)
         .ok_or_else(|| "with_nested_fields requires assignments".to_string())?;
+    let create_parents = parameters
+        .get("createParents")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
     let dataset = workspaces
         .get(target)
         .cloned()
@@ -1987,7 +2042,7 @@ fn apply_with_nested_fields(
             } else {
                 return Err("assignment requires value or expr".into());
             };
-            set_nested_path(&mut row, &path, value)?;
+            set_nested_path(&mut row, &path, value, create_parents)?;
         }
         out.push(row);
     }
@@ -2017,7 +2072,7 @@ fn apply_rename_nested_fields(
             let from = nested_path_from_value(obj.get("from"))?;
             let to = nested_path_from_value(obj.get("to"))?;
             if let Some(value) = take_nested_path(&mut row, &from)? {
-                set_nested_path(&mut row, &to, value)?;
+                set_nested_path(&mut row, &to, value, true)?;
             }
         }
         out.push(row);
@@ -2057,7 +2112,6 @@ fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> 
             let mut path = Vec::with_capacity(items.len());
             for item in items {
                 match item {
-                    Value::String(s) => path.push(s.clone()),
                     Value::Object(obj) => {
                         let kind = obj.get("kind").and_then(Value::as_str).unwrap_or("");
                         match kind {
@@ -2082,7 +2136,17 @@ fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> 
                             }
                         }
                     }
-                    _ => return Err("path segments must be strings or structural objects".into()),
+                    Value::String(_) => {
+                        return Err(
+                            "string segments in nested paths are invalid; use structural {kind:field|index} objects"
+                                .into(),
+                        );
+                    }
+                    _ => {
+                        return Err(
+                            "path segments must be structural objects with kind field|index".into(),
+                        )
+                    }
                 }
             }
             Ok(path)
@@ -2094,7 +2158,12 @@ fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> 
     }
 }
 
-fn set_nested_path(row: &mut Row, path: &[String], value: RuntimeValue) -> Result<(), String> {
+fn set_nested_path(
+    row: &mut Row,
+    path: &[String],
+    value: RuntimeValue,
+    create_parents: bool,
+) -> Result<(), String> {
     if path.is_empty() {
         return Err("empty nested path".into());
     }
@@ -2103,41 +2172,68 @@ fn set_nested_path(row: &mut Row, path: &[String], value: RuntimeValue) -> Resul
         return Ok(());
     }
     let head = &path[0];
-    let child = row
-        .entry(head.clone())
-        .or_insert_with(|| RuntimeValue::Map(BTreeMap::new()));
-    match child {
-        RuntimeValue::Map(map) => {
-            let mut nested = map.clone();
-            set_nested_map(&mut nested, &path[1..], value)?;
-            *child = RuntimeValue::Map(nested);
-            Ok(())
+    if create_parents {
+        let child = row
+            .entry(head.clone())
+            .or_insert_with(|| RuntimeValue::Map(IndexMap::new()));
+        match child {
+            RuntimeValue::Map(map) => {
+                let mut nested = map.clone();
+                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
+                *child = RuntimeValue::Map(nested);
+                Ok(())
+            }
+            _ => Err(format!("path segment '{head}' is not a map")),
         }
-        _ => Err(format!("path segment '{head}' is not a map")),
+    } else {
+        match row.get_mut(head) {
+            Some(RuntimeValue::Map(map)) => {
+                let mut nested = map.clone();
+                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
+                row.insert(head.clone(), RuntimeValue::Map(nested));
+                Ok(())
+            }
+            Some(_) => Err(format!("path segment '{head}' is not a map")),
+            None => Err(format!("missing parent path segment '{head}'")),
+        }
     }
 }
 
 fn set_nested_map(
-    map: &mut BTreeMap<String, RuntimeValue>,
+    map: &mut IndexMap<String, RuntimeValue>,
     path: &[String],
     value: RuntimeValue,
+    create_parents: bool,
 ) -> Result<(), String> {
     if path.len() == 1 {
         map.insert(path[0].clone(), value);
         return Ok(());
     }
     let head = &path[0];
-    let child = map
-        .entry(head.clone())
-        .or_insert_with(|| RuntimeValue::Map(BTreeMap::new()));
-    match child {
-        RuntimeValue::Map(inner) => {
-            let mut nested = inner.clone();
-            set_nested_map(&mut nested, &path[1..], value)?;
-            *child = RuntimeValue::Map(nested);
-            Ok(())
+    if create_parents {
+        let child = map
+            .entry(head.clone())
+            .or_insert_with(|| RuntimeValue::Map(IndexMap::new()));
+        match child {
+            RuntimeValue::Map(inner) => {
+                let mut nested = inner.clone();
+                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
+                *child = RuntimeValue::Map(nested);
+                Ok(())
+            }
+            _ => Err(format!("path segment '{head}' is not a map")),
         }
-        _ => Err(format!("path segment '{head}' is not a map")),
+    } else {
+        match map.get_mut(head) {
+            Some(RuntimeValue::Map(inner)) => {
+                let mut nested = inner.clone();
+                set_nested_map(&mut nested, &path[1..], value, create_parents)?;
+                map.insert(head.clone(), RuntimeValue::Map(nested));
+                Ok(())
+            }
+            Some(_) => Err(format!("path segment '{head}' is not a map")),
+            None => Err(format!("missing parent path segment '{head}'")),
+        }
     }
 }
 
@@ -2158,11 +2254,11 @@ fn take_nested_path(row: &mut Row, path: &[String]) -> Result<Option<RuntimeValu
 }
 
 fn take_nested_map(
-    map: &mut BTreeMap<String, RuntimeValue>,
+    map: &mut IndexMap<String, RuntimeValue>,
     path: &[String],
 ) -> Result<Option<RuntimeValue>, String> {
     if path.len() == 1 {
-        return Ok(map.remove(&path[0]));
+        return Ok(map.shift_remove(&path[0]));
     }
     let Some(RuntimeValue::Map(inner)) = map.get_mut(&path[0]) else {
         return Ok(None);
@@ -2206,6 +2302,39 @@ fn param_string_list_from_value(value: &Value, key: &str) -> Result<Vec<String>,
             })
             .collect(),
         _ => Err(format!("parameter '{key}' must be an array of strings")),
+    }
+}
+
+fn param_category_labels(
+    parameters: &IndexMap<String, Value>,
+    key: &str,
+) -> Result<Vec<String>, String> {
+    let value = parameters
+        .get(key)
+        .ok_or_else(|| format!("missing parameter '{key}'"))?;
+    match value {
+        Value::Array(items) => items
+            .iter()
+            .map(|item| match item {
+                Value::String(s) => Ok(s.clone()),
+                Value::Number(n) => Ok(n.to_string()),
+                Value::Bool(b) => Ok(b.to_string()),
+                _ => Err(format!(
+                    "parameter '{key}' categories must be strings, numbers, or booleans"
+                )),
+            })
+            .collect(),
+        _ => Err(format!("parameter '{key}' must be an array")),
+    }
+}
+
+fn stringify_category_runtime(value: &RuntimeValue) -> String {
+    match value {
+        RuntimeValue::String(s) => s.clone(),
+        RuntimeValue::Integer(i) => i.to_string(),
+        RuntimeValue::Decimal(d) => d.to_string(),
+        RuntimeValue::Boolean(b) => b.to_string(),
+        other => format!("{other:?}"),
     }
 }
 

@@ -323,7 +323,7 @@ fn portable_plan_rejects_executable_objects() {
         rules: vec![],
         lineage: vec![],
         requirements: Default::default(),
-        error_mode: None,
+        error_mode: Some("fail".into()),
         extensions: Default::default(),
     };
     let err = portable.validate_budgets().unwrap_err();
@@ -842,7 +842,7 @@ fn window_frame_first_last_and_date_units() {
 #[test]
 fn field_index_element_at_access_ops() {
     let map = RuntimeValue::Map({
-        let mut m = BTreeMap::new();
+        let mut m = indexmap::IndexMap::new();
         m.insert("a".into(), RuntimeValue::Integer(7));
         m
     });
@@ -959,7 +959,7 @@ fn reshape_set_sample_and_statistics_behaviors() {
         "t".into(),
         vec![btreemap! {
             "obj" => RuntimeValue::Map({
-                let mut m = BTreeMap::new();
+                let mut m = indexmap::IndexMap::new();
                 m.insert("a".into(), RuntimeValue::Integer(1));
                 m
             })

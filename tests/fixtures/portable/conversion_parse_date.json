@@ -1,0 +1,20 @@
+{
+  "id": "conversion-parse-date",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "d", "expr": "dtcs:parse_date(s, \"%Y-%m-%d\")" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "s": "2024-01-15" }]
+  },
+  "expected": {
+    "t": [{ "s": "2024-01-15", "d": { "$date": "2024-01-15" } }]
+  }
+}

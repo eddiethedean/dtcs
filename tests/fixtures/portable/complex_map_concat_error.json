@@ -1,0 +1,19 @@
+{
+  "id": "complex-map-concat-error",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "out", "expr": "dtcs:map_concat(left, right)" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "left": { "a": 1 }, "right": { "b": 2 } }]
+  },
+  "expected": {},
+  "expectError": "collisionPolicy"
+}

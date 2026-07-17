@@ -276,12 +276,145 @@ fn json_to_runtime(value: &Value) -> Result<RuntimeValue, String> {
                 if let Some(reason) = map.get("$invalid").and_then(Value::as_str) {
                     return Ok(RuntimeValue::invalid(reason));
                 }
+                if let Some(date) = map.get("$date").and_then(Value::as_str) {
+                    return Ok(RuntimeValue::Date(date.to_string()));
+                }
+                if let Some(dt) = map.get("$datetime").and_then(Value::as_str) {
+                    return Ok(RuntimeValue::DateTime(dt.to_string()));
+                }
             }
-            let mut out = BTreeMap::new();
+            let mut out = IndexMap::new();
             for (k, v) in map {
                 out.insert(k.clone(), json_to_runtime(v)?);
             }
             RuntimeValue::Map(out)
         }
     })
+}
+
+/// Fixture for `portablePlanMigrate` assertions.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PortablePlanMigrateFixture {
+    /// Stable fixture id.
+    pub id: String,
+    /// Source portable plan document (v1 or other).
+    pub source: Value,
+    /// Expected profile after successful migration.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expect_profile: Option<String>,
+    /// Optional expected error substring (negative cases).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub expect_error: Option<String>,
+}
+
+/// Load and execute a portable plan migration fixture for conformance.
+pub fn run_portable_plan_migrate_case(
+    fixtures_dir: &Path,
+    relative: &str,
+    test_id: &str,
+    profile_id: &str,
+) -> ConformanceTestResult {
+    let bytes = match read_fixture(fixtures_dir, relative) {
+        Ok(bytes) => bytes,
+        Err(err) => {
+            return ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(err),
+            };
+        }
+    };
+    let fixture: PortablePlanMigrateFixture = match serde_json::from_slice(&bytes) {
+        Ok(f) => f,
+        Err(err) => {
+            return ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(format!("parse portable plan migrate fixture: {err}")),
+            };
+        }
+    };
+    let source_bytes = match serde_json::to_vec(&fixture.source) {
+        Ok(bytes) => bytes,
+        Err(err) => {
+            return ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(format!("serialize migrate source: {err}")),
+            };
+        }
+    };
+    let result = crate::plan::PortablePlan::from_json_migrating(&source_bytes);
+    if let Some(expect_err) = &fixture.expect_error {
+        return match result {
+            Err(err) if err.contains(expect_err) => ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: true,
+                message: None,
+            },
+            Err(err) => ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(format!(
+                    "expected error containing '{expect_err}', got '{err}'"
+                )),
+            },
+            Ok(_) => ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(format!(
+                    "expected error containing '{expect_err}', but migration succeeded"
+                )),
+            },
+        };
+    }
+    let plan = match result {
+        Ok(plan) => plan,
+        Err(err) => {
+            return ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(format!("migration failed: {err}")),
+            };
+        }
+    };
+    if plan.plan_identity != crate::plan::TRANSFORM_PLAN_IDENTITY {
+        return ConformanceTestResult {
+            id: test_id.into(),
+            profile: profile_id.into(),
+            passed: false,
+            message: Some(format!(
+                "expected planIdentity '{}', got '{}'",
+                crate::plan::TRANSFORM_PLAN_IDENTITY,
+                plan.plan_identity
+            )),
+        };
+    }
+    if let Some(expect_profile) = &fixture.expect_profile {
+        if &plan.profile != expect_profile {
+            return ConformanceTestResult {
+                id: test_id.into(),
+                profile: profile_id.into(),
+                passed: false,
+                message: Some(format!(
+                    "expected profile '{expect_profile}', got '{}'",
+                    plan.profile
+                )),
+            };
+        }
+    }
+    ConformanceTestResult {
+        id: test_id.into(),
+        profile: profile_id.into(),
+        passed: true,
+        message: None,
+    }
 }

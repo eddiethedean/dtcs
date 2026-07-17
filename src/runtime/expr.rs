@@ -30,17 +30,21 @@ pub fn eval_expression_on_row_with_mode(
 
 /// Evaluate an expression AST against a single row.
 pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, String> {
+    evaluate_expr_on_row_scoped(expr, row, None)
+}
+
+fn evaluate_expr_on_row_scoped(
+    expr: &Expr,
+    row: &Row,
+    lambda_params: Option<&[String]>,
+) -> Result<RuntimeValue, String> {
     match expr {
         Expr::Literal { value, .. } => Ok(literal_to_runtime(value)),
-        Expr::FieldRef { target, .. } => {
-            let field = target.rsplit('.').next().unwrap_or(target);
-            Ok(match lookup_field(row, field) {
-                FieldLookup::Missing => RuntimeValue::missing(),
-                FieldLookup::Present(value) => value,
-            })
+        Expr::FieldRef { target, scope, .. } => {
+            resolve_field_ref(target, scope.as_deref(), row, lambda_params)
         }
         Expr::Unary { op, expr, .. } => {
-            let inner = evaluate_expr_on_row(expr, row)?;
+            let inner = evaluate_expr_on_row_scoped(expr, row, lambda_params)?;
             match op {
                 UnaryOp::Negate => match inner {
                     RuntimeValue::Integer(v) => Ok(RuntimeValue::Integer(-v)),
@@ -57,36 +61,36 @@ pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, Stri
             op, left, right, ..
         } => match op {
             BinaryOp::And => {
-                let left_val = evaluate_expr_on_row(left, row)?;
+                let left_val = evaluate_expr_on_row_scoped(left, row, lambda_params)?;
                 let left_bool = left_val
                     .as_bool()
                     .ok_or_else(|| "and requires boolean operands".to_string())?;
                 if !left_bool {
                     return Ok(RuntimeValue::Boolean(false));
                 }
-                let right_val = evaluate_expr_on_row(right, row)?;
+                let right_val = evaluate_expr_on_row_scoped(right, row, lambda_params)?;
                 let right_bool = right_val
                     .as_bool()
                     .ok_or_else(|| "and requires boolean operands".to_string())?;
                 Ok(RuntimeValue::Boolean(right_bool))
             }
             BinaryOp::Or => {
-                let left_val = evaluate_expr_on_row(left, row)?;
+                let left_val = evaluate_expr_on_row_scoped(left, row, lambda_params)?;
                 let left_bool = left_val
                     .as_bool()
                     .ok_or_else(|| "or requires boolean operands".to_string())?;
                 if left_bool {
                     return Ok(RuntimeValue::Boolean(true));
                 }
-                let right_val = evaluate_expr_on_row(right, row)?;
+                let right_val = evaluate_expr_on_row_scoped(right, row, lambda_params)?;
                 let right_bool = right_val
                     .as_bool()
                     .ok_or_else(|| "or requires boolean operands".to_string())?;
                 Ok(RuntimeValue::Boolean(right_bool))
             }
             _ => {
-                let left_val = evaluate_expr_on_row(left, row)?;
-                let right_val = evaluate_expr_on_row(right, row)?;
+                let left_val = evaluate_expr_on_row_scoped(left, row, lambda_params)?;
+                let right_val = evaluate_expr_on_row_scoped(right, row, lambda_params)?;
                 evaluate_binary(*op, &left_val, &right_val)
             }
         },
@@ -96,13 +100,49 @@ pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, Stri
             }
             let evaluated_args: Result<Vec<_>, _> = args
                 .iter()
-                .map(|arg| evaluate_expr_on_row(arg, row))
+                .map(|arg| evaluate_expr_on_row_scoped(arg, row, lambda_params))
                 .collect();
             call_function(callee, &evaluated_args?)
         }
         Expr::Lambda { .. } => {
             Err("lambda expressions may only be evaluated by a lambda-enabled function".into())
         }
+    }
+}
+
+fn resolve_field_ref(
+    target: &str,
+    scope: Option<&str>,
+    row: &Row,
+    lambda_params: Option<&[String]>,
+) -> Result<RuntimeValue, String> {
+    match scope {
+        Some("lambda") => {
+            let params = lambda_params.unwrap_or(&[]);
+            if params.iter().any(|p| p == target) {
+                return Ok(match lookup_field(row, target) {
+                    FieldLookup::Missing => RuntimeValue::missing(),
+                    FieldLookup::Present(value) => value,
+                });
+            }
+            if let Some((param, _)) = target.split_once('.') {
+                if params.iter().any(|p| p == param) {
+                    return Ok(match lookup_field(row, param) {
+                        FieldLookup::Missing => RuntimeValue::missing(),
+                        FieldLookup::Present(value) => value,
+                    });
+                }
+            }
+            Ok(RuntimeValue::missing())
+        }
+        None | Some("row") => {
+            let field = target.rsplit('.').next().unwrap_or(target);
+            Ok(match lookup_field(row, field) {
+                FieldLookup::Missing => RuntimeValue::missing(),
+                FieldLookup::Present(value) => value,
+            })
+        }
+        Some(other) => Err(format!("unsupported fieldRef scope '{other}'")),
     }
 }
 
@@ -262,7 +302,11 @@ fn evaluate_list_lambda(callee: &str, args: &[Expr], row: &Row) -> Result<Runtim
         if let Some(index_name) = parameters.get(1) {
             lambda_row.insert(index_name.clone(), RuntimeValue::Integer(index as i64));
         }
-        mapped.push(evaluate_expr_on_row(body, &lambda_row)?);
+        mapped.push(evaluate_expr_on_row_scoped(
+            body,
+            &lambda_row,
+            Some(parameters),
+        )?);
     }
     match callee {
         "dtcs:transform" => Ok(RuntimeValue::List(mapped)),
@@ -306,7 +350,7 @@ fn evaluate_reduce(args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
         let mut lambda_row = row.clone();
         lambda_row.insert(parameters[0].clone(), acc);
         lambda_row.insert(parameters[1].clone(), value);
-        acc = evaluate_expr_on_row(body, &lambda_row)?;
+        acc = evaluate_expr_on_row_scoped(body, &lambda_row, Some(parameters))?;
     }
     Ok(acc)
 }
@@ -336,7 +380,11 @@ fn evaluate_zip_with(args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
         let mut lambda_row = row.clone();
         lambda_row.insert(parameters[0].clone(), left[i].clone());
         lambda_row.insert(parameters[1].clone(), right[i].clone());
-        out.push(evaluate_expr_on_row(body, &lambda_row)?);
+        out.push(evaluate_expr_on_row_scoped(
+            body,
+            &lambda_row,
+            Some(parameters),
+        )?);
     }
     Ok(RuntimeValue::List(out))
 }
@@ -357,12 +405,13 @@ fn evaluate_map_filter(args: &[Expr], row: &Row) -> Result<RuntimeValue, String>
     if parameters.len() != 2 {
         return Err("dtcs:map_filter lambda requires (key, value)".into());
     }
-    let mut out = std::collections::BTreeMap::new();
+    let mut out = indexmap::IndexMap::new();
     for (key, value) in map {
         let mut lambda_row = row.clone();
         lambda_row.insert(parameters[0].clone(), RuntimeValue::String(key.clone()));
         lambda_row.insert(parameters[1].clone(), value.clone());
-        if evaluate_expr_on_row(body, &lambda_row)?.as_bool() == Some(true) {
+        if evaluate_expr_on_row_scoped(body, &lambda_row, Some(parameters))?.as_bool() == Some(true)
+        {
             out.insert(key, value);
         }
     }
@@ -385,12 +434,12 @@ fn evaluate_map_transform(callee: &str, args: &[Expr], row: &Row) -> Result<Runt
     if parameters.len() != 2 {
         return Err(format!("{callee} lambda requires (key, value)"));
     }
-    let mut out = std::collections::BTreeMap::new();
+    let mut out = indexmap::IndexMap::new();
     for (key, value) in map {
         let mut lambda_row = row.clone();
         lambda_row.insert(parameters[0].clone(), RuntimeValue::String(key.clone()));
         lambda_row.insert(parameters[1].clone(), value.clone());
-        let result = evaluate_expr_on_row(body, &lambda_row)?;
+        let result = evaluate_expr_on_row_scoped(body, &lambda_row, Some(parameters))?;
         if callee == "dtcs:transform_keys" {
             let new_key = result
                 .as_str()

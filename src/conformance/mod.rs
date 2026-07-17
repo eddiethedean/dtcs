@@ -17,7 +17,8 @@ pub use model::{
 };
 pub use portable::{
     datasets_match_expected, run_portable_differential_case, run_portable_fixture,
-    PortableDifferentialFixture, PortableEvalMode,
+    run_portable_plan_migrate_case, PortableDifferentialFixture, PortableEvalMode,
+    PortablePlanMigrateFixture,
 };
 pub use runner::{embedded_profiles, manifest, run_all, run_for_profiles};
 pub use security::{run_security_probe, run_security_probes};

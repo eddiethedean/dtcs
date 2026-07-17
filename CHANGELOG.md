@@ -30,8 +30,10 @@ DTCS 3.0 / tools 0.13 release. Spec `3.0.0` (draft); tooling alpha.
 
 ### Maturity
 
+- `portable-relational-kernel/2` and `portable-relational/2` are **Candidate** until Standard graduation criteria are met (two independent compilers).
 - Advanced A.9 profiles remain **Experimental**; `portable-window/2` is **Candidate**.
-- **Certified** only where dual-path fixtures exist (kernel relational 2.0 surface).
+- **Certified** only where dual-path fixtures exist (kernel relational 2.0 `/1` surface).
+- Per-family §16 portable fixtures and plan-v1 migrate assertion are included for the reference surface.
 - **WASM / Node:** `parse` / `validate` / `conformanceDeclare` only — no full 3.0 runtime.
 
 ### Non-goals

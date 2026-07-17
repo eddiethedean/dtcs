@@ -345,7 +345,8 @@
     {
       "id": "portable-kernel-project",
       "profiles": [
-        "dtcs:profile/portable-relational-kernel/1"
+        "dtcs:profile/portable-relational-kernel/1",
+        "dtcs:profile/portable-relational-kernel/2"
       ],
       "fixture": "portable/kernel_project.json",
       "format": "json",
@@ -356,7 +357,8 @@
     {
       "id": "portable-kernel-between-filter",
       "profiles": [
-        "dtcs:profile/portable-relational-kernel/1"
+        "dtcs:profile/portable-relational-kernel/1",
+        "dtcs:profile/portable-relational-kernel/2"
       ],
       "fixture": "portable/kernel_between_filter.json",
       "format": "json",
@@ -367,7 +369,8 @@
     {
       "id": "portable-relational-join",
       "profiles": [
-        "dtcs:profile/portable-relational/1"
+        "dtcs:profile/portable-relational/1",
+        "dtcs:profile/portable-relational/2"
       ],
       "fixture": "portable/relational_join.json",
       "format": "json",
@@ -378,7 +381,8 @@
     {
       "id": "portable-relational-agg-sort",
       "profiles": [
-        "dtcs:profile/portable-relational/1"
+        "dtcs:profile/portable-relational/1",
+        "dtcs:profile/portable-relational/2"
       ],
       "fixture": "portable/relational_agg_sort.json",
       "format": "json",
@@ -389,7 +393,8 @@
     {
       "id": "portable-relational-collision-error",
       "profiles": [
-        "dtcs:profile/portable-relational/1"
+        "dtcs:profile/portable-relational/1",
+        "dtcs:profile/portable-relational/2"
       ],
       "fixture": "portable/plan_budget_error.json",
       "format": "json",
@@ -420,12 +425,55 @@
       }
     },
     {
-      "id": "portable-reshape-sample",
+      "id": "portable-extended-sample",
       "profiles": [
-        "dtcs:profile/portable-relational-extended/1",
+        "dtcs:profile/portable-relational-extended/1"
+      ],
+      "fixture": "portable/extended_sample.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-extended-intersect",
+      "profiles": [
+        "dtcs:profile/portable-relational-extended/1"
+      ],
+      "fixture": "portable/extended_intersect.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-reshape-explode",
+      "profiles": [
         "dtcs:profile/portable-reshape/1"
       ],
-      "fixture": "portable/reshape_sample.json",
+      "fixture": "portable/reshape_explode.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-reshape-unpivot",
+      "profiles": [
+        "dtcs:profile/portable-reshape/1"
+      ],
+      "fixture": "portable/reshape_unpivot.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-reshape-pivot",
+      "profiles": [
+        "dtcs:profile/portable-reshape/1"
+      ],
+      "fixture": "portable/reshape_pivot.json",
       "format": "json",
       "assertion": {
         "kind": "portableDifferential"
@@ -440,6 +488,138 @@
       "format": "json",
       "assertion": {
         "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-window-v2-extended",
+      "profiles": [
+        "dtcs:profile/portable-window/2"
+      ],
+      "fixture": "portable/window_v2_extended.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-string-regex-reject",
+      "profiles": [
+        "dtcs:profile/portable-string-advanced/1"
+      ],
+      "fixture": "portable/string_regex_reject.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-conversion-parse-date",
+      "profiles": [
+        "dtcs:profile/portable-conversion/1"
+      ],
+      "fixture": "portable/conversion_parse_date.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-conversion-bad-format",
+      "profiles": [
+        "dtcs:profile/portable-conversion/1"
+      ],
+      "fixture": "portable/conversion_bad_format.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-statistics-median",
+      "profiles": [
+        "dtcs:profile/portable-statistics/1"
+      ],
+      "fixture": "portable/statistics_median.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-complex-map-concat-error",
+      "profiles": [
+        "dtcs:profile/portable-complex-values/1"
+      ],
+      "fixture": "portable/complex_map_concat_error.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-nested-with-field",
+      "profiles": [
+        "dtcs:profile/portable-complex-values/1"
+      ],
+      "fixture": "portable/nested_with_field.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-nested-dotted-reject",
+      "profiles": [
+        "dtcs:profile/portable-complex-values/1"
+      ],
+      "fixture": "portable/nested_dotted_reject.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-temporal-to-timezone",
+      "profiles": [
+        "dtcs:profile/portable-temporal-iana/1"
+      ],
+      "fixture": "portable/temporal_to_timezone.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-nondeterministic-seeded-random",
+      "profiles": [
+        "dtcs:profile/portable-nondeterministic/1"
+      ],
+      "fixture": "portable/nondeterministic_seeded_random.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-plan-v1-migrate",
+      "profiles": [
+        "dtcs:profile/portable-relational-kernel/2"
+      ],
+      "fixture": "portable/plan_v1_migrate.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portablePlanMigrate"
+      }
+    },
+    {
+      "id": "portable-plan-missing-error-mode",
+      "profiles": [
+        "dtcs:profile/portable-relational-kernel/2"
+      ],
+      "fixture": "portable/plan_missing_error_mode.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portablePlanMigrate"
       }
     }
   ]

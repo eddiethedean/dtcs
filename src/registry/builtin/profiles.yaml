@@ -35,14 +35,14 @@ entries:
     name: "Portable Relational Kernel v2"
     category: "profile"
     version: "2.0.0"
-    status: "standard"
+    status: "candidate"
     definition: |
       {"kind":"profile","family":"portable-relational-kernel","supersedes":"dtcs:profile/portable-relational-kernel/1","planProfile":"dtcs.transform-plan/2","requiredActions":["dtcs:project","dtcs:filter","dtcs:with_fields","dtcs:rename_fields","dtcs:drop_fields"]}
   dtcs:profile/portable-relational/2:
     name: "Portable Relational v2"
     category: "profile"
     version: "2.0.0"
-    status: "standard"
+    status: "candidate"
     definition: |
       {"kind":"profile","family":"portable-relational","extends":"dtcs:profile/portable-relational-kernel/2","supersedes":"dtcs:profile/portable-relational/1","planProfile":"dtcs.transform-plan/2"}
   dtcs:profile/portable-string-advanced/1:

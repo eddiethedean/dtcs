@@ -1,0 +1,20 @@
+{
+  "id": "statistics-median",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "m", "expr": "dtcs:median(1.0, 2.0, 3.0)" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "id": 1 }]
+  },
+  "expected": {
+    "t": [{ "id": 1, "m": 2.0 }]
+  }
+}

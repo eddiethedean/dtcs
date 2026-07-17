@@ -1,7 +1,6 @@
 //! Custom JSON (de)serialization for [`RuntimeValue`] `$dtcs` tokens.
 
-use std::collections::BTreeMap;
-
+use indexmap::IndexMap;
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value as JsonValue;
@@ -57,7 +56,7 @@ fn runtime_value_from_json(value: JsonValue) -> Result<RuntimeValue, String> {
                     other => Err(format!("unknown $dtcs marker '{other}'")),
                 }
             } else {
-                let mut out = BTreeMap::new();
+                let mut out = IndexMap::new();
                 for (key, nested) in map {
                     out.insert(key, runtime_value_from_json(nested)?);
                 }

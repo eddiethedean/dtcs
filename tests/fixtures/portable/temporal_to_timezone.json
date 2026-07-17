@@ -1,0 +1,23 @@
+{
+  "id": "temporal-to-timezone",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "local", "expr": "dtcs:to_timezone(ts, \"America/New_York\")" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "ts": "2024-01-01T12:00:00Z" }]
+  },
+  "expected": {
+    "t": [{
+      "ts": "2024-01-01T12:00:00Z",
+      "local": { "$datetime": "2024-01-01T07:00:00-05:00" }
+    }]
+  }
+}

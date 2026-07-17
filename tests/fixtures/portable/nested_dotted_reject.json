@@ -1,0 +1,20 @@
+{
+  "id": "nested-dotted-reject",
+  "actions": [
+    {
+      "action": "dtcs:with_nested_fields",
+      "target": "t",
+      "parameters": {
+        "createParents": true,
+        "assignments": [
+          { "path": "a.b", "value": 1 }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{}]
+  },
+  "expected": {},
+  "expectError": "dotted"
+}

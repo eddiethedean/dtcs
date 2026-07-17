@@ -4,6 +4,7 @@ pub mod actions;
 mod conversion;
 pub mod error_mode;
 pub mod expr;
+pub mod format_gate;
 pub mod functions;
 mod lineage;
 mod model;

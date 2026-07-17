@@ -1,8 +1,10 @@
 //! Stdlib function execution.
 
+use crate::runtime::format_gate::validate_dtcs_format;
 use crate::runtime::model::RuntimeValue;
 use chrono::{DateTime, LocalResult, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use chrono_tz::Tz;
+use indexmap::IndexMap;
 use std::sync::OnceLock;
 
 /// Evaluate a `dtcs:` function call.
@@ -170,20 +172,14 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 "dtcs:regex_extract_all" => {
                     let group =
                         args.get(2).and_then(RuntimeValue::as_integer).unwrap_or(0) as usize;
-                    Ok(RuntimeValue::List(
-                        regex
-                            .captures_iter(text)
-                            .filter_map(|caps| {
-                                caps.get(group)
-                                    .map(|m| RuntimeValue::String(m.as_str().into()))
-                            })
-                            .collect(),
-                    ))
+                    Ok(RuntimeValue::List(regex_extract_all_advancing(
+                        &regex, text, group,
+                    )))
                 }
                 "dtcs:regex_split" => Ok(RuntimeValue::List(
-                    regex
-                        .split(text)
-                        .map(|part| RuntimeValue::String(part.into()))
+                    regex_split_advancing(&regex, text)
+                        .into_iter()
+                        .map(RuntimeValue::String)
                         .collect(),
                 )),
                 _ => unreachable!(),
@@ -214,6 +210,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .map(|v| string_value(v, callee))
                 .transpose()?
                 .unwrap_or("%Y-%m-%d");
+            validate_dtcs_format(format)?;
             NaiveDate::parse_from_str(text, format)
                 .map(|d| RuntimeValue::Date(d.format("%Y-%m-%d").to_string()))
                 .map_err(|_| format!("{callee} failed to parse date"))
@@ -225,6 +222,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .map(|v| string_value(v, callee))
                 .transpose()?
                 .unwrap_or("%H:%M:%S");
+            validate_dtcs_format(format)?;
             NaiveTime::parse_from_str(text, format)
                 .map(|t| RuntimeValue::Time(t.format("%H:%M:%S").to_string()))
                 .map_err(|_| format!("{callee} failed to parse time"))
@@ -239,6 +237,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .map(|v| string_value(v, callee))
                 .transpose()?
                 .unwrap_or("%Y-%m-%dT%H:%M:%S");
+            validate_dtcs_format(format)?;
             NaiveDateTime::parse_from_str(text, format)
                 .map(|d| RuntimeValue::DateTime(d.format("%Y-%m-%dT%H:%M:%S").to_string()))
                 .map_err(|_| format!("{callee} failed to parse datetime"))
@@ -250,6 +249,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .map(|v| string_value(v, callee))
                 .transpose()?
                 .unwrap_or("%Y-%m-%d");
+            validate_dtcs_format(format)?;
             NaiveDate::parse_from_str(text, "%Y-%m-%d")
                 .map(|d| RuntimeValue::String(d.format(format).to_string()))
                 .map_err(|_| format!("{callee} requires YYYY-MM-DD date"))
@@ -261,6 +261,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .map(|v| string_value(v, callee))
                 .transpose()?
                 .unwrap_or("%Y-%m-%dT%H:%M:%S");
+            validate_dtcs_format(format)?;
             if let Ok(dt) = DateTime::parse_from_rfc3339(text) {
                 return Ok(RuntimeValue::String(dt.format(format).to_string()));
             }
@@ -330,7 +331,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             else {
                 return Err("dtcs:map_from_entries requires list".into());
             };
-            let mut map = std::collections::BTreeMap::new();
+            let mut map = IndexMap::new();
             for entry in entries {
                 let RuntimeValue::List(pair) = entry else {
                     return Err("dtcs:map_from_entries requires [key, value] pairs".into());
@@ -339,17 +340,40 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                     return Err("dtcs:map_from_entries requires [key, value] pairs".into());
                 }
                 let key = string_value(&pair[0], callee)?.to_string();
+                if map.contains_key(&key) {
+                    return Err(format!("dtcs:map_from_entries duplicate key '{key}'"));
+                }
                 map.insert(key, pair[1].clone());
             }
             Ok(RuntimeValue::Map(map))
         }
         "dtcs:map_concat" => {
-            let mut out = std::collections::BTreeMap::new();
-            for value in args {
-                let RuntimeValue::Map(map) = value else {
-                    return Err("dtcs:map_concat requires maps".into());
-                };
-                out.extend(map.clone());
+            let (maps, policy) = split_map_concat_args(args)?;
+            let mut out = IndexMap::new();
+            for map in maps {
+                for (key, value) in map {
+                    match policy {
+                        None | Some("right") => {
+                            out.insert(key, value);
+                        }
+                        Some("left") => {
+                            out.entry(key).or_insert(value);
+                        }
+                        Some("error") => {
+                            if out.contains_key(&key) {
+                                return Err(format!(
+                                    "dtcs:map_concat duplicate key '{key}' under collisionPolicy error"
+                                ));
+                            }
+                            out.insert(key, value);
+                        }
+                        Some(other) => {
+                            return Err(format!(
+                                "dtcs:map_concat unsupported collisionPolicy '{other}'"
+                            ));
+                        }
+                    }
+                }
             }
             Ok(RuntimeValue::Map(out))
         }
@@ -366,13 +390,14 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             _ => Err("dtcs:object_values requires object".into()),
         },
         "dtcs:variance" | "dtcs:stddev" => {
-            let nums: Vec<f64> = args.iter().filter_map(RuntimeValue::as_decimal).collect();
+            let (nums, population) = stats_numbers_and_mode(args)?;
             if nums.len() < 2 {
                 return Ok(RuntimeValue::Null);
             }
-            let mean = nums.iter().sum::<f64>() / nums.len() as f64;
-            let var =
-                nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (nums.len() - 1) as f64;
+            let n = nums.len() as f64;
+            let mean = nums.iter().sum::<f64>() / n;
+            let denom = if population { n } else { n - 1.0 };
+            let var = nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / denom;
             Ok(if callee == "dtcs:stddev" {
                 RuntimeValue::Decimal(var.sqrt())
             } else {
@@ -380,12 +405,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             })
         }
         "dtcs:covariance" => {
-            if args.len() != 2 {
-                return Err("dtcs:covariance requires two lists".into());
-            }
-            let (RuntimeValue::List(xs), RuntimeValue::List(ys)) = (&args[0], &args[1]) else {
-                return Err("dtcs:covariance requires two lists".into());
-            };
+            let (xs, ys, population) = covariance_args(args)?;
             let pairs: Vec<(f64, f64)> = xs
                 .iter()
                 .zip(ys.iter())
@@ -397,7 +417,8 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             let n = pairs.len() as f64;
             let mx = pairs.iter().map(|(x, _)| x).sum::<f64>() / n;
             let my = pairs.iter().map(|(_, y)| y).sum::<f64>() / n;
-            let cov = pairs.iter().map(|(x, y)| (x - mx) * (y - my)).sum::<f64>() / (n - 1.0);
+            let denom = if population { n } else { n - 1.0 };
+            let cov = pairs.iter().map(|(x, y)| (x - mx) * (y - my)).sum::<f64>() / denom;
             Ok(RuntimeValue::Decimal(cov))
         }
         "dtcs:correlation" => {
@@ -487,14 +508,32 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             Ok(RuntimeValue::List(out))
         }
         "dtcs:cast" | "dtcs:try_cast" => {
-            if args.len() != 2 {
+            if callee == "dtcs:cast" && args.len() != 2 {
                 return Err(format!("{callee} requires value and target type"));
             }
+            if callee == "dtcs:try_cast" && !(2..=3).contains(&args.len()) {
+                return Err(format!(
+                    "{callee} requires value, target type, and optional policy"
+                ));
+            }
             let target = string_arg(args, 1, callee)?;
+            let policy = if callee == "dtcs:try_cast" {
+                args.get(2)
+                    .map(|v| string_value(v, callee))
+                    .transpose()?
+                    .unwrap_or("invalid")
+            } else {
+                "fail"
+            };
             let result = cast_runtime_value(&args[0], target);
             match (callee, result) {
                 (_, Ok(value)) => Ok(value),
-                ("dtcs:try_cast", Err(_)) => Ok(RuntimeValue::invalid("cast failed")),
+                ("dtcs:try_cast", Err(error)) => match policy {
+                    "invalid" => Ok(RuntimeValue::invalid("cast failed")),
+                    "null" => Ok(RuntimeValue::Null),
+                    "fail" => Err(error),
+                    other => Err(format!("unsupported try_cast policy '{other}'")),
+                },
                 (_, Err(error)) => Err(error),
             }
         }
@@ -512,7 +551,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             if args.len() % 2 != 0 {
                 return Err(format!("{callee} requires key/value pairs"));
             }
-            let mut map = std::collections::BTreeMap::new();
+            let mut map = IndexMap::new();
             for pair in args.chunks(2) {
                 let key = string_value(&pair[0], callee)?;
                 if map.insert(key.into(), pair[1].clone()).is_some() {
@@ -589,9 +628,9 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             let zoned = match zone.from_local_datetime(&naive) {
                 LocalResult::Single(value) => value,
                 LocalResult::Ambiguous(earliest, latest) => match ambiguous {
-                    "earliest" => earliest,
-                    "latest" => latest,
-                    "reject" => {
+                    "earliest" | "earlier" => earliest,
+                    "latest" | "later" => latest,
+                    "reject" | "error" => {
                         return Err(
                             "dtcs:to_utc rejects ambiguous local time without explicit policy"
                                 .into(),
@@ -600,7 +639,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                     other => return Err(format!("unsupported ambiguousPolicy '{other}'")),
                 },
                 LocalResult::None => match nonexistent {
-                    "shift_forward" => zone
+                    "shift_forward" | "shiftForward" => zone
                         .from_local_datetime(&naive)
                         .latest()
                         .or_else(|| {
@@ -611,7 +650,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                         .ok_or_else(|| {
                             "dtcs:to_utc could not shift nonexistent local time forward".to_string()
                         })?,
-                    "reject" => {
+                    "reject" | "error" => {
                         return Err(
                             "dtcs:to_utc rejects nonexistent local time without explicit policy"
                                 .into(),
@@ -1601,4 +1640,154 @@ fn string_value<'a>(value: &'a RuntimeValue, callee: &str) -> Result<&'a str, St
         }
         other => Err(format!("{callee} requires string arguments, got {other:?}")),
     }
+}
+
+fn stats_mode_from_string(value: &str) -> Result<bool, String> {
+    match value {
+        "population" => Ok(true),
+        "sample" => Ok(false),
+        other => Err(format!(
+            "unsupported statistics mode '{other}'; expected sample|population"
+        )),
+    }
+}
+
+fn stats_numbers_and_mode(args: &[RuntimeValue]) -> Result<(Vec<f64>, bool), String> {
+    let mut population = false;
+    let mut nums = Vec::new();
+    for (index, arg) in args.iter().enumerate() {
+        if index + 1 == args.len() {
+            if let RuntimeValue::String(mode) = arg {
+                population = stats_mode_from_string(mode)?;
+                continue;
+            }
+        }
+        if let Some(n) = arg.as_decimal() {
+            nums.push(n);
+        }
+    }
+    Ok((nums, population))
+}
+
+fn covariance_args(
+    args: &[RuntimeValue],
+) -> Result<(&Vec<RuntimeValue>, &Vec<RuntimeValue>, bool), String> {
+    if !(2..=3).contains(&args.len()) {
+        return Err("dtcs:covariance requires two lists and optional mode".into());
+    }
+    let (RuntimeValue::List(xs), RuntimeValue::List(ys)) = (&args[0], &args[1]) else {
+        return Err("dtcs:covariance requires two lists".into());
+    };
+    let population = match args.get(2) {
+        None => false,
+        Some(RuntimeValue::String(mode)) => stats_mode_from_string(mode)?,
+        Some(_) => {
+            return Err("dtcs:covariance mode must be 'sample' or 'population'".into());
+        }
+    };
+    Ok((xs, ys, population))
+}
+
+type MapConcatParts<'a> = (Vec<IndexMap<String, RuntimeValue>>, Option<&'a str>);
+
+fn split_map_concat_args(args: &[RuntimeValue]) -> Result<MapConcatParts<'_>, String> {
+    if args.is_empty() {
+        return Ok((Vec::new(), None));
+    }
+    let last_is_policy = matches!(
+        args.last(),
+        Some(RuntimeValue::String(s)) if matches!(s.as_str(), "error" | "left" | "right")
+    );
+    let map_count = if last_is_policy {
+        args.len() - 1
+    } else {
+        args.len()
+    };
+    if map_count >= 2 && !last_is_policy {
+        return Err("map_concat requires collisionPolicy error|left|right".into());
+    }
+    let mut maps = Vec::with_capacity(map_count);
+    for value in &args[..map_count] {
+        let RuntimeValue::Map(map) = value else {
+            return Err("dtcs:map_concat requires maps".into());
+        };
+        maps.push(map.clone());
+    }
+    let policy = if last_is_policy {
+        args.last().and_then(RuntimeValue::as_str)
+    } else {
+        None
+    };
+    Ok((maps, policy))
+}
+
+fn regex_extract_all_advancing(
+    regex: &regex::Regex,
+    text: &str,
+    group: usize,
+) -> Vec<RuntimeValue> {
+    let mut out = Vec::new();
+    let mut locs = regex.capture_locations();
+    let mut pos = 0;
+    while pos <= text.len() {
+        if regex.captures_read_at(&mut locs, text, pos).is_none() {
+            break;
+        }
+        if let Some((start, end)) = locs.get(group) {
+            out.push(RuntimeValue::String(text[start..end].into()));
+        }
+        let Some((match_start, match_end)) = locs.get(0) else {
+            break;
+        };
+        let next = if match_end == match_start {
+            if match_end >= text.len() {
+                break;
+            }
+            match_end
+                + text[match_end..]
+                    .chars()
+                    .next()
+                    .map(|c| c.len_utf8())
+                    .unwrap_or(1)
+        } else {
+            match_end
+        };
+        if next <= pos {
+            break;
+        }
+        pos = next;
+    }
+    out
+}
+
+fn regex_split_advancing(regex: &regex::Regex, text: &str) -> Vec<String> {
+    let mut parts = Vec::new();
+    let mut last = 0usize;
+    let mut pos = 0usize;
+    while pos <= text.len() {
+        let Some(found) = regex.find_at(text, pos) else {
+            break;
+        };
+        parts.push(text[last..found.start()].to_string());
+        if found.end() > found.start() {
+            last = found.end();
+            pos = found.end();
+        } else {
+            last = found.start();
+            if found.start() >= text.len() {
+                break;
+            }
+            pos = found.start()
+                + text[found.start()..]
+                    .chars()
+                    .next()
+                    .map(|c| c.len_utf8())
+                    .unwrap_or(1);
+        }
+        if pos <= found.start() && found.end() == found.start() {
+            break;
+        }
+    }
+    parts.push(text[last.min(text.len())..].to_string());
+    parts
 }

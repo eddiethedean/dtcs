@@ -1,0 +1,27 @@
+{
+  "id": "nested-with-field",
+  "actions": [
+    {
+      "action": "dtcs:with_nested_fields",
+      "target": "t",
+      "parameters": {
+        "createParents": true,
+        "assignments": [
+          {
+            "path": [
+              { "kind": "field", "name": "a" },
+              { "kind": "field", "name": "b" }
+            ],
+            "value": 1
+          }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{}]
+  },
+  "expected": {
+    "t": [{ "a": { "b": 1 } }]
+  }
+}

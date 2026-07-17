@@ -595,24 +595,25 @@ Ships the full Portable Relational Profile in one release: kernel operators and 
 **Proposal:** [docs/DTCS_3_0_SPEC_PROPOSAL.md](docs/DTCS_3_0_SPEC_PROPOSAL.md) (3.0-R1–R5)  
 **SPEC:** [Ch 27](SPEC.md#chapter-27-rich-portable-analytics), [Appendix A.9](SPEC.md#a9-dtcs-30-rich-portable-analytics-profiles)
 
-Ships the DTCS 3.0 Rich Portable Analytics reference surface: plan v2, A.9 family identifiers, and maturity-honest profile status (Advanced Experimental; `portable-window/2` Candidate). Certified dual-path fixtures remain focused on the kernel relational 2.0 surface.
+Ships the DTCS 3.0 Rich Portable Analytics reference surface: plan v2, A.9 family identifiers, Spec-faithful behavioral SHALLs (errorMode, nested paths, map policies, format/regex gates, fingerprint pins), and per-family §16 fixtures. Maturity: Advanced **Experimental**; `portable-window/2` **Candidate**; kernel/relational `/2` **Candidate** (not Standard). Certified dual-path fixtures remain focused on the kernel relational 2.0 `/1` surface.
 
 ### R1–R5 status (reference surface)
 
 | Slice | Focus | Status |
 |-------|--------|--------|
-| **R1** | Protocol / plan v2, lambdas, `errorMode`, fingerprint pins, migration | Done |
+| **R1** | Protocol / plan v2, lambdas, required `errorMode`, fingerprint pins, migration | Done |
 | **R2** | Deterministic expression families (string-advanced, conversion, statistics, complex-values) | Done |
 | **R3** | Relational expansion (reshape/pivot, set, sample, nested field actions) | Done |
 | **R4** | IANA temporal + controlled nondeterminism (`xorshift64star/1`) | Done |
-| **R5** | Conformance surface / profile graduation posture | Complete for reference; Standard graduation remains a non-goal |
+| **R5** | Conformance surface / profile graduation posture | Done for reference (§16 family fixtures); Standard graduation remains a non-goal |
 
 ### Deliverables
 
 - [x] Canonical portable plan `dtcs.transform-plan/2` with v1 migrate; defaults `portable-relational-kernel/2` / `portable-relational/2`
-- [x] Fingerprint pins: `unicode-15.1`, `dtcs-regex/1`, `iana-2025b`, `xorshift64star/1`; explicit `errorMode`
-- [x] A.9 family identifiers exercised by the reference runtime (including window/2 `ntile` / `percent_rank` / `cume_dist` / `nth_value`)
-- [x] Advanced A.9 profiles declared Experimental; `portable-window/2` Candidate
+- [x] Fingerprint pins: `unicode-15.1`, `dtcs-regex/1`, `dtcs-format/1`, `iana-2025b`, `xorshift64star/1`; required `errorMode`
+- [x] A.9 family identifiers + Spec-faithful semantics (including window/2 `ntile` / `percent_rank` / `cume_dist` / `nth_value`)
+- [x] Per-family portable differential fixtures + plan migrate assertion
+- [x] Advanced A.9 profiles Experimental; `portable-window/2` and kernel/relational `/2` Candidate
 - [x] Package versions at `0.13.0` (crates.io / PyPI / bindings)
 
 **Non-goals:** second production compiler in-repo; Standard graduation of Experimental A.9 families.

@@ -154,6 +154,11 @@ impl PortablePlan {
             }
             other => return Err(format!("unsupported plan identity '{other}'")),
         }
+        if plan.error_mode.is_none() {
+            plan.error_mode = Some("fail".into());
+        }
+        let mode = plan.error_mode.as_deref().unwrap_or("fail");
+        insert_fingerprint_pins(&mut plan.requirements, mode);
         plan.validate_budgets()?;
         Ok(plan)
     }
@@ -269,19 +274,21 @@ impl PortablePlan {
         if contains_executable_marker(&serde_json::from_slice(&bytes).unwrap_or(Value::Null)) {
             return Err("portable plan rejects executable or host-language objects".into());
         }
-        if let Some(mode) = &self.error_mode {
-            match mode.as_str() {
-                "fail" | "invalid" | "null" => {}
-                "route" => {
-                    if !self.requirements.contains_key("invalidOutput") {
-                        return Err("errorMode 'route' requires requirements.invalidOutput".into());
-                    }
+        let mode = self
+            .error_mode
+            .as_ref()
+            .ok_or_else(|| "portable plan errorMode is required".to_string())?;
+        match mode.as_str() {
+            "fail" | "invalid" | "null" => {}
+            "route" => {
+                if !self.requirements.contains_key("invalidOutput") {
+                    return Err("errorMode 'route' requires requirements.invalidOutput".into());
                 }
-                other => {
-                    return Err(format!(
-                        "unsupported errorMode '{other}'; expected fail|invalid|null|route"
-                    ));
-                }
+            }
+            other => {
+                return Err(format!(
+                    "unsupported errorMode '{other}'; expected fail|invalid|null|route"
+                ));
             }
         }
         Ok(())

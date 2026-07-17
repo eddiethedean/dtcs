@@ -1,0 +1,26 @@
+{
+  "id": "string-regex-reject",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          {
+            "as": "ok",
+            "expr": "dtcs:regex_matches(s, \"a(?=b)\")"
+          }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      {
+        "s": "ab"
+      }
+    ]
+  },
+  "expected": {},
+  "expectError": "dtcs-regex"
+}

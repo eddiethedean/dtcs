@@ -1,0 +1,23 @@
+{
+  "id": "reshape-unpivot",
+  "actions": [
+    {
+      "action": "dtcs:unpivot",
+      "target": "t",
+      "parameters": {
+        "fields": ["x", "y"],
+        "nameField": "name",
+        "valueField": "val"
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "id": 1, "x": 10, "y": 20 }]
+  },
+  "expected": {
+    "t": [
+      { "id": 1, "name": "x", "val": 10 },
+      { "id": 1, "name": "y", "val": 20 }
+    ]
+  }
+}

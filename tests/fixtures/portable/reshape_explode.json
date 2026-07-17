@@ -1,0 +1,24 @@
+{
+  "id": "reshape-explode",
+  "actions": [
+    {
+      "action": "dtcs:explode",
+      "target": "t",
+      "parameters": {
+        "expr": "items",
+        "as": ["item"]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      { "id": 10, "items": [1, 2] }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "id": 10, "items": [1, 2], "item": 1 },
+      { "id": 10, "items": [1, 2], "item": 2 }
+    ]
+  }
+}

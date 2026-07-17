@@ -103,6 +103,15 @@ fn run_test_case(
         );
     }
 
+    if matches!(test.assertion, ConformanceAssertion::PortablePlanMigrate) {
+        return super::portable::run_portable_plan_migrate_case(
+            fixtures_dir,
+            &test.fixture,
+            &test.id,
+            profile_id,
+        );
+    }
+
     let format = parse_format(&test.format);
     let content = match read_fixture(fixtures_dir, &test.fixture) {
         Ok(bytes) => bytes,
@@ -500,6 +509,7 @@ fn run_test_case(
         }
         ConformanceAssertion::SecurityProbe { .. } => unreachable!("handled above"),
         ConformanceAssertion::PortableDifferential => unreachable!("handled above"),
+        ConformanceAssertion::PortablePlanMigrate => unreachable!("handled above"),
     }
 }
 

@@ -1,0 +1,12 @@
+{
+  "id": "plan-v1-migrate",
+  "source": {
+    "planIdentity": "dtcs.transform-plan/1",
+    "profile": "dtcs:profile/portable-relational-kernel/1",
+    "specificationVersion": "2.0.0",
+    "transformation": "legacy",
+    "actions": [],
+    "rules": []
+  },
+  "expectProfile": "dtcs:profile/portable-relational-kernel/2"
+}

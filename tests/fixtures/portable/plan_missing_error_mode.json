@@ -1,0 +1,11 @@
+{
+  "id": "plan-missing-error-mode",
+  "source": {
+    "planIdentity": "dtcs.transform-plan/9",
+    "profile": "dtcs:profile/portable-relational-kernel/2",
+    "specificationVersion": "3.0.0",
+    "transformation": "x",
+    "actions": []
+  },
+  "expectError": "unsupported plan identity"
+}

@@ -1,5 +1,5 @@
 {
-  "id": "reshape-sample",
+  "id": "extended-sample",
   "actions": [
     {
       "action": "dtcs:sample",

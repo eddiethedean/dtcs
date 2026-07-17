@@ -1,0 +1,19 @@
+{
+  "id": "conversion-bad-format",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "d", "expr": "dtcs:parse_date(s, \"%Y-%m-%d%z\")" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "s": "2024-01-15" }]
+  },
+  "expected": {},
+  "expectError": "dtcs-format"
+}

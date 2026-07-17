@@ -156,6 +156,8 @@ pub enum ConformanceAssertion {
     },
     /// Portable differential fixture (input rows + action steps + expected rows).
     PortableDifferential,
+    /// Portable plan v1→v2 migration fixture.
+    PortablePlanMigrate,
 }
 
 /// A single conformance test definition.

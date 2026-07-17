@@ -1,0 +1,20 @@
+{
+  "id": "nondeterministic-seeded-random",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "r", "expr": "dtcs:random(7)" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [{ "id": 1 }]
+  },
+  "expected": {
+    "t": [{ "id": 1, "r": 0.112726908214470511 }]
+  }
+}
