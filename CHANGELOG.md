@@ -43,9 +43,15 @@ Phase 0.12 — Portable Relational Profile (DTCS-R1 through R4) in one release (
 
 ### Migration notes
 
-See [docs/user/migration-portable-relational.md](docs/user/migration-portable-relational.md). Existing contracts using legacy `field`/`equals` filters and name-list projects remain valid.
+See [docs/user/migration-portable-relational.md](docs/user/migration-portable-relational.md) and [docs/user/migration-0.12.md](docs/user/migration-0.12.md). Existing contracts using legacy `field`/`equals` filters and name-list projects remain valid.
 
-**Release:** push tag `v0.12.0` to publish to crates.io and PyPI.
+### Fixes and docs (included in this release)
+
+- Runtime correctness: And/Or short-circuit; predicate-only / outer join padding; mixed int/decimal sort; typed group keys; inverted window frames; datetime time preservation; structured lowering on expression keys.
+- Binding and CI alignment: Spec `2.0.0` / twelve profiles in WASM/Node/Python smokes; rustfmt; MkDocs portable-conformance nav.
+- Adoption docs: canonical [versioning](docs/user/versioning.md), RTD home rewrite, no-clone `dtcs run` recipe, portable API/CLI docs, error taxonomy and diagnostic catalog.
+
+**Release:** move tag `v0.12.0` to the commit that includes the above (crates.io / PyPI still on `0.11.0` until this tag publishes successfully).
 
 ## 0.11.0
 
