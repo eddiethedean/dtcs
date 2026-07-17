@@ -1,6 +1,6 @@
 # Smallest copy-pasteable DTCS contract for install checks.
-# Document dtcsVersion must be exactly "1.0.0" (Spec is still 1.0.0-draft).
-dtcsVersion: "1.0.0"
+# Prefer dtcsVersion "2.0.0"; "1.0.0" / "1.0.0-draft" remain accepted.
+dtcsVersion: "2.0.0"
 id: "demo.minimal"
 name: "Minimal Demo"
 version: "0.1.0"

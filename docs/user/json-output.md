@@ -354,13 +354,13 @@ Success emits a single registry entry (same object shape as list items, may incl
 {
   "implementationId": "dtcs:reference",
   "implementationVersion": "0.12.0",
-  "dtcsVersion": "1.0.0-draft",
+  "dtcsVersion": "2.0.0",
   "primaryProfile": "integrated-platform",
   "profiles": [
     {
       "id": "integrated-platform",
       "implementationClass": "integratedPlatform",
-      "dtcsVersion": "1.0.0-draft",
+      "dtcsVersion": "2.0.0",
       "implementationVersion": "0.12.0",
       "supportedRegistries": ["dtcs:builtin"],
       "supportedExtensions": ["acme"],
@@ -400,9 +400,30 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "crateVersion": "0.12.0",
-  "specVersion": "1.0.0-draft"
+  "specVersion": "2.0.0"
 }
 ```
+
+## export-portable
+
+Rust CLI `dtcs export-portable` emits a portable plan document (pretty JSON). With `--fingerprint`, it emits a bare SHA-256 hex string instead.
+
+Typical portable plan fields:
+
+```json
+{
+  "identity": "dtcs.transform-plan/1",
+  "profile": "dtcs:profile/portable-relational-kernel/1",
+  "nodes": [],
+  "registryVersions": {}
+}
+```
+
+Exact node shapes follow SPEC Chapter 13 §12.1. Python: `plan_export_portable` / `plan_fingerprint` in [api/python.md](../api/python.md#portable-plans).
+
+## Schema note
+
+Formal JSON Schema artifacts for every `--json` envelope are not yet published. Treat the examples on this page plus Rust serde types as the machine contract until generated schemas ship.
 
 ## Diagnostic object
 

@@ -132,6 +132,12 @@ let transformation_plan = result.plan.expect("plan");
 
 let validation = plan::validate(&transformation_plan);
 assert!(validation.is_valid());
+
+// Phase 0.12 — portable export
+let portable = dtcs::export_portable_plan(
+    &transformation_plan,
+    "dtcs:profile/portable-relational-kernel/1",
+)?;
 ```
 
 ```python
@@ -142,6 +148,9 @@ result = dtcs.plan_lower(contract)
 assert dtcs.is_valid({"diagnostics": result["diagnostics"]})
 plan = result["plan"]
 assert dtcs.is_valid(dtcs.plan_validate(plan))
+portable = dtcs.plan_export_portable(plan)
+assert portable["identity"] == "dtcs.transform-plan/1"
+assert len(dtcs.plan_fingerprint(portable)) == 64
 ```
 
 One-shot convenience:

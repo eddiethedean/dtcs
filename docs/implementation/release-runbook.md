@@ -21,12 +21,23 @@ cargo clippy --all-targets -- -D warnings
 cargo test --locked
 cargo test --test phase_0_10 --locked
 cargo test --test phase_0_11 --locked
+cargo test --test portable_relational --locked
 cargo run --bin dtcs -- conformance run --profile all
 pytest python/tests -v
 NO_MKDOCS_2_WARNING=true ./scripts/check-docs.sh
 ```
 
-5. Binding smokes (from repo):
+5. **Changelog → docs checklist** (when behavior or versions change):
+
+- [ ] [versioning.md](../user/versioning.md) / getting-started expected `dtcs version` output
+- [ ] [cli-guide.md](../user/cli-guide.md) command table + new flags
+- [ ] [api/python.md](../api/python.md) / [api/rust.md](../api/rust.md) / WASM/Node
+- [ ] [json-output.md](../user/json-output.md) envelope examples (`specVersion`, new commands)
+- [ ] [troubleshooting.md](../user/troubleshooting.md) diagnostic remediation table
+- [ ] Migration guides / FAQ if upgrade story changes
+- [ ] MkDocs `nav` + hub tables in [docs/README.md](https://github.com/eddiethedean/dtcs/blob/main/docs/README.md)
+
+6. Binding smokes (from repo):
 
 ```bash
 cd bindings/wasm && npm test
@@ -57,4 +68,4 @@ git push origin v0.x.y
 | PyPI missing wheel | maturin/release job logs; Python version matrix |
 | crates.io reject | version already published; `cargo publish --dry-run` |
 | npm skipped | `NPM_TOKEN` unset (expected) |
-| Conformance drift | dual manifest sync; `phase_0_10` / `phase_0_11` tests |
+| Conformance drift | dual manifest sync; `phase_0_10` / `phase_0_11` / `portable_relational` tests |

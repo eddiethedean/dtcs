@@ -61,9 +61,10 @@ dtcs run examples/customer_pipeline.dtcs.yaml \
 | Goal | Where |
 |------|--------|
 | Concepts in two pages | [docs/user/concepts.md](docs/user/concepts.md) |
+| Versions | [docs/user/versioning.md](docs/user/versioning.md) |
 | Write contracts | [docs/user/writing-contracts.md](docs/user/writing-contracts.md) |
 | CLI reference | [docs/user/cli-guide.md](docs/user/cli-guide.md) |
-| Upgrade from 0.10.x | [docs/user/migration-0.11.md](docs/user/migration-0.11.md) |
+| Upgrade to 0.12 / Spec 2.0 | [docs/user/migration-0.12.md](docs/user/migration-0.12.md) |
 | Evaluate for your org | [docs/adoption/overview.md](docs/adoption/overview.md) |
 
 ## Develop from source
@@ -74,7 +75,7 @@ Requires Rust + [maturin](https://www.maturin.rs/). See [CONTRIBUTING.md](CONTRI
 
 | Path | Purpose |
 |------|---------|
-| [SPEC.md](SPEC.md) | Full DTCS 1.0 draft specification |
+| [SPEC.md](SPEC.md) | Full DTCS 2.0.0 draft specification |
 | [docs/user/](docs/user/) | User guides |
 | [docs/adoption/](docs/adoption/) | Evaluator / security materials |
 | [docs/api/](docs/api/) | Python, Rust, WASM, Node API docs |

@@ -1,8 +1,10 @@
 # Conformance certification
 
-Offline conformance profiles and a certification suite per [SPEC.md](../SPEC.md) Chapter 23. Phase 0.10 introduced the machinery; Phase 0.11 deepens Analyzer assertions and runtime catalog coverage.
+Offline conformance profiles and a certification suite per [SPEC.md](../SPEC.md) Chapter 23. Phase 0.10 introduced the machinery; Phase 0.11 deepens Analyzer assertions; Phase 0.12 adds portable semantic-family profiles and `portableDifferential` fixtures.
 
 ## Profiles
+
+### Implementation classes
 
 The reference implementation declares eight implementation classes:
 
@@ -18,6 +20,17 @@ The reference implementation declares eight implementation classes:
 | `integrated-platform` | Integrated Platform (primary) |
 
 Analyzer profile capabilities include `compatibilityAnalysis`, `evolutionAnalysis`, and `lineageAnalysis`.
+
+### Portable semantic-family profiles (0.12)
+
+| Profile ID | Focus |
+|------------|-------|
+| `dtcs:profile/portable-relational-kernel/1` | Kernel operators |
+| `dtcs:profile/portable-relational/1` | Rich relational ops |
+| `dtcs:profile/portable-window/1` | Window frames |
+| `dtcs:profile/portable-complex-types/1` | Complex access |
+
+Implementer details and dual-path gates: [portable-conformance.md](../implementation/portable-conformance.md).
 
 ## Assertion kinds
 
@@ -36,6 +49,7 @@ Manifest cases under `tests/conformance/manifest.json` (mirrored in `src/conform
 | `compileValid` | Compilation succeeds |
 | `runtimeOutput` | Runtime output matches fixture (`input`, `expectedOutput`) |
 | `runtimeInvalid` | Runtime fails with expected diagnostic `codes` |
+| `portableDifferential` | Portable fixture: Direct vs StructuredLowering must match (0.12) |
 | `securityProbe` | Automated Ch 24 probe (`probeId`) |
 
 ## Declare capability

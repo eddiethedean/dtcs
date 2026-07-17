@@ -2,14 +2,14 @@
 
 A DTCS transformation contract is a YAML or JSON document describing **what** a data transformation means — inputs, outputs, semantics, and lineage — without prescribing an execution engine.
 
-This guide uses field tables and snippets. For end-to-end samples after you clone (or download from GitHub), see [`examples/minimal.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/minimal.dtcs.yaml) and the 0.11 flagship [`examples/customer_pipeline.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml). Normative rules: [SPEC.md](../SPEC.md) Chapter 3 (COM), Chapters 5–6, and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative). Coverage: [spec-completeness.md](../implementation/spec-completeness.md).
+This guide uses field tables and snippets. For end-to-end samples after you clone (or download from GitHub), see [`examples/minimal.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/minimal.dtcs.yaml) and the sample pipeline [`examples/customer_pipeline.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml). Normative rules: [SPEC.md](../SPEC.md) Chapter 3 (COM), Chapters 5–6, and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative). Coverage: [spec-completeness.md](../implementation/spec-completeness.md). Versions: [versioning.md](versioning.md).
 
 ## Minimal structure
 
 Every contract needs:
 
 ```yaml
-dtcsVersion: "1.0.0"
+dtcsVersion: "2.0.0"
 id: "my.transform"
 name: "My Transform"
 version: "1.0.0"
@@ -42,7 +42,7 @@ lineage:
 
 | Field | Required | Purpose |
 |-------|----------|---------|
-| `dtcsVersion` | Yes | Spec version the document targets (`1.0.0` for current draft) |
+| `dtcsVersion` | Yes | Spec version the document targets (prefer `"2.0.0"`; `"1.0.0"` / `"1.0.0-draft"` accepted) |
 | `id` | Yes | Stable contract identifier (namespaced string) |
 | `name` | Yes | Human-readable title |
 | `version` | Yes | Contract revision (semver-like string) |
@@ -297,13 +297,13 @@ Common first-time errors:
 |------------|-----|
 | `dtcs:missing-lineage` | Add a lineage mapping for each output |
 | `dtcs:unresolved-reference` | Check field paths match `interface.field` format |
-| `dtcs:unsupported-version` | Set `dtcsVersion` to a supported value (`1.0.0`) |
+| `dtcs:unsupported-version` | Set `dtcsVersion` to `"2.0.0"` (preferred) or `"1.0.0"` / `"1.0.0-draft"` |
 | `dtcs:invalid-type` | Fix type syntax (e.g. `list<string>` not `list`) |
 | `dtcs:unknown-registry-entry` | Use a `dtcs:` identifier from `dtcs registry list`, or declare a vendor extension |
 | `dtcs:invalid-semantic-action` | Supply required `parameters` for dataset actions; match target type/nullability |
 | stdlib semantics errors | Match target field type/nullability and rule `phase` to the registry definition |
 
-See [faq.md](faq.md) and [troubleshooting.md](troubleshooting.md) for more help. Migrating from 0.10.x: [CHANGELOG migration notes](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#0110).
+See [faq.md](faq.md) and [troubleshooting.md](troubleshooting.md) for more help. Upgrading to 0.12 / Spec 2.0: [migration-0.12.md](migration-0.12.md).
 
 ## Next steps
 

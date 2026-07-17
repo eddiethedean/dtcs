@@ -95,6 +95,7 @@ dtcs/
       optimize.rs
       equivalence.rs
       rule_key.rs
+      portable.rs          # Phase 0.12 portable transform-plan export
     capability/
       mod.rs
       model.rs
@@ -102,6 +103,7 @@ dtcs/
       requirements.rs
       match.rs
       validate.rs
+      portable.rs          # Phase 0.12 capability accuracy / manifests
     compile/
       mod.rs
       model.rs
@@ -125,6 +127,7 @@ dtcs/
       runner.rs
       model.rs
       security.rs
+      portable.rs          # Phase 0.12 portableDifferential runner
       manifest.json
     cli/
       mod.rs
@@ -137,6 +140,7 @@ dtcs/
       compatibility/
       runtime/
       capability/
+      portable/            # Phase 0.12 differential fixtures
       plans/
       plans_optimized/
       execution_plans/
@@ -155,6 +159,7 @@ dtcs/
     phase_0_9.rs
     phase_0_10.rs
     phase_0_11.rs
+    portable_relational.rs
     manifest.rs
 ```
 

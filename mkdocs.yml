@@ -83,15 +83,19 @@ nav:
       - Writing contracts: user/writing-contracts.md
       - Cookbook: user/cookbook.md
   - Guides:
+      - Versioning: user/versioning.md
       - CLI guide: user/cli-guide.md
       - Expressions: user/expressions.md
       - Compatibility: user/compatibility.md
       - JSON output: user/json-output.md
       - CI integration: user/ci-integration.md
       - Conformance: user/conformance.md
+      - Error taxonomy: user/error-taxonomy.md
+      - Diagnostic catalog: user/diagnostic-catalog.md
       - Extensions & registries: user/extensions-and-registries.md
-      - Migration 0.11: user/migration-0.11.md
+      - Migration 0.12: user/migration-0.12.md
       - Portable Relational migration: user/migration-portable-relational.md
+      - Migration 0.11 (historical): user/migration-0.11.md
       - Limits & deployment: user/limits.md
       - Troubleshooting: user/troubleshooting.md
       - FAQ: user/faq.md
@@ -113,22 +117,24 @@ nav:
   - Contribute:
       - Contributing: https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md
       - Architecture: implementation/architecture.md
-      - Overview: implementation/README.md
-      - Project goal: implementation/project-goal.md
-      - Crate layout: implementation/crate-layout.md
-      - Model guide: implementation/model-guide.md
-      - Validation guide: implementation/validation-guide.md
-      - Diagnostics guide: implementation/diagnostics-guide.md
-      - Public API notes: implementation/public-api.md
-      - CLI spec: implementation/cli-spec.md
-      - Testing plan: implementation/testing-plan.md
-      - Release runbook: implementation/release-runbook.md
-      - Rust dependencies: implementation/rust-dependencies.md
-      - Spec usage: implementation/spec-usage.md
-      - Non-goals: implementation/non-goals.md
-      - Test verification: implementation/test-verification-report.md
-      - Implementation phases: implementation/implementation-phases.md
-      - Editorial baseline: editorial/baseline.md
-      - Style guide: editorial/style-guide.md
-      - Authoring guide: editorial/authoring-guide.md
-      - Review checklist: editorial/review-checklist.md
+      - Reference implementers:
+          - Overview: implementation/README.md
+          - Project goal: implementation/project-goal.md
+          - Crate layout: implementation/crate-layout.md
+          - Model guide: implementation/model-guide.md
+          - Validation guide: implementation/validation-guide.md
+          - Diagnostics guide: implementation/diagnostics-guide.md
+          - Public API notes: implementation/public-api.md
+          - CLI spec: implementation/cli-spec.md
+          - Testing plan: implementation/testing-plan.md
+          - Release runbook: implementation/release-runbook.md
+          - Rust dependencies: implementation/rust-dependencies.md
+          - Spec usage: implementation/spec-usage.md
+          - Non-goals: implementation/non-goals.md
+          - Test verification: implementation/test-verification-report.md
+          - Implementation phases: implementation/implementation-phases.md
+      - Editorial:
+          - Baseline: editorial/baseline.md
+          - Style guide: editorial/style-guide.md
+          - Authoring guide: editorial/authoring-guide.md
+          - Review checklist: editorial/review-checklist.md

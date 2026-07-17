@@ -26,7 +26,8 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 - Engine capability matching (`capability::match_plan`, full-catalog `dtcs:reference` profile)
 - Compilation (`compile::compile`, `ExecutionPlan` IR, `ReferenceCompiler`)
 - Reference runtime (`runtime::execute`, in-memory row-oriented execution of the full stdlib)
-- Conformance profiles and offline certification suite (Phase 0.10)
+- Portable Relational Profile (rich joins/aggs, window frames, datetime, complex access, `export_portable_plan`, capability accuracy)
+- Conformance profiles and offline certification suite (Phase 0.10 + portableDifferential in 0.12)
 - WASM and Node bindings (parse, validate, conformance declare)
 - CLI and Python bindings
 - SPEC completeness matrix and normative Appendix A catalog

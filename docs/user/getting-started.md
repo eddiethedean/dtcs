@@ -110,17 +110,83 @@ dtcs diagnostics contract.dtcs.yaml
 
 Add `--json` for machine-readable output (see [json-output.md](json-output.md)).
 
-**You are done with the first success path.** Everything below is optional.
+**You are done with the first success path (validate).** Optional: run a tiny contract with sample rows without cloning (below), or continue with the table.
+
+## 4. Run without cloning (optional)
+
+Create `hello.dtcs.yaml`:
+
+```yaml
+dtcsVersion: "2.0.0"
+id: "demo.hello"
+name: "Hello Run"
+version: "0.1.0"
+
+metadata:
+  description: "Minimal contract that executes with the reference runtime"
+  classification: internal
+  governance:
+    owner: "docs"
+    steward: "docs"
+  provenance:
+    author: "docs"
+    createdAt: "2026-01-01T00:00:00Z"
+
+inputs:
+  - id: "people"
+    schema:
+      fields:
+        - name: "name"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "people_out"
+    schema:
+      fields:
+        - name: "name"
+          type: "string"
+          nullable: false
+
+semanticActions:
+  - id: "lower_name"
+    action: "dtcs:lowercase"
+    target: "people.name"
+
+lineage:
+  mappings:
+    - output: "people_out"
+      inputs: ["people"]
+```
+
+Create `hello.input.json`:
+
+```json
+{
+  "people": [
+    { "name": "Ada" },
+    { "name": "Grace" }
+  ]
+}
+```
+
+```bash
+dtcs validate hello.dtcs.yaml
+dtcs run hello.dtcs.yaml --input hello.input.json --json
+```
+
+Expected JSON includes lowercased names under `people_out` (for example `"ada"`, `"grace"`). A warning about the shared field name `name` is harmless. This is an in-memory teaching runtime, not a warehouse executor — see [limits.md](limits.md).
 
 ## Next steps
 
 | Goal | Document / action |
 |------|-------------------|
 | Mental model (COM → validate → plan → run) | [concepts.md](concepts.md) |
+| Versions (crate / Spec / `dtcsVersion`) | [versioning.md](versioning.md) |
 | Author richer contracts | [writing-contracts.md](writing-contracts.md) |
-| 0.11 flagship sample (clone or download) | [`customer_pipeline.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml) |
-| Run with sample rows (needs fixture file) | Clone the repo, then see [cookbook.md](cookbook.md) |
-| Upgrade from 0.10.x | [migration-0.11.md](migration-0.11.md) |
+| Sample pipeline (clone or download) | [`customer_pipeline.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml) |
+| More recipes | [cookbook.md](cookbook.md) |
+| Upgrade to 0.12 / Spec 2.0 | [migration-0.12.md](migration-0.12.md) |
 | CLI flags and exit codes | [cli-guide.md](cli-guide.md) |
 | CI gates | [ci-integration.md](ci-integration.md) |
 | Common problems | [troubleshooting.md](troubleshooting.md) · [faq.md](faq.md) |

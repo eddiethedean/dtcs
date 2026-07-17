@@ -34,8 +34,8 @@ body:
       description: Output of `dtcs version --json`
       placeholder: |
         {
-          "crateVersion": "0.9.0",
-          "specVersion": "1.0.0-draft"
+          "crateVersion": "0.12.0",
+          "specVersion": "2.0.0"
         }
     validations:
       required: true

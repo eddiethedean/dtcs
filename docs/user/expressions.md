@@ -7,7 +7,7 @@ For normative rules, see [SPEC.md](../SPEC.md) Chapter 8 and [Appendix A.7](../S
 ## Minimal example
 
 ```yaml
-dtcsVersion: "1.0.0"
+dtcsVersion: "2.0.0"
 id: "analysis.constant.expr"
 name: "Constant expression"
 version: "0.1.0"
@@ -71,6 +71,7 @@ Expressions support:
 - **Collection operators** — `in`, `contains` (membership / containment)
 - **Function calls** — `dtcs:concat(a, b)` using the standard library
 - **Unary** — `-x`, `!x`
+- **Portable Relational (Spec 2.0)** — ternary `between`, access helpers (`dtcs:field` / `dtcs:index` / `dtcs:element_at`), and structured expression trees (see `expression_to_structured` in the Python API)
 
 ### Field references
 
@@ -112,6 +113,8 @@ See [writing-contracts.md](writing-contracts.md#available-functions) and [SPEC A
 
 ## Null, missing, and invalid
 
+### Runtime / CLI / Python I/O dialect
+
 | Kind | Meaning | Serialized form |
 |------|---------|-----------------|
 | null | Present key with null payload | JSON `null` |
@@ -124,6 +127,17 @@ Functions declare `nullBehavior`:
 - `defined` — null/missing are interpreted by the function (`is_null`, `is_missing`)
 
 Implementations and consumers **must not** coerce missing/invalid to null unless a catalog entry explicitly defines that behavior.
+
+### Portable conformance fixture dialect
+
+Fixtures under `tests/fixtures/portable/` use a shorter encoding for the dual-path gate:
+
+| Kind | Fixture form |
+|------|--------------|
+| missing | `{ "$missing": true }` |
+| invalid | `{ "$invalid": "reason" }` |
+
+Do **not** mix dialects in the same file. Engine authors consuming portable fixtures should map `$missing` / `$invalid` into their runtime representation (and into `{"$dtcs":…}` when speaking the CLI/Python I/O dialect). Details: [portable-conformance.md](../implementation/portable-conformance.md#token-dialects).
 
 ## Typing
 

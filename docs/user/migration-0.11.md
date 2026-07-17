@@ -1,6 +1,8 @@
-# Migrating to 0.11.0
+# Migrating to 0.11.0 (historical)
 
-Upgrade playbook from **0.10.x** tools. Spec remains `1.0.0-draft`; document `dtcsVersion` stays `"1.0.0"`.
+> **Archived.** Current tools are **0.12.0** (Spec **2.0.0**). For new upgrades use [migration-0.12.md](migration-0.12.md). Do **not** pin `dtcs==0.11.0` for new work.
+
+Upgrade playbook from **0.10.x** tools to **0.11.x**. At that time Spec was still `1.0.0-draft` and document `dtcsVersion` was typically `"1.0.0"`.
 
 ## Summary
 
@@ -85,5 +87,5 @@ cargo install dtcs --version 0.11.0
 ## Related
 
 - [CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#0110)
-- [faq.md](faq.md#migration-to-0110)
+- [faq.md](faq.md#migration-to-0110-historical)
 - [customer_pipeline.dtcs.yaml](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml)

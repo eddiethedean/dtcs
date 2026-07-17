@@ -62,7 +62,7 @@ content = urllib.request.urlopen(url).read()
 report = dtcs.parse_and_validate(content)
 assert dtcs.is_valid(report)
 contract = dtcs.parse(content)["contract"]
-assert contract["dtcsVersion"] == "1.0.0"
+assert contract["dtcsVersion"] == "2.0.0"
 ```
 
 ## Analysis and planning
@@ -104,7 +104,7 @@ assert contract["dtcsVersion"] == "1.0.0"
 | `execution_validate(plan)` | `{diagnostics}` |
 | `runtime_execute(execution_plan, inputs)` | `{outputs, diagnostics}` |
 
-`inputs` map interface id → list of row dicts. Cell values may be JSON `null`, or `{"$dtcs":"missing"}` / `{"$dtcs":"invalid"}`. **Do not coerce** missing/invalid to `None`.
+`inputs` map interface id → list of row dicts. Cell values may be JSON `null`, or `{"$dtcs":"missing"}` / `{"$dtcs":"invalid"}`. **Do not coerce** missing/invalid to `None`. Fixture dialect note: [expressions.md](../user/expressions.md#null-missing-and-invalid).
 
 ```python
 import json, dtcs
@@ -119,6 +119,29 @@ assert dtcs.is_valid(result)
 assert len(result["outputs"]["customer_clean"]) == 2
 ```
 
+## Portable plans
+
+| Function | Arguments | Returns |
+|----------|-----------|---------|
+| `plan_export_portable(plan, profile=...)` | lowered plan dict; default profile `dtcs:profile/portable-relational-kernel/1` | portable plan dict (`identity`, nodes, …) |
+| `plan_fingerprint(portable_plan)` | portable plan dict | SHA-256 hex string |
+| `expression_to_structured(source)` | expression source string | structured AST dict |
+| `capability_portable_manifest(profile=...)` | portable profile id | per-entry capability manifest |
+
+```python
+import dtcs
+
+contract = dtcs.parse_file("contract.dtcs.yaml")["contract"]
+plan = dtcs.plan_lower(contract)["plan"]
+portable = dtcs.plan_export_portable(plan)
+fp = dtcs.plan_fingerprint(portable)
+manifest = dtcs.capability_portable_manifest()
+assert portable["identity"] == "dtcs.transform-plan/1"
+assert isinstance(fp, str) and len(fp) == 64
+```
+
+The Rust CLI exposes the same export as `dtcs export-portable`. The Python CLI (`python -m dtcs`) does **not** yet wrap this subcommand — use the functions above.
+
 ## Conformance
 
 | Function | Notes |
@@ -128,9 +151,14 @@ assert len(result["outputs"]["customer_clean"]) == 2
 
 ## Typing
 
-The wheel does not yet ship `py.typed` / `.pyi` stubs. Treat return values as JSON-compatible dicts/lists (except `inspect`, which returns `str`).
+The wheel does not yet ship `py.typed` / `.pyi` stubs. Treat return values as JSON-compatible dicts/lists (except `inspect`, which returns `str`). Longer-term: TypedDicts or published JSON Schema for envelopes ([json-output.md](../user/json-output.md)).
+
+## Raises vs diagnostics
+
+Most APIs return diagnostic dicts and do **not** raise for invalid contracts. Exceptions typically indicate programmer error (e.g. `None` where a contract dict is required) or I/O failures. See [error-taxonomy.md](../user/error-taxonomy.md).
 
 ## See also
 
 - [Rust API](rust.md) · [WASM](wasm.md) · [Node](node.md)
-- [migration-0.11.md](../user/migration-0.11.md)
+- [migration-0.12.md](../user/migration-0.12.md)
+- [cli-guide.md](../user/cli-guide.md#export-portable)

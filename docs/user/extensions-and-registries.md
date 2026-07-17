@@ -14,7 +14,7 @@ How to add non-`dtcs:` identifiers without breaking validation.
 ```yaml
 id: "acme:registry"
 version: "1.0.0"
-governingSpecification: "1.0.0-draft"
+governingSpecification: "2.0.0"
 publicationStatus: "experimental"
 entries:
   acme:normalize_phone:

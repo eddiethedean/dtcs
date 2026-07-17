@@ -1,5 +1,7 @@
 # DTCS Change Proposal: Rich Portable Relational Transformations
 
+> **Historical design note.** This proposal is **Accepted** and **implemented** in tools `0.12.0`. The normative source of truth is [SPEC.md](../SPEC.md) (draft 2.0.0). Prefer [migration-portable-relational.md](user/migration-portable-relational.md) and [migration-0.12.md](user/migration-0.12.md) for living guidance. Sections below retain original problem framing for history; present-tense “missing” language is **not** current status.
+
 Status: **Accepted** (implemented in tools `0.12.0`; SPEC draft updated)  
 Proposed target: DTCS next compatible revision plus staged registries  
 Related ETLantic milestones: 0.12  

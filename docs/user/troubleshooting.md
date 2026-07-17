@@ -58,7 +58,7 @@ dtcs diagnostics my_contract.yaml --json
 
 | Diagnostic | Likely cause | Fix |
 |------------|--------------|-----|
-| `dtcs:unsupported-version` | `dtcsVersion` not exactly `1.0.0` | Set `dtcsVersion: "1.0.0"` (patch variants like `1.0.1` are rejected) |
+| `dtcs:unsupported-version` | `dtcsVersion` not in the supported set | Set `dtcsVersion: "2.0.0"` (preferred) or `"1.0.0"` / `"1.0.0-draft"` (patch variants like `1.0.1` / `2.0.1` are rejected) |
 | `dtcs:missing-lineage` | Output without lineage mapping | Add `lineage.mappings` entry for each output |
 | `dtcs:unresolved-reference` | Field path does not exist | Use `interface.field` format matching an input/output `id` |
 | `dtcs:invalid-type` | Malformed type expression | Use `list<string>`, not bare `list` |
@@ -74,7 +74,7 @@ From 0.11.0, omitted lineage `operation` defaults to `dtcs:derive` and `flow` de
 
 Missing and null are distinct. Inspect JSON for `{"$dtcs":"missing"}` vs `null`. Use `dtcs:is_missing` / `dtcs:is_null` in expressions. See [faq.md](faq.md#what-are-null-vs-missing-vs-invalid-values) and [expressions.md](expressions.md#null-missing-and-invalid).
 
-See [writing-contracts.md](writing-contracts.md#validate-as-you-write) for more diagnostic fixes. Migrating from 0.10.x: [faq.md](faq.md#migration-to-0110).
+See [writing-contracts.md](writing-contracts.md#validate-as-you-write) for more diagnostic fixes. Upgrading tools: [migration-0.12.md](migration-0.12.md). From 0.10.x to 0.11.x (historical): [migration-0.11.md](migration-0.11.md).
 
 ## Analysis and planning
 

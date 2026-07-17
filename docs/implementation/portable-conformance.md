@@ -23,8 +23,20 @@ Portable differential fixtures live under `tests/fixtures/portable/` and are JSO
 ```
 
 - `actions` — ordered `dtcs:` semantic actions applied by the reference runtime
-- `input` / `expected` — datasets keyed by interface id (JSON scalars map to runtime values; `{ "$missing": true }` and `{ "$invalid": "reason" }` are supported)
+- `input` / `expected` — datasets keyed by interface id (JSON scalars map to runtime values; see [token dialects](#token-dialects))
 - `expectError` — optional substring; when set, each evaluation mode must fail with a matching message
+
+### Token dialects
+
+Portable fixtures use a **fixture dialect** optimized for compact JSON:
+
+| Kind | Fixture encoding | Runtime / CLI I/O encoding |
+|------|------------------|----------------------------|
+| missing | `{ "$missing": true }` | `{ "$dtcs": "missing" }` |
+| invalid | `{ "$invalid": "reason" }` | `{ "$dtcs": "invalid", "reason": "…" }` (shape may vary) |
+| null | JSON `null` | JSON `null` |
+
+Adopter-facing `dtcs run --input` and Python `runtime_execute` use the **runtime I/O dialect** (`$dtcs`). See [expressions.md](../user/expressions.md#null-missing-and-invalid).
 
 Manifest entries use assertion kind `portableDifferential` and profile ids such as:
 
@@ -57,5 +69,7 @@ The reference capability manifest (`reference_portable_manifest`) must not mark 
 
 ```bash
 cargo test --test phase_0_10
+cargo test --test portable_relational
 dtcs conformance run --profile dtcs:profile/portable-relational/1
+dtcs conformance run --profile all
 ```

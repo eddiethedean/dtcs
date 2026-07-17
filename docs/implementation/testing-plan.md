@@ -108,6 +108,27 @@ Integration tests: [`tests/phase_0_9.rs`](https://github.com/eddiethedean/dtcs/b
 
 Integration tests: [`tests/phase_0_10.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/phase_0_10.rs). CI runs `cargo test --test phase_0_10` and `dtcs conformance run --profile all`.
 
+## Phase 0.11 / 0.12 fixture groups
+
+| Concern | Example fixtures / artifacts |
+|---------|------------------------------|
+| Flagship pipeline | `examples/customer_pipeline.dtcs.yaml`, `tests/fixtures/runtime/customer_pipeline_input.json` |
+| Portable differential | `tests/fixtures/portable/*.json` |
+| Portable integration | [`tests/portable_relational.rs`](https://github.com/eddiethedean/dtcs/blob/main/tests/portable_relational.rs) |
+| Capability accuracy | `validate_capability_accuracy` / `reference_portable_manifest` unit tests |
+
+### How to add a portable differential fixture
+
+1. Add `tests/fixtures/portable/<id>.json` with `actions`, `input`, `expected` (or `expectError`).
+2. Use the **fixture token dialect** (`$missing` / `$invalid`) — not `{"$dtcs":…}` — see [portable-conformance.md](portable-conformance.md#token-dialects).
+3. Register a `portableDifferential` case in **both** `src/conformance/manifest.json` and `tests/conformance/manifest.json`.
+4. Run:
+   ```bash
+   cargo test --test portable_relational --locked
+   cargo test --test phase_0_10 --locked
+   cargo run --bin dtcs -- conformance run --profile all
+   ```
+
 ## Phase 0.2 fixture groups
 
 | Concern | Example fixtures |

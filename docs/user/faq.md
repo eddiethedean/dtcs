@@ -70,8 +70,10 @@ See [writing-contracts.md](writing-contracts.md).
 
 ### What is the difference between `version` and `dtcsVersion`?
 
-- `dtcsVersion` — which specification version the document conforms to
+- `dtcsVersion` — which specification version the document conforms to (prefer `"2.0.0"`; see [versioning.md](versioning.md))
 - `version` — the revision of this specific contract (semver-like)
+
+Supported `dtcsVersion` values: `"2.0.0"`, `"1.0.0"`, `"1.0.0-draft"`.
 
 ### What are null vs missing vs invalid values?
 
@@ -100,15 +102,30 @@ No. All analysis is read-only.
 
 Contracts may also declare a COM-level `compatibility` policy (`policy`, `forward`, `backward`, `notes`) separate from analysis results. See [compatibility.md](compatibility.md).
 
-## Migration to 0.11.0
+## Spec 2.0 and tools 0.12
 
-Dedicated guide with before/after YAML: **[migration-0.11.md](migration-0.11.md)**.
+### What is Spec 2.0?
 
-Notable changes from 0.10.x: lineage `operation`/`flow` defaults, dataset action `parameters`, null/missing/invalid runtime tokens, and the full Ch 17–19 catalog.
+DTCS **2.0.0** (draft) is the current normative Spec. It supersedes `1.0.0-draft` and includes the Portable Relational Profile. Prefer document `dtcsVersion: "2.0.0"`. See [versioning.md](versioning.md) and [migration-0.12.md](migration-0.12.md).
+
+### How do I upgrade to 0.12.0?
+
+Dedicated guide: **[migration-0.12.md](migration-0.12.md)**. Portable Relational compatibility tables: [migration-portable-relational.md](migration-portable-relational.md).
+
+```bash
+pip install 'dtcs==0.12.0'
+# or: cargo install dtcs --version 0.12.0
+```
+
+## Migration to 0.11.0 (historical)
+
+Archived guide with before/after YAML for **0.10.x → 0.11.x**: **[migration-0.11.md](migration-0.11.md)**. Do not pin `0.11.0` for new work.
+
+Notable changes from that era: lineage `operation`/`flow` defaults, dataset action `parameters`, null/missing/invalid runtime tokens, and the full Ch 17–19 catalog.
 
 ### How do I upgrade between versions?
 
-Read [migration-0.11.md](migration-0.11.md) and the [CHANGELOG migration summary](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#migration-summary). Pin with `pip install dtcs==0.12.0` or `cargo install dtcs --version 0.12.0`.
+Prefer [migration-0.12.md](migration-0.12.md) and the [CHANGELOG](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md). Pin with `pip install dtcs==0.12.0` or `cargo install dtcs --version 0.12.0`.
 
 ## Contributing
 

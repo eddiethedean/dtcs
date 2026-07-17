@@ -1,6 +1,6 @@
 # Implementation Build Order
 
-> **Historical document.** This describes the *scaffold build order* (Phases 1–13 below), not the release roadmap. For current milestone status, use [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) (Phases 0.1–0.11) and [spec-completeness.md](spec-completeness.md).
+> **Historical document.** This describes the *scaffold build order* (Phases 1–13 below), not the release roadmap. For current milestone status, use [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) (Phases 0.1–**0.12**) and [spec-completeness.md](spec-completeness.md). Portable Relational work lives under Phase 0.12 — do not skip those modules when following this scaffold.
 
 | Scaffold phase (this doc) | ROADMAP phase | Topic |
 |---------------------------|---------------|-------|

@@ -2,6 +2,8 @@
 
 This document helps architects and enterprise evaluators assess DTCS for their organization.
 
+> **Not production-certified.** Spec `2.0.0` is a **draft**. Tools `0.12.0` are **alpha**. Tables labeled **Covered** mean the reference implementation *exercises* that draft area — they are **not** a green-light procurement matrix or an external certification.
+
 ## What DTCS provides
 
 DTCS standardizes **transformation semantics** as portable, vendor-neutral contracts. A DTCS contract captures:
@@ -39,12 +41,23 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Capability matching | Covered (Phase 0.9; full-catalog profile in 0.11) |
 | Compilation | Covered (Phase 0.9) |
 | Reference runtime | Covered (Phase 0.9; full catalog + null tokens in 0.11) |
-| Conformance certification (Ch 23) | Covered (Phase 0.10) |
-| SPEC completeness matrix | Covered (Phase 0.11) |
+| Portable Relational (0.12) | Covered (joins, windows, datetime, complex access, portable plans) |
+| Conformance certification (Ch 23) | Covered (Phase 0.10 + portable semantic-family profiles in 0.12) |
+| SPEC completeness matrix | Covered (Phase 0.11+) |
 
 *Released reference implementation: `0.12.0`.*
 
 See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) for the full milestone plan and [spec-completeness.md](../implementation/spec-completeness.md) for the chapter matrix.
+
+## Pip-first evaluator path (no clone)
+
+```bash
+pip install 'dtcs==0.12.0'
+dtcs version
+dtcs conformance run --profile all
+```
+
+Then follow [getting-started.md](../user/getting-started.md) for a pasteable validate + `dtcs run` micro-example. Clone the repository only when you need `examples/` or `tests/fixtures/`.
 
 ## What you can use today
 
@@ -59,8 +72,9 @@ See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) for 
 9. **Capability matching** — verify a plan against an engine profile (`dtcs match`)
 10. **Compilation** — produce execution plans from transformation plans (`dtcs compile`)
 11. **Reference execution** — run contracts end-to-end with sample inputs (`dtcs run`)
-12. **Conformance certification** — offline profiles via `dtcs conformance declare` / `dtcs conformance run`
-13. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
+12. **Conformance certification** — offline profiles via `dtcs conformance declare` / `dtcs conformance run` (including portable profiles)
+13. **Portable plan export** — Rust CLI `dtcs export-portable`; Python `plan_export_portable`
+14. **Governance hooks** — metadata validation enforces owner/steward on restricted classifications
 
 ## What is explicitly out of scope
 
@@ -99,19 +113,25 @@ Rust and Python packages install the same `dtcs` CLI.
 
 ## Evaluation checklist
 
-- [ ] Validate existing pipeline contracts with `dtcs validate`
+**Pip-first (no clone):**
+
+- [ ] `pip install 'dtcs==0.12.0'` and `dtcs version` shows Spec `2.0.0`
+- [ ] Validate the curlable minimal sample ([getting-started.md](../user/getting-started.md))
+- [ ] Run the no-clone `hello` contract with `dtcs run`
+- [ ] Run offline conformance: `dtcs conformance run --profile all`
+- [ ] Review [security-checklist.md](security-checklist.md) for Ch 24 probes
+- [ ] Read [versioning.md](../user/versioning.md) and [limits.md](../user/limits.md)
+
+**Clone-required (richer fixtures):**
+
 - [ ] Review diagnostic output for schema and lineage gaps (`operation` / `flow`)
 - [ ] Author or review a dataset action with `parameters` (for example `dtcs:project`)
 - [ ] Exercise null / missing / invalid tokens with `dtcs run` and inspect JSON carefully
 - [ ] Compare current and proposed contract versions with `dtcs compat`
 - [ ] Trace lineage for critical inputs with `dtcs lineage --impact`
-- [ ] Match plans against engine capabilities with `dtcs match examples/customer_pipeline.dtcs.yaml` (from a clone)
-- [ ] Compile contracts to execution plans with `dtcs compile examples/customer_pipeline.dtcs.yaml`
-- [ ] Execute end-to-end with the reference runtime: `dtcs run examples/customer_pipeline.dtcs.yaml --input tests/fixtures/runtime/customer_pipeline_input.json`
-- [ ] Run offline conformance certification: `dtcs conformance run --profile all` (includes Analyzer assertions)
-- [ ] Review [security-checklist.md](security-checklist.md) for Ch 24 requirements
-- [ ] Read SPEC Chapters 1–3 and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative) for design principles and the standard library catalog
-- [ ] Skim [faq.md](../user/faq.md#migration-to-0110) if upgrading from 0.10.x
+- [ ] Match / compile / run `examples/customer_pipeline.dtcs.yaml` with its fixture input
+- [ ] Skim [migration-0.12.md](../user/migration-0.12.md) if upgrading from 0.11.x
+- [ ] Read SPEC Chapters 1–3 and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative)
 
 Conformance certification is available via `dtcs conformance declare` and `dtcs conformance run`. See [conformance.md](../user/conformance.md). External certification authority remains out of scope per Ch 23 §13.
 
