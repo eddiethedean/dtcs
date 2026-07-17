@@ -74,7 +74,7 @@ From 0.11.0, omitted lineage `operation` defaults to `dtcs:derive` and `flow` de
 
 Missing and null are distinct. Inspect JSON for `{"$dtcs":"missing"}` vs `null`. Use `dtcs:is_missing` / `dtcs:is_null` in expressions. See [faq.md](faq.md#what-are-null-vs-missing-vs-invalid-values) and [expressions.md](expressions.md#null-missing-and-invalid).
 
-See [writing-contracts.md](writing-contracts.md#validate-as-you-write) for more diagnostic fixes. Upgrading tools: [migration-0.12.md](migration-0.12.md). From 0.10.x to 0.11.x (historical): [migration-0.11.md](migration-0.11.md).
+See [writing-contracts.md](writing-contracts.md#validate-as-you-write) for more diagnostic fixes. Upgrading tools: [migration-0.13.md](migration-0.13.md). Historical 0.12 / Spec 2.0: [migration-0.12.md](migration-0.12.md). From 0.10.x to 0.11.x: [migration-0.11.md](migration-0.11.md).
 
 ## Analysis and planning
 

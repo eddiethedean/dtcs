@@ -29,6 +29,19 @@ Thank you for contributing to the Data Transformation Contract Standard and its 
 
 Full user-oriented dev notes: [docs/user/getting-started.md](docs/user/getting-started.md#develop-from-source). Hosted docs: [dtcs.readthedocs.io](https://dtcs.readthedocs.io/).
 
+### First PR checklist
+
+Before opening a PR that changes behavior or docs:
+
+- [ ] `cargo fmt --all -- --check`
+- [ ] `cargo clippy --all-targets -- -D warnings`
+- [ ] `cargo test --locked`
+- [ ] `cargo run --bin dtcs -- conformance run --profile all` (if runtime/plan/conformance touched)
+- [ ] `./scripts/check-conformance-manifests.sh` (if either manifest changed)
+- [ ] `./scripts/check-docs.sh` (if docs or public API comments changed)
+- [ ] `pytest python/tests -v` (if Python surface or CLI touched)
+- [ ] CHANGELOG entry for user-visible changes
+
 ### CI checks
 
 Pull requests must pass the workflow in [`.github/workflows/checks.yml`](.github/workflows/checks.yml):

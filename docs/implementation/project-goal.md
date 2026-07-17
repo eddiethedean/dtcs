@@ -4,7 +4,11 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 
 `SPEC.md` is the source of truth.
 
-## Implemented through 0.12.0
+## Implemented through 0.13.0
+
+Everything below through **0.12.0**, plus DTCS 3.0 Rich Portable Analytics (plan `dtcs.transform-plan/2`, kernel/relational `/2` Candidate, A.9 Experimental families, fingerprint pins, explicit `errorMode`).
+
+### Through 0.12.0 (still current)
 
 - Canonical Object Model (including `guarantees`, `compatibility` declaration, nested extensions)
 - YAML and JSON parsing

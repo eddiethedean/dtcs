@@ -4,7 +4,7 @@ Common diagnostic codes you will see from `dtcs diagnostics`, `validate`, and re
 
 | Code | Typical meaning | First fix |
 |------|-----------------|-----------|
-| `dtcs:unsupported-version` | `dtcsVersion` not in the supported set | Set `"2.0.0"` (preferred) or `"1.0.0"` / `"1.0.0-draft"` — [versioning.md](versioning.md) |
+| `dtcs:unsupported-version` | `dtcsVersion` not in the supported set | Set `"3.0.0"` (preferred) or `"2.0.0"` / `"1.0.0"` / `"1.0.0-draft"` — [versioning.md](versioning.md) |
 | `dtcs:missing-lineage` | Output lacks a lineage mapping | Add `lineage.mappings` for each output |
 | `dtcs:unresolved-reference` | Field path does not resolve | Use `interface.field` matching an input/output `id` |
 | `dtcs:ambiguous-reference` | Path resolves in more than one way | Disambiguate interface or field names |

@@ -1,8 +1,10 @@
-# Portable Relational Profile — Compatibility Table
+# Portable Relational Profile — Compatibility Table (0.12)
+
+> **Historical tables for tools 0.12 / Spec 2.0 profile `/1`.** For current work prefer tools **0.13** / Spec **3.0**, plan identity `dtcs.transform-plan/2`, and kernel/relational `/2` (Candidate). See [migration-0.13.md](migration-0.13.md).
 
 Upgrade guidance for tools **0.12+** implementing the Portable Relational Profile
-(`dtcs:profile/portable-relational-kernel/1` through advanced profiles). Spec is **`2.0.0`**.
-Document `dtcsVersion` SHOULD be `"2.0.0"`; `"1.0.0"` remains accepted for compatibility.
+(`dtcs:profile/portable-relational-kernel/1` through advanced profiles). Spec for these tables is **`2.0.0`**.
+Document `dtcsVersion` for that era SHOULD be `"2.0.0"`; `"1.0.0"` remains accepted for compatibility.
 
 ## Policy (option B)
 

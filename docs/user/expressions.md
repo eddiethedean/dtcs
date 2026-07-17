@@ -7,7 +7,7 @@ For normative rules, see [SPEC.md](../SPEC.md) Chapter 8 and [Appendix A.7](../S
 ## Minimal example
 
 ```yaml
-dtcsVersion: "2.0.0"
+dtcsVersion: "3.0.0"
 id: "analysis.constant.expr"
 name: "Constant expression"
 version: "0.1.0"
@@ -44,9 +44,12 @@ lineage:
 Validate and analyze:
 
 ```bash
+# After cloning the repo (fixtures are not in PyPI wheels):
 dtcs validate tests/fixtures/analysis_constant_expr.yaml
 dtcs analyze tests/fixtures/analysis_constant_expr.yaml
 ```
+
+Or paste the YAML above into `expr.dtcs.yaml` and run `dtcs validate expr.dtcs.yaml`.
 
 ## Expression block fields
 
@@ -71,7 +74,7 @@ Expressions support:
 - **Collection operators** — `in`, `contains` (membership / containment)
 - **Function calls** — `dtcs:concat(a, b)` using the standard library
 - **Unary** — `-x`, `!x`
-- **Portable Relational (Spec 2.0)** — ternary `between`, access helpers (`dtcs:field` / `dtcs:index` / `dtcs:element_at`), and structured expression trees (see `expression_to_structured` in the Python API)
+- **Portable Relational / Rich Analytics (Spec 2.0–3.0)** — ternary `between`, access helpers (`dtcs:field` / `dtcs:index` / `dtcs:element_at`), lambdas, and structured expression trees (see `expression_to_structured` in the Python API)
 
 ### Field references
 

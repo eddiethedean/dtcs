@@ -2,9 +2,9 @@
 
 Crate: [`dtcs` on crates.io](https://crates.io/crates/dtcs).
 
-**Generated API docs:** [https://docs.rs/dtcs](https://docs.rs/dtcs/0.13.0)
+**Generated API docs (signatures):** [https://docs.rs/dtcs/0.13.0](https://docs.rs/dtcs/0.13.0)
 
-This page is a consumer-oriented map. Implementer design notes live in [public-api.md](../implementation/public-api.md). Versions: [versioning.md](../user/versioning.md).
+This page is a consumer-oriented map. Implementer design notes: [public-api.md](../implementation/public-api.md). Versions: [versioning.md](../user/versioning.md).
 
 ## Add dependency
 
@@ -17,28 +17,59 @@ dtcs = "0.13"
 
 | API | Purpose |
 |-----|---------|
-| `parse` / `parse_file` | YAML/JSON → COM |
+| `parse` / `parse_file` / `parse_yaml` / `parse_json` | YAML/JSON → COM |
 | `validate` / `validate_with_registry` | Validation report |
-| `check_contract` | Static semantic analysis |
-| `lower_plan` / `optimize_plan` / `plan_equivalent` | Transformation plans |
-| `export_portable_plan` | Portable transform-plan envelope (`dtcs.transform-plan/2`) |
+| `parse_and_validate` | One-shot parse + validate |
+| `check_contract` / `check_expression` | Static semantic analysis |
+| `to_structured_node` / `from_structured_node` | Structured expression trees |
+| `lower_plan` / `optimize_plan` / `validate_plan` / `plan_equivalent` | Transformation plans |
+| `export_portable_plan` | Portable envelope (`dtcs.transform-plan/2`) |
+| `parse_validate_and_plan` / `_optimize` / `_compile` / `_run` | Pipeline helpers (+ `_with_registry` variants) |
 | `analyze_compatibility` / `analyze_evolution` / `analyze_lineage` | Compatibility and lineage |
-| `match_plan` / `compile` / `execute` | Capability match, compile, runtime |
+| `match_plan` / `compile` / `compile_after_match` / `execute` | Capability match, compile, runtime |
+| `discover_capabilities` / `validate_capabilities` | Capability discovery |
 | `reference_portable_manifest` / `validate_capability_accuracy` | Portable capability manifests |
 | `conformance_run` / `conformance_declare` | Ch 23 certification |
-| `resolve_registry` / `default_registry` | Identifier catalog |
-| `SPEC_VERSION` | Spec version string (`"3.0.0"`) |
+| `default_registry` / `resolve_registry` / `is_known_*` | Identifier catalog |
+| `inspect_contract` / `codes` | Diagnostics helpers |
+| `Dataset` / `Row` / `RuntimeValue` / `RuntimeInputs` | Runtime value types |
+| `SPEC_VERSION` / `TRANSFORM_PLAN_IDENTITY` / `KERNEL_PROFILE` | Version and profile constants |
 
-Exact signatures: see docs.rs for the installed crate version.
+Exact signatures: **docs.rs for the installed crate version**.
 
-## Minimal pipeline example
+## Minimal pipeline (crates.io — no repo checkout)
 
 ```rust
 use dtcs::{parse, validate, DocumentFormat};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let yaml = include_str!("../examples/minimal.dtcs.yaml");
-    let parsed = parse(yaml.as_bytes(), DocumentFormat::Yaml)?;
+    let yaml = br#"
+dtcsVersion: "3.0.0"
+id: "demo.minimal"
+name: "Minimal Demo"
+version: "0.1.0"
+metadata:
+  description: "crates.io consumer demo"
+  classification: internal
+  governance: { owner: "docs", steward: "docs" }
+  provenance: { author: "docs", createdAt: "2026-01-01T00:00:00Z" }
+inputs:
+  - id: "people"
+    schema:
+      fields:
+        - { name: "display_name", type: "string", nullable: false }
+outputs:
+  - id: "people_out"
+    schema:
+      fields:
+        - { name: "display_name", type: "string", nullable: false }
+semanticActions:
+  - { id: "lower", action: "dtcs:lowercase", target: "people.display_name" }
+lineage:
+  mappings:
+    - { output: "people_out", inputs: ["people"] }
+"#;
+    let parsed = parse(yaml, DocumentFormat::Yaml)?;
     let contract = parsed.contract.expect("parse produced a contract");
     let report = validate(&contract);
     assert!(!report.has_errors());
@@ -47,8 +78,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
-For plan → portable export, see `export_portable_plan` on docs.rs and the CLI below.
+Inside this repository you may use `include_str!("../examples/minimal.dtcs.yaml")` instead of an inline string.
 
+## Portable export sketch
+
+```rust
+use dtcs::{export_portable_plan, lower_plan, KERNEL_PROFILE, TRANSFORM_PLAN_IDENTITY};
+
+// after you have a validated `&TransformationContract`:
+let lowered = lower_plan(&contract, None, None);
+let plan = lowered.plan.expect("lower succeeded");
+let portable = export_portable_plan(&plan, KERNEL_PROFILE)?;
+assert_eq!(portable.plan_identity, TRANSFORM_PLAN_IDENTITY);
+```
+
+Confirm parameter order and profile constants on [docs.rs](https://docs.rs/dtcs/0.13.0).
 ## CLI
 
 ```bash
@@ -70,3 +114,4 @@ Library APIs return `DiagnosticReport` / structured results rather than panickin
 - [Python API](python.md) · [WASM](wasm.md) · [Node](node.md)
 - [architecture.md](../implementation/architecture.md)
 - [migration-0.13.md](../user/migration-0.13.md)
+- [docs.rs/dtcs](https://docs.rs/dtcs/0.13.0) (signature source of truth)

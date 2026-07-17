@@ -20,9 +20,10 @@ Then: [Getting started](user/getting-started.md) (validate in minutes) · [Adopt
 | Audience | Start here |
 |----------|------------|
 | **New users** | [getting-started](user/getting-started.md) → [concepts](user/concepts.md) → [writing contracts](user/writing-contracts.md) |
-| **Evaluators / architects** | [adoption/overview](adoption/overview.md) · [limits](user/limits.md) |
+| **Evaluators / architects** | [adoption/overview](adoption/overview.md) · [limits](user/limits.md) · [what-dtcs-is-not](user/what-dtcs-is-not.md) |
 | **Upgrading to 0.13 / Spec 3.0** | [migration-0.13](user/migration-0.13.md) |
-| **Upgrading to 0.12 / Spec 2.0** | [migration-0.12](user/migration-0.12.md) · [Portable Relational](user/migration-portable-relational.md) |
+| **Upgrading to 0.12 / Spec 2.0** (historical) | [migration-0.12](user/migration-0.12.md) · [Portable Relational 0.12 tables](user/migration-portable-relational.md) |
+| **What DTCS is not** | [what-dtcs-is-not](user/what-dtcs-is-not.md) |
 | **Contributors** | [CONTRIBUTING](https://github.com/eddiethedean/dtcs/blob/main/CONTRIBUTING.md) · [architecture](implementation/architecture.md) |
 | **Spec authors** | [editorial/baseline](editorial/baseline.md) · [SPEC](SPEC.md) |
 
@@ -53,9 +54,10 @@ Then: [Getting started](user/getting-started.md) (validate in minutes) · [Adopt
 | [extensions-and-registries](user/extensions-and-registries.md) | Vendor catalogs |
 | [migration-0.13](user/migration-0.13.md) | Upgrade to tools 0.13 / Spec 3.0 |
 | [migration-0.12](user/migration-0.12.md) | Historical: tools 0.12 / Spec 2.0 |
-| [migration-portable-relational](user/migration-portable-relational.md) | Portable Relational compatibility |
+| [migration-portable-relational](user/migration-portable-relational.md) | Historical: 0.12 `/1` compatibility tables |
 | [migration-0.11](user/migration-0.11.md) | Historical: 0.10.x → 0.11.x |
 | [limits](user/limits.md) | Runtime / deployment limits |
+| [what-dtcs-is-not](user/what-dtcs-is-not.md) | Design philosophy / boundaries |
 | [troubleshooting](user/troubleshooting.md) | Common failures |
 | [faq](user/faq.md) | FAQ |
 | [glossary](user/glossary.md) | Terms |
@@ -64,7 +66,7 @@ Then: [Getting started](user/getting-started.md) (validate in minutes) · [Adopt
 
 | Area | Links |
 |------|-------|
-| Adoption | [overview](adoption/overview.md) · [security checklist](adoption/security-checklist.md) · [SECURITY.md](https://github.com/eddiethedean/dtcs/blob/main/SECURITY.md) |
+| Adoption | [overview](adoption/overview.md) · [what DTCS is not](user/what-dtcs-is-not.md) · [security checklist](adoption/security-checklist.md) · [SECURITY.md](https://github.com/eddiethedean/dtcs/blob/main/SECURITY.md) |
 | API | [Python](api/python.md) · [Rust](api/rust.md) · [WASM](api/wasm.md) · [Node](api/node.md) |
 | Spec | [SPEC](SPEC.md) · [completeness](implementation/spec-completeness.md) · [portable conformance](implementation/portable-conformance.md) · [CHANGELOG](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md) · [ROADMAP](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) |
 

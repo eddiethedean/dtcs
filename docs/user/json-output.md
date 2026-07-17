@@ -38,7 +38,7 @@ dtcs diagnostics contract.yaml --json
   "id": "customer.normalize",
   "name": "Normalize Customer",
   "version": "0.2.0",
-  "dtcsVersion": "1.0.0",
+  "dtcsVersion": "3.0.0",
   "inputs": 1,
   "outputs": 1,
   "semanticActions": 1,
@@ -157,7 +157,7 @@ On success, emits the transformation plan document directly (not wrapped in a re
 ```json
 {
   "identity": {
-    "dtcsVersion": "1.0.0",
+    "dtcsVersion": "3.0.0",
     "id": "customer.normalize",
     "name": "Normalize Customer",
     "version": "0.2.0"
@@ -263,7 +263,7 @@ Success emits an execution plan document (same shape as the Rust `ExecutionPlan`
     "capabilityVersion": "1.0.0"
   },
   "identity": {
-    "dtcsVersion": "1.0.0",
+    "dtcsVersion": "3.0.0",
     "id": "customer.normalize",
     "name": "Normalize Customer",
     "version": "0.2.0"

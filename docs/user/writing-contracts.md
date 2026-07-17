@@ -9,7 +9,7 @@ This guide uses field tables and snippets. For end-to-end samples after you clon
 Every contract needs:
 
 ```yaml
-dtcsVersion: "2.0.0"
+dtcsVersion: "3.0.0"
 id: "my.transform"
 name: "My Transform"
 version: "1.0.0"
@@ -42,7 +42,7 @@ lineage:
 
 | Field | Required | Purpose |
 |-------|----------|---------|
-| `dtcsVersion` | Yes | Spec version the document targets (prefer `"2.0.0"`; `"1.0.0"` / `"1.0.0-draft"` accepted) |
+| `dtcsVersion` | Yes | Spec edition (`"3.0.0"` preferred; `"2.0.0"` / `"1.0.0"` / `"1.0.0-draft"` accepted) |
 | `id` | Yes | Stable contract identifier (namespaced string) |
 | `name` | Yes | Human-readable title |
 | `version` | Yes | Contract revision (semver-like string) |
@@ -297,13 +297,13 @@ Common first-time errors:
 |------------|-----|
 | `dtcs:missing-lineage` | Add a lineage mapping for each output |
 | `dtcs:unresolved-reference` | Check field paths match `interface.field` format |
-| `dtcs:unsupported-version` | Set `dtcsVersion` to `"2.0.0"` (preferred) or `"1.0.0"` / `"1.0.0-draft"` |
+| `dtcs:unsupported-version` | Set `dtcsVersion` to `"3.0.0"` (preferred) or `"2.0.0"` / `"1.0.0"` / `"1.0.0-draft"` |
 | `dtcs:invalid-type` | Fix type syntax (e.g. `list<string>` not `list`) |
 | `dtcs:unknown-registry-entry` | Use a `dtcs:` identifier from `dtcs registry list`, or declare a vendor extension |
 | `dtcs:invalid-semantic-action` | Supply required `parameters` for dataset actions; match target type/nullability |
 | stdlib semantics errors | Match target field type/nullability and rule `phase` to the registry definition |
 
-See [faq.md](faq.md) and [troubleshooting.md](troubleshooting.md) for more help. Upgrading to 0.12 / Spec 2.0: [migration-0.12.md](migration-0.12.md).
+See [faq.md](faq.md) and [troubleshooting.md](troubleshooting.md) for more help. Upgrading to 0.13 / Spec 3.0: [migration-0.13.md](migration-0.13.md). Historical 0.12 notes: [migration-0.12.md](migration-0.12.md).
 
 ## Next steps
 

@@ -1,0 +1,61 @@
+# Spec 3.0 sample: coalesce expression + lowercase action.
+# Validate: dtcs validate examples/spec3_coalesce.dtcs.yaml
+# Portable plans from tools 0.13 use identity dtcs.transform-plan/2
+dtcsVersion: "3.0.0"
+id: "demo.spec3.coalesce"
+name: "Spec 3.0 Coalesce Demo"
+version: "0.1.0"
+
+metadata:
+  description: "Spec 3.0 contract with a coalesce expression (pip/curl friendly)"
+  classification: internal
+  governance:
+    owner: "docs"
+    steward: "docs"
+  provenance:
+    author: "docs"
+    createdAt: "2026-01-01T00:00:00Z"
+
+inputs:
+  - id: "events"
+    schema:
+      fields:
+        - name: "event_id"
+          type: "string"
+          nullable: false
+        - name: "primary_label"
+          type: "string"
+          nullable: false
+        - name: "fallback_label"
+          type: "string"
+          nullable: false
+
+outputs:
+  - id: "events_labeled"
+    schema:
+      fields:
+        - name: "out_event_id"
+          type: "string"
+          nullable: false
+        - name: "label"
+          type: "string"
+          nullable: false
+
+expressions:
+  - id: "pick_label"
+    expr: "dtcs:coalesce(events.primary_label, events.fallback_label)"
+    type: "string"
+    nullBehavior: coalesce
+    deterministic: true
+
+semanticActions:
+  - id: "lower_fallback"
+    action: "dtcs:lowercase"
+    target: "events.fallback_label"
+
+lineage:
+  mappings:
+    - output: "events_labeled"
+      inputs: ["events"]
+      operation: "dtcs:derive"
+      flow: derived

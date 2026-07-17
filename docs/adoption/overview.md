@@ -20,31 +20,40 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 ## Reference implementation maturity
 
-> **Maturity:** Spec `3.0.0` (draft) · tools alpha (`0.13.0`). **Covered** means the reference implementation exercises that draft area — not production certification of the standard.
+> **Maturity:** Spec `3.0.0` (draft) · tools alpha (`0.13.0`). The table below is a **reference-exercise map**, not a certification or procurement scorecard. Prefer reading [limits.md](../user/limits.md) and [what-dtcs-is-not.md](../user/what-dtcs-is-not.md) before treating any row as “done for production.”
 
-| Component | Reference impl coverage |
+### Limitations first
+
+- Spec is a **draft**; tools are **alpha**
+- `dtcs run` is an in-memory teaching runtime, not warehouse ETL
+- Advanced A.9 profiles are **Experimental**; kernel/relational `/2` and `portable-window/2` are **Candidate** (not Standard)
+- WASM/Node expose parse/validate/declare only
+
+### Coverage map (reference exercises draft SPEC areas)
+
+| Component | Reference impl status |
 |-----------|-------------------------|
 | Specification | Draft (`3.0.0`, 27 chapters + Appendix A catalog) |
-| Parser (YAML/JSON) | Covered |
-| Seven-phase validation | Covered |
-| Metadata validation | Covered |
-| Type system (incl. expressions) | Covered |
-| Compatibility analysis | Covered (five classification levels) |
-| Evolution analysis | Covered |
-| Versioning validation (Ch 25) | Covered |
-| Lineage analysis (dataset-level) | Covered (`operation` / `flow` in COM) |
-| Identifier registry & extensibility | Covered (Phase 0.4) |
-| Standard libraries (Ch 17–19) | Covered (full catalog, Phase 0.11) |
-| Static semantic analysis | Covered (Phase 0.6) |
-| Transformation plan lowering | Covered (Phase 0.7) |
-| Plan optimization | Covered (Phase 0.8) |
-| Capability matching | Covered (Phase 0.9; full-catalog profile in 0.11) |
-| Compilation | Covered (Phase 0.9) |
-| Reference runtime | Covered (Phase 0.9; full catalog + null tokens in 0.11) |
-| Portable Relational (0.12) | Covered (joins, windows, datetime, complex access, portable plans) |
-| Rich Portable Analytics (0.13 / Ch 27) | Covered (plan v2, kernel/relational `/2` Candidate, A.9 Experimental families) |
-| Conformance certification (Ch 23) | Covered (Phase 0.10 + portable semantic-family profiles in 0.12–0.13) |
-| SPEC completeness matrix | Covered (Phase 0.11+) |
+| Parser (YAML/JSON) | Exercises draft COM parse |
+| Seven-phase validation | Exercises draft validation |
+| Metadata validation | Exercises draft metadata rules |
+| Type system (incl. expressions) | Exercises draft typing |
+| Compatibility analysis | Exercises five classification levels |
+| Evolution analysis | Exercises same-identity revisions |
+| Versioning validation (Ch 25) | Exercises draft versioning |
+| Lineage analysis (dataset-level) | Exercises `operation` / `flow` in COM |
+| Identifier registry & extensibility | Exercises registry merge |
+| Standard libraries (Ch 17–19) | Exercises full catalog |
+| Static semantic analysis | Exercises analyzer profile |
+| Transformation plan lowering | Exercises planner |
+| Plan optimization | Exercises optimizer |
+| Capability matching | Exercises match against reference profile |
+| Compilation | Exercises compiler |
+| Reference runtime | Exercises small in-memory runs |
+| Portable Relational (0.12 `/1`) | Exercises joins, windows, datetime, complex access, portable plans |
+| Rich Portable Analytics (0.13 / Ch 27) | Exercises plan v2; `/2` Candidate; A.9 Experimental families |
+| Conformance certification (Ch 23) | Exercises offline profiles + portable fixtures |
+| SPEC completeness matrix | Living implementer matrix — not external certification |
 
 *Released reference implementation: `0.13.0`.*
 
@@ -55,6 +64,11 @@ See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) for 
 ```bash
 pip install 'dtcs==0.13.0'
 dtcs version
+# quick first success — prefer validate before full conformance:
+curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml \
+  -o contract.dtcs.yaml
+dtcs validate contract.dtcs.yaml
+# optional deeper gate:
 dtcs conformance run --profile all
 ```
 
@@ -131,7 +145,7 @@ Rust and Python packages install the same `dtcs` CLI.
 - [ ] Compare current and proposed contract versions with `dtcs compat`
 - [ ] Trace lineage for critical inputs with `dtcs lineage --impact`
 - [ ] Match / compile / run `examples/customer_pipeline.dtcs.yaml` with its fixture input
-- [ ] Skim [migration-0.12.md](../user/migration-0.12.md) if upgrading from 0.11.x
+- [ ] Skim [migration-0.13.md](../user/migration-0.13.md) if upgrading to tools 0.13 / Spec 3.0 (historical 0.12: [migration-0.12.md](../user/migration-0.12.md))
 - [ ] Read SPEC Chapters 1–3 and [Appendix A](../SPEC.md#appendix-a-standard-library-catalog-normative)
 
 Conformance certification is available via `dtcs conformance declare` and `dtcs conformance run`. See [conformance.md](../user/conformance.md). External certification authority remains out of scope per Ch 23 §13.

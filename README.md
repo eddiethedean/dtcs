@@ -10,7 +10,7 @@ DTCS is a **draft** standard and toolkit for writing **vendor-neutral data trans
 
 **Status:** Spec `3.0.0` (draft) · Tools `0.13.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
 
-[Documentation](https://dtcs.readthedocs.io/) · [Getting started](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
+[Documentation](https://dtcs.readthedocs.io/) · [Getting started](docs/user/getting-started.md) · [What DTCS is not](docs/user/what-dtcs-is-not.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
 ## Try it (no clone)
 
@@ -64,7 +64,8 @@ dtcs run examples/customer_pipeline.dtcs.yaml \
 | Versions | [docs/user/versioning.md](docs/user/versioning.md) |
 | Write contracts | [docs/user/writing-contracts.md](docs/user/writing-contracts.md) |
 | CLI reference | [docs/user/cli-guide.md](docs/user/cli-guide.md) |
-| Upgrade to 0.12 / Spec 2.0 | [docs/user/migration-0.12.md](docs/user/migration-0.12.md) |
+| Upgrade to 0.13 / Spec 3.0 | [docs/user/migration-0.13.md](docs/user/migration-0.13.md) |
+| Historical: 0.12 / Spec 2.0 | [docs/user/migration-0.12.md](docs/user/migration-0.12.md) |
 | Evaluate for your org | [docs/adoption/overview.md](docs/adoption/overview.md) |
 
 ## Develop from source

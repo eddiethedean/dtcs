@@ -1,18 +1,18 @@
 # DTCS 3.0 Rich Portable Analytics Proposal
 
-- Status: Draft proposal for DTCS 3.0.0
-- Proposed specification version: `3.0.0`
-- Baseline: DTCS 2.0.0 and `dtcs` 0.12.0
-- Proposed plan protocol: `dtcs.transform-plan/2`
+> **Accepted / historical.** This proposal is **merged into** [SPEC.md](../SPEC.md) draft **3.0.0** and implemented in tools **0.13.0**. Prefer [migration-0.13.md](user/migration-0.13.md) and the living SPEC for normative behavior. Sections below retain original proposal framing for history.
+
+- Status: **Accepted** (implemented in tools `0.13.0`; SPEC draft `3.0.0`)
+- Specification version: `3.0.0`
+- Baseline at proposal time: DTCS 2.0.0 and `dtcs` 0.12.0
+- Plan protocol: `dtcs.transform-plan/2`
 - Owner: DTCS publisher and maintainers
 - Primary consumer: ETLantic portable transformations
 
-!!! info "Proposal—not published DTCS behavior"
-    This document proposes normative DTCS 3.0 changes. It does not alter DTCS
-    2.0 or make the identifiers below available in the current `dtcs` package.
-    Implementations must not advertise these capabilities until the
-    specification, registries, schemas, package, and conformance fixtures are
-    published.
+!!! info "Historical proposal text"
+    The body below was written before publication. Identifiers and profiles described
+    here are available in Spec 3.0 / tools 0.13 — do not treat this file as the
+    normative source of truth.
 
 ## 1. Executive summary
 

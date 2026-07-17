@@ -7,6 +7,15 @@ Install the tools and validate a contract. Prefer `pip install` when you want a 
 - **Python 3.9+** (for PyPI) **or** **Rust 1.75+** (for `cargo install` / building from source)
 - A terminal with `curl` (or any way to save a YAML file)
 
+### Installation notes
+
+| Topic | Detail |
+|-------|--------|
+| Pin | Prefer `pip install 'dtcs==0.13.0'` or `cargo install dtcs --version 0.13.0` |
+| Platforms | PyPI publishes wheels for common CPython 3.9–3.13 platforms when available; otherwise build from source with Rust |
+| Dual `dtcs` on PATH | Rust and Python both install a `dtcs` CLI — run `which dtcs` / `dtcs version` if versions look wrong |
+| Offline | Paste YAML from this page; wheels do not include `examples/` |
+| Full matrix | [limits.md](limits.md) · [what-dtcs-is-not.md](what-dtcs-is-not.md) |
 ## 1. Install
 
 ```bash
@@ -117,7 +126,7 @@ Add `--json` for machine-readable output (see [json-output.md](json-output.md)).
 Create `hello.dtcs.yaml`:
 
 ```yaml
-dtcsVersion: "2.0.0"
+dtcsVersion: "3.0.0"
 id: "demo.hello"
 name: "Hello Run"
 version: "0.1.0"
@@ -185,8 +194,10 @@ Expected JSON includes lowercased names under `people_out` (for example `"ada"`,
 | Versions (crate / Spec / `dtcsVersion`) | [versioning.md](versioning.md) |
 | Author richer contracts | [writing-contracts.md](writing-contracts.md) |
 | Sample pipeline (clone or download) | [`customer_pipeline.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/customer_pipeline.dtcs.yaml) |
+| Spec 3.0 sample (coalesce) | [`spec3_coalesce.dtcs.yaml`](https://github.com/eddiethedean/dtcs/blob/main/examples/spec3_coalesce.dtcs.yaml) |
 | More recipes | [cookbook.md](cookbook.md) |
-| Upgrade to 0.12 / Spec 2.0 | [migration-0.12.md](migration-0.12.md) |
+| Upgrade to 0.13 / Spec 3.0 | [migration-0.13.md](migration-0.13.md) |
+| Historical: 0.12 / Spec 2.0 | [migration-0.12.md](migration-0.12.md) |
 | CLI flags and exit codes | [cli-guide.md](cli-guide.md) |
 | CI gates | [ci-integration.md](ci-integration.md) |
 | Common problems | [troubleshooting.md](troubleshooting.md) · [faq.md](faq.md) |

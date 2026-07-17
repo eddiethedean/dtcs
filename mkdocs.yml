@@ -79,6 +79,7 @@ validation:
 nav:
   - Home: index.md
   - Getting started: user/getting-started.md
+  - What DTCS is not: user/what-dtcs-is-not.md
   - Tutorials:
       - Concepts: user/concepts.md
       - Writing contracts: user/writing-contracts.md
@@ -95,8 +96,8 @@ nav:
       - Diagnostic catalog: user/diagnostic-catalog.md
       - Extensions & registries: user/extensions-and-registries.md
       - Migration 0.13: user/migration-0.13.md
-      - Migration 0.12: user/migration-0.12.md
-      - Portable Relational migration: user/migration-portable-relational.md
+      - Migration 0.12 (historical): user/migration-0.12.md
+      - Portable Relational (0.12 tables): user/migration-portable-relational.md
       - Migration 0.11 (historical): user/migration-0.11.md
       - Limits & deployment: user/limits.md
       - Troubleshooting: user/troubleshooting.md

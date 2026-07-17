@@ -76,7 +76,7 @@ dtcs export-portable contract.dtcs.yaml --json
 dtcs export-portable contract.dtcs.yaml --fingerprint
 ```
 
-See [cli-guide.md](cli-guide.md#export-portable) and [migration-0.12.md](migration-0.12.md).
+See [cli-guide.md](cli-guide.md#export-portable) and [migration-0.13.md](migration-0.13.md) (plan v2). Historical 0.12 portable notes: [migration-0.12.md](migration-0.12.md).
 
 ## Conformance certification
 

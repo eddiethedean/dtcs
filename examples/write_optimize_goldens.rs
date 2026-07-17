@@ -1,3 +1,4 @@
+//! Maintainer tooling (not a user-facing sample contract).
 //! One-off helper to regenerate optimized plan golden files.
 //! Run: cargo run --example write_optimize_goldens
 

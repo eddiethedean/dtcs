@@ -106,19 +106,48 @@ assert contract["dtcsVersion"] == "3.0.0"
 
 `inputs` map interface id → list of row dicts. Cell values may be JSON `null`, or `{"$dtcs":"missing"}` / `{"$dtcs":"invalid"}`. **Do not coerce** missing/invalid to `None`. Fixture dialect note: [expressions.md](../user/expressions.md#null-missing-and-invalid).
 
-```python
-import json, dtcs
+**Pip-only run (no clone):** wheels do not include `examples/` or `tests/`. Paste a tiny contract and input inline:
 
-parsed = dtcs.parse_file("examples/customer_pipeline.dtcs.yaml")
-contract = parsed["contract"]
+```python
+import dtcs
+
+yaml = b"""
+dtcsVersion: "3.0.0"
+id: "demo.hello"
+name: "Hello Run"
+version: "0.1.0"
+metadata:
+  description: "pip-only run demo"
+  classification: internal
+  governance: { owner: "docs", steward: "docs" }
+  provenance: { author: "docs", createdAt: "2026-01-01T00:00:00Z" }
+inputs:
+  - id: "people"
+    schema:
+      fields:
+        - { name: "name", type: "string", nullable: false }
+outputs:
+  - id: "people_out"
+    schema:
+      fields:
+        - { name: "name", type: "string", nullable: false }
+semanticActions:
+  - { id: "lower_name", action: "dtcs:lowercase", target: "people.name" }
+lineage:
+  mappings:
+    - { output: "people_out", inputs: ["people"] }
+"""
+contract = dtcs.parse(yaml)["contract"]
 plan = dtcs.plan_lower(contract)["plan"]
 compiled = dtcs.compile_plan(plan)["plan"]
-inputs = json.loads(open("tests/fixtures/runtime/customer_pipeline_input.json").read())
-result = dtcs.runtime_execute(compiled, inputs)
+result = dtcs.runtime_execute(compiled, {"people": [{"name": "Ada"}, {"name": "Grace"}]})
 assert dtcs.is_valid(result)
-assert len(result["outputs"]["customer_clean"]) == 2
+assert result["outputs"]["people_out"][0]["name"] == "ada"
 ```
 
+After cloning the repo, you can also `parse_file("examples/customer_pipeline.dtcs.yaml")` with fixtures under `tests/fixtures/runtime/`.
+
+Signatures and `__all__`: see [`python/dtcs/__init__.py`](https://github.com/eddiethedean/dtcs/blob/main/python/dtcs/__init__.py) (source of truth until `py.typed` ships).
 ## Portable plans
 
 | Function | Arguments | Returns |

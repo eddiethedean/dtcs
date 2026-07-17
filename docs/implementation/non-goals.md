@@ -10,7 +10,11 @@ Do not implement these yet:
 
 The reference crate should remain a correct spec core based on [`SPEC.md`](../SPEC.md).
 
-## In scope through 0.12.0
+## In scope through 0.13.0
+
+Everything through **0.12.0** below, plus Rich Portable Analytics (Ch 27 / A.9): plan v2, kernel/relational `/2` (Candidate), Experimental advanced families, and related fingerprint / `errorMode` requirements.
+
+## In scope through 0.12.0 (subset)
 
 - Parse YAML and JSON into the Canonical Object Model
 - Seven-phase validation with structured diagnostics

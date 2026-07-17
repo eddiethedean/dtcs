@@ -1,6 +1,6 @@
 # Smallest copy-pasteable DTCS contract for install checks.
-# Prefer dtcsVersion "2.0.0"; "1.0.0" / "1.0.0-draft" remain accepted.
-dtcsVersion: "2.0.0"
+# Prefer dtcsVersion "3.0.0"; "2.0.0" / "1.0.0" / "1.0.0-draft" remain accepted.
+dtcsVersion: "3.0.0"
 id: "demo.minimal"
 name: "Minimal Demo"
 version: "0.1.0"

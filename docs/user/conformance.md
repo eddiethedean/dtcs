@@ -30,11 +30,15 @@ Analyzer profile capabilities include `compatibilityAnalysis`, `evolutionAnalysi
 | `dtcs:profile/portable-window/1` | Window frames |
 | `dtcs:profile/portable-complex-types/1` | Complex access |
 
-### DTCS 3.0 / A.9 profiles (0.13)
+### DTCS 3.0 / A.9 profiles (0.13) — maturity for evaluators
 
-Kernel/relational `/2` defaults accompany plan v2 and remain **Candidate** until migration fixtures and `/2` dual-path conformance gates pass. Advanced A.9 families (`portable-string-advanced`, `portable-conversion`, `portable-statistics`, `portable-complex-values`, `portable-reshape`, `portable-relational-extended`, `portable-temporal-iana`, `portable-nondeterministic`) are **Experimental**; `portable-window/2` is **Candidate**. Certified dual-path fixtures remain focused on the kernel relational 2.0 `/1` surface.
+| Maturity | Meaning for adopters | Profiles |
+|----------|----------------------|----------|
+| **Experimental** | Reference may implement; **do not** claim certification or production portability | A.9 families: string-advanced, conversion, statistics, complex-values, reshape, relational-extended, temporal-iana, nondeterministic |
+| **Candidate** | Fixtures exist; waiting on two-compiler graduation criteria before Standard | `portable-relational-kernel/2`, `portable-relational/2`, `portable-window/2` |
+| **Certified dual-path (today)** | Strongest portable evidence in this repo | Kernel relational **`/1`** surface with differential fixtures |
 
-Implementer details and dual-path gates: [portable-conformance.md](../implementation/portable-conformance.md).
+Kernel/relational `/2` defaults accompany plan v2. Advanced A.9 families remain Experimental. Implementer details: [portable-conformance.md](../implementation/portable-conformance.md).
 
 ## Assertion kinds
 

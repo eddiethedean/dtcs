@@ -19,7 +19,7 @@
 //! use dtcs::{parse, validate, DocumentFormat};
 //!
 //! let yaml = br#"
-//! dtcsVersion: "2.0.0"
+//! dtcsVersion: "3.0.0"
 //! id: "example"
 //! name: "Example"
 //! version: "0.2.0"
