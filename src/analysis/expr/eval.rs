@@ -140,6 +140,7 @@ fn evaluate_binary(
         },
         BinaryOp::Eq => Some(LiteralValue::Boolean(left == right)),
         BinaryOp::Neq => Some(LiteralValue::Boolean(left != right)),
+        BinaryOp::NullSafeEq => Some(LiteralValue::Boolean(left == right)),
         BinaryOp::Lt | BinaryOp::Lte | BinaryOp::Gt | BinaryOp::Gte => {
             compare_ordered(op, left, right).map(LiteralValue::Boolean)
         }
@@ -155,7 +156,13 @@ fn evaluate_binary(
             }
             _ => None,
         },
-        BinaryOp::In | BinaryOp::Contains => None,
+        BinaryOp::Mod => match (left, right) {
+            (LiteralValue::Integer(a), LiteralValue::Integer(b)) if *b != 0 => {
+                Some(LiteralValue::Integer(a % b))
+            }
+            _ => None,
+        },
+        BinaryOp::In | BinaryOp::Contains | BinaryOp::Between => None,
     }
 }
 

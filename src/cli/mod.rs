@@ -64,6 +64,20 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+    /// Export a portable transformation plan (`dtcs.transform-plan/1`).
+    ExportPortable {
+        /// Path to a DTCS document.
+        path: PathBuf,
+        /// Optional additional registry file to merge for planning.
+        #[arg(long)]
+        registry: Option<PathBuf>,
+        /// Portable profile identifier.
+        #[arg(long, default_value = "dtcs:profile/portable-relational-kernel/1")]
+        profile: String,
+        /// Emit only the semantic fingerprint.
+        #[arg(long)]
+        fingerprint: bool,
+    },
     /// Optimize a transformation plan (contract or serialized plan JSON).
     Optimize {
         /// Path to a DTCS contract or serialized plan JSON.
@@ -404,6 +418,54 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
                 if !order.is_empty() {
                     println!("order: {}", order.join(" -> "));
                 }
+            }
+            Ok(0)
+        }
+        Command::ExportPortable {
+            path,
+            registry,
+            profile,
+            fingerprint,
+        } => {
+            let contract = load_valid_contract_with_registry(&path, registry.as_ref(), true)?;
+            let merged = match registry.as_ref() {
+                Some(registry_path) => Some(
+                    crate::registry::load_merged(registry_path)
+                        .map_err(|report| registry_report_error(&report))?,
+                ),
+                None => None,
+            };
+            let registry_doc = merged
+                .as_ref()
+                .unwrap_or_else(|| crate::registry::default_registry());
+            let analysis_report = analysis::check_contract(&contract, Some(registry_doc));
+            let plan_result =
+                crate::plan::lower(&contract, Some(registry_doc), Some(&analysis_report));
+            if !plan_result.is_valid() {
+                let report = DiagnosticReport {
+                    diagnostics: plan_result.diagnostics,
+                };
+                render_report(&report, true, ReportMode::Diagnostics)
+                    .map_err(|e| miette::miette!("{e}"))?;
+                return Ok(1);
+            }
+            let plan = plan_result
+                .plan
+                .ok_or_else(|| miette::miette!("plan lowering succeeded without a plan"))?;
+            let portable = crate::plan::export_portable_plan(&plan, &profile)
+                .map_err(|e| miette::miette!("{e}"))?;
+            if fingerprint {
+                println!(
+                    "{}",
+                    portable
+                        .fingerprint()
+                        .map_err(|e| miette::miette!("{e}"))?
+                );
+            } else {
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&portable).map_err(|e| miette::miette!("{e}"))?
+                );
             }
             Ok(0)
         }

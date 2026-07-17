@@ -19,7 +19,7 @@ fn base_profile(class: ImplementationClass, optional: &[&str]) -> ConformancePro
 /// Returns all embedded conformance profiles for this implementation.
 #[must_use]
 pub fn all_profiles() -> Vec<ConformanceProfile> {
-    vec![
+    let mut profiles = vec![
         base_profile(ImplementationClass::Parser, &[]),
         base_profile(ImplementationClass::Validator, &[]),
         base_profile(
@@ -44,7 +44,56 @@ pub fn all_profiles() -> Vec<ConformanceProfile> {
                 "referenceRuntime",
             ],
         ),
-    ]
+    ];
+    // Semantic-family profiles (orthogonal to implementation class).
+    profiles.push(semantic_profile(
+        "dtcs:profile/portable-relational-kernel/1",
+        ImplementationClass::Compiler,
+        &[
+            "portablePlanSerialization",
+            "structuredExpressions",
+            "operatorRegistry",
+            "fieldShaping",
+        ],
+    ));
+    profiles.push(semantic_profile(
+        "dtcs:profile/portable-relational/1",
+        ImplementationClass::Compiler,
+        &[
+            "portablePlanSerialization",
+            "richJoins",
+            "unionByName",
+            "multiAggregate",
+            "distinctLimit",
+        ],
+    ));
+    profiles.push(semantic_profile(
+        "dtcs:profile/portable-window/1",
+        ImplementationClass::Compiler,
+        &["windowFunctions"],
+    ));
+    profiles.push(semantic_profile(
+        "dtcs:profile/portable-complex-types/1",
+        ImplementationClass::Compiler,
+        &["complexTypes"],
+    ));
+    profiles
+}
+
+fn semantic_profile(
+    id: &str,
+    class: ImplementationClass,
+    optional: &[&str],
+) -> ConformanceProfile {
+    ConformanceProfile {
+        id: id.to_string(),
+        implementation_class: class,
+        dtcs_version: crate::SPEC_VERSION.to_string(),
+        implementation_version: env!("CARGO_PKG_VERSION").to_string(),
+        supported_registries: vec!["dtcs:builtin".into()],
+        supported_extensions: vec!["acme".into()],
+        optional_capabilities: optional.iter().map(|s| (*s).to_string()).collect(),
+    }
 }
 
 /// Returns a profile by identifier.

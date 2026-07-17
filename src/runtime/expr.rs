@@ -1,11 +1,58 @@
 //! Runtime expression evaluation.
 
 use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, UnaryOp};
+use crate::analysis::expr::parse::parse_expression;
 use crate::runtime::conversion::integer_to_decimal;
 use crate::runtime::functions::call_function;
 use crate::runtime::model::{
     lookup_field, parse_qualified_field_with_interfaces, FieldLookup, Row, RuntimeValue,
 };
+
+/// Parse and evaluate an expression string against a single row (unqualified field names).
+pub fn eval_expression_on_row(source: &str, row: &Row) -> Result<RuntimeValue, String> {
+    let expr = parse_expression(source).map_err(|e| format!("expression parse error: {}", e.message))?;
+    evaluate_expr_on_row(&expr, row)
+}
+
+/// Evaluate an expression AST against a single row.
+pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, String> {
+    match expr {
+        Expr::Literal { value, .. } => Ok(literal_to_runtime(value)),
+        Expr::FieldRef { target, .. } => {
+            let field = target.rsplit('.').next().unwrap_or(target);
+            Ok(match lookup_field(row, field) {
+                FieldLookup::Missing => RuntimeValue::missing(),
+                FieldLookup::Present(value) => value,
+            })
+        }
+        Expr::Unary { op, expr, .. } => {
+            let inner = evaluate_expr_on_row(expr, row)?;
+            match op {
+                UnaryOp::Negate => match inner {
+                    RuntimeValue::Integer(v) => Ok(RuntimeValue::Integer(-v)),
+                    RuntimeValue::Decimal(v) => Ok(RuntimeValue::Decimal(-v)),
+                    other => Err(format!("negate unsupported for {other:?}")),
+                },
+                UnaryOp::Not => match inner.as_bool() {
+                    Some(v) => Ok(RuntimeValue::Boolean(!v)),
+                    None => Err("not requires boolean".into()),
+                },
+            }
+        }
+        Expr::Binary {
+            op, left, right, ..
+        } => {
+            let left_val = evaluate_expr_on_row(left, row)?;
+            let right_val = evaluate_expr_on_row(right, row)?;
+            evaluate_binary(*op, &left_val, &right_val)
+        }
+        Expr::Call { callee, args, .. } => {
+            let evaluated_args: Result<Vec<_>, _> =
+                args.iter().map(|arg| evaluate_expr_on_row(arg, row)).collect();
+            call_function(callee, &evaluated_args?)
+        }
+    }
+}
 
 /// Evaluate an expression AST against a row workspace context.
 pub fn evaluate_expr(
@@ -203,11 +250,22 @@ fn evaluate_binary(
             }
             _ => Err("div type mismatch or division by zero".into()),
         },
+        BinaryOp::Mod => match (left, right) {
+            (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) if *b != 0 => {
+                Ok(RuntimeValue::Integer(a % b))
+            }
+            (RuntimeValue::Decimal(a), RuntimeValue::Decimal(b)) if *b != 0.0 => {
+                Ok(RuntimeValue::Decimal(a % b))
+            }
+            _ => Err("mod type mismatch or division by zero".into()),
+        },
         BinaryOp::Eq => Ok(RuntimeValue::Boolean(values_equal(left, right))),
         BinaryOp::Neq => Ok(RuntimeValue::Boolean(!values_equal(left, right))),
+        BinaryOp::NullSafeEq => Ok(RuntimeValue::Boolean(null_safe_equal(left, right))),
         BinaryOp::Lt | BinaryOp::Lte | BinaryOp::Gt | BinaryOp::Gte => {
             compare_ordered(op, left, right).map(RuntimeValue::Boolean)
         }
+        BinaryOp::Between => Err("between requires ternary desugar; use >= and <=".into()),
         BinaryOp::In => match right {
             RuntimeValue::List(items) => Ok(RuntimeValue::Boolean(
                 items.iter().any(|item| values_equal(left, item)),
@@ -231,6 +289,18 @@ fn evaluate_binary(
             _ => Err("contains requires list or string on the left".into()),
         },
         BinaryOp::And | BinaryOp::Or => unreachable!("handled by short-circuit evaluation"),
+    }
+}
+
+fn null_safe_equal(left: &RuntimeValue, right: &RuntimeValue) -> bool {
+    match (left, right) {
+        (RuntimeValue::Null, RuntimeValue::Null)
+        | (RuntimeValue::Missing(_), RuntimeValue::Missing(_)) => true,
+        (RuntimeValue::Null, _)
+        | (_, RuntimeValue::Null)
+        | (RuntimeValue::Missing(_), _)
+        | (_, RuntimeValue::Missing(_)) => false,
+        _ => values_equal(left, right),
     }
 }
 

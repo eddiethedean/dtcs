@@ -8,7 +8,7 @@
 
 DTCS is a **draft** standard and toolkit for writing **vendor-neutral data transformation contracts** in YAML/JSON — the *semantics* of transforms, not a Spark, Polars, or SQL engine.
 
-**Status:** Spec `1.0.0-draft` · Tools `0.11.0` (alpha). Good for validation, compatibility analysis, and conformance research — **not** a production ETL runtime.
+**Status:** Spec `2.0.0` (draft) · Tools `0.15.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
 
 [Documentation](https://dtcs.readthedocs.io/) · [Getting started](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
@@ -19,8 +19,8 @@ DTCS is a **draft** standard and toolkit for writing **vendor-neutral data trans
 ```bash
 pip install dtcs
 dtcs version
-# → dtcs 0.11.0
-# → spec 1.0.0-draft
+# → dtcs 0.15.0
+# → spec 2.0.0
 
 curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml \
   -o contract.dtcs.yaml
@@ -29,22 +29,22 @@ dtcs validate contract.dtcs.yaml
 # → exit 0
 ```
 
-Or paste the same file from [`examples/minimal.dtcs.yaml`](examples/minimal.dtcs.yaml). Contracts must set `dtcsVersion: "1.0.0"` exactly (the Spec itself is still `1.0.0-draft`).
+Or paste the same file from [`examples/minimal.dtcs.yaml`](examples/minimal.dtcs.yaml). Prefer `dtcsVersion: "2.0.0"`; `"1.0.0"` remains accepted for compatibility.
 
 **Bindings:** Python (`pip install dtcs`), WASM (`@eddiethedean/dtcs-wasm`), Node (`@eddiethedean/dtcs`). See [docs/api/](docs/api/).
 
 ## What this repository contains
 
-- **[SPEC.md](SPEC.md)** — normative DTCS 1.0 draft (26 chapters + Appendix A)
+- **[SPEC.md](SPEC.md)** — normative DTCS 2.0 draft (26 chapters + Appendix A, including Portable Relational)
 - **Reference tools** — parse, validate, analyze, plan, optimize, match, compile, and run contracts (Rust CLI + Python; limited WASM/Node surface)
 
 | | |
 |---|---|
-| **Spec status** | Draft (`1.0.0-draft`) |
-| **Reference tools** | `0.11.0` (alpha) — validator through reference runtime and conformance |
-| **Document `dtcsVersion`** | Must be exactly `1.0.0` today (patch versions are rejected) |
+| **Spec status** | Draft (`2.0.0`) |
+| **Reference tools** | `0.15.0` (alpha) — validator through reference runtime, portable relational profiles, and conformance |
+| **Document `dtcsVersion`** | `"2.0.0"` preferred; `"1.0.0"` / `"1.0.0-draft"` still accepted |
 
-Coverage tables labeled “Covered” or “Complete” mean the **reference implementation exercises that draft SPEC area**, not that DTCS 1.0 is finalized or production-certified.
+Coverage tables labeled “Covered” or “Complete” mean the **reference implementation exercises that draft SPEC area**, not that DTCS 2.0 is finalized or production-certified.
 
 ## Next steps (after `valid`)
 

@@ -41,7 +41,7 @@ pub enum Expr {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "camelCase")]
+#[serde(tag = "type", content = "value", rename_all = "camelCase")]
 pub enum LiteralValue {
     Boolean(bool),
     String(String),
@@ -59,12 +59,17 @@ pub enum UnaryOp {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BinaryOp {
+/// Binary operators.
     Add,
     Sub,
     Mul,
     Div,
+    /// Integer / numeric modulo.
+    Mod,
     Eq,
     Neq,
+    /// Null-safe equality (null == null is true).
+    NullSafeEq,
     Lt,
     Lte,
     Gt,
@@ -73,6 +78,8 @@ pub enum BinaryOp {
     Or,
     /// Membership test (`value in collection`).
     In,
+    /// Inclusive between (`value between lo and hi`) — desugared to comparisons when needed.
+    Between,
     /// Collection/string contains (`collection contains value`).
     Contains,
 }

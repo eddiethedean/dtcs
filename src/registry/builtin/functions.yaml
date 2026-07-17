@@ -1,6 +1,6 @@
 id: "dtcs:stdlib.functions"
-version: "1.0.0"
-governingSpecification: "1.0.0-draft"
+version: "2.0.0"
+governingSpecification: "2.0.0"
 publicationStatus: "standard"
 entries:
   dtcs:lower:
@@ -24,6 +24,13 @@ entries:
     status: "standard"
     definition: |
       {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["string"],"returnType":"string","returnNullable":false,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:concat_ws:
+    name: "Concat With Separator"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["string"],"returnType":"string","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
   dtcs:substr:
     name: "Substring"
     category: "function"
@@ -41,10 +48,45 @@ entries:
   dtcs:coalesce:
     name: "Coalesce"
     category: "function"
+    version: "2.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"defined","semantics":"firstPresent"}
+  dtcs:if_null:
+    name: "If Null"
+    category: "function"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"function","minArgs":1,"maxArgs":null,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:null_if:
+    name: "Null If"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:case_when:
+    name: "Case When"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["boolean","string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:try_cast:
+    name: "Try Cast"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsTarget","returnNullable":true,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:is_invalid:
+    name: "Is Invalid"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"boolean","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
   dtcs:length:
     name: "Length"
     category: "function"
@@ -80,6 +122,55 @@ entries:
     status: "standard"
     definition: |
       {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["integer","decimal"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:round:
+    name: "Round"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":2,"argTypes":["decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:floor:
+    name: "Floor"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:ceil:
+    name: "Ceil"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:power:
+    name: "Power"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:sqrt:
+    name: "Square Root"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["decimal","integer"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:least:
+    name: "Least"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:greatest:
+    name: "Greatest"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":null,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:min:
     name: "Min"
     category: "function"
@@ -101,6 +192,20 @@ entries:
     status: "standard"
     definition: |
       {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:starts_with:
+    name: "Starts With"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:ends_with:
+    name: "Ends With"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","minArgs":2,"maxArgs":2,"argTypes":["string"],"returnType":"boolean","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
   dtcs:is_null:
     name: "Is Null"
     category: "function"
@@ -115,3 +220,101 @@ entries:
     status: "standard"
     definition: |
       {"kind":"function","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"boolean","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:count_all:
+    name: "Count All"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"aggregate","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:count:
+    name: "Count"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"aggregate","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"integer","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:count_distinct:
+    name: "Count Distinct"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"aggregate","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"integer","returnNullable":false,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:sum:
+    name: "Sum"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"aggregate","minArgs":1,"maxArgs":1,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:average:
+    name: "Average"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"aggregate","minArgs":1,"maxArgs":1,"argTypes":["integer","decimal"],"returnType":"decimal","returnNullable":true,"deterministic":true,"nullBehavior":"defined"}
+  dtcs:current_date:
+    name: "Current Date"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"date","returnNullable":false,"deterministic":false,"nullBehavior":"defined","runStable":false}
+  dtcs:current_timestamp:
+    name: "Current Timestamp"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"datetime","returnNullable":false,"deterministic":false,"nullBehavior":"defined","runStable":false,"timezone":"explicit"}
+  dtcs:date_add:
+    name: "Date Add"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":3,"argTypes":["date","datetime","integer","string"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:date_diff:
+    name: "Date Diff"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":3,"argTypes":["date","datetime","string"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:row_number:
+    name: "Row Number"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"window","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:rank:
+    name: "Rank"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"window","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:dense_rank:
+    name: "Dense Rank"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"window","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:lag:
+    name: "Lag"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"window","minArgs":1,"maxArgs":3,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:lead:
+    name: "Lead"
+    category: "function"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"function","family":"window","minArgs":1,"maxArgs":3,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}

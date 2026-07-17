@@ -19,7 +19,7 @@
 //! use dtcs::{parse, validate, DocumentFormat};
 //!
 //! let yaml = br#"
-//! dtcsVersion: "1.0.0"
+//! dtcsVersion: "2.0.0"
 //! id: "example"
 //! name: "Example"
 //! version: "0.2.0"
@@ -50,7 +50,7 @@
 //! ```
 
 /// DTCS specification version this crate targets.
-pub const SPEC_VERSION: &str = "1.0.0-draft";
+pub const SPEC_VERSION: &str = "2.0.0";
 
 pub mod analysis;
 pub mod capability;
@@ -74,10 +74,14 @@ pub mod cli;
 #[cfg(feature = "python")]
 mod python;
 
-pub use analysis::{check_contract, check_expression, AnalysisFinding, AnalysisReport};
+pub use analysis::{
+    check_contract, check_expression, from_structured_node, to_structured_node, AnalysisFinding,
+    AnalysisReport,
+};
 pub use capability::{
     discover as discover_capabilities, match_plan, match_plan_with_registry, reference_profile,
-    validate as validate_capabilities, CapabilityMatchReport, EngineCapabilityDeclaration,
+    reference_portable_manifest, validate as validate_capabilities, CapabilityMatchReport,
+    EngineCapabilityDeclaration, EntryCapability, PortableCapabilityManifest,
 };
 pub use compatibility::{
     analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,
@@ -101,15 +105,19 @@ pub use model::{
 };
 pub use parser::{parse, parse_file, parse_json, parse_yaml, DocumentFormat, ParseResult};
 pub use plan::{
-    equivalent, equivalent as plan_equivalent, lower as lower_plan, optimize,
+    equivalent, equivalent as plan_equivalent, export_portable_plan, lower as lower_plan, optimize,
     optimize as optimize_plan, validate as validate_plan, OptimizeOptions, OptimizeResult,
-    PlanResult, TransformationPlan,
+    PlanResult, PortablePlan, RegistryVersions, TransformationPlan, COMPLEX_TYPES_PROFILE,
+    KERNEL_PROFILE, RELATIONAL_PROFILE, TRANSFORM_PLAN_IDENTITY, WINDOW_PROFILE,
 };
 pub use registry::{
-    default_registry, is_known_action, is_known_function, is_known_rule, load as load_registry,
-    load_merged, resolve as resolve_registry, resolve_default,
+    default_registry, is_known_action, is_known_function, is_known_operator, is_known_profile,
+    is_known_rule, load as load_registry, load_merged, resolve as resolve_registry,
+    resolve_default,
 };
-pub use runtime::{execute, ExecuteResult, RuntimeInputs, RuntimeOutputs, RuntimeValue};
+pub use runtime::{
+    execute, Dataset, ExecuteResult, Row, RuntimeInputs, RuntimeOutputs, RuntimeValue,
+};
 pub use validation::{validate, validate_with_registry, ValidationPhase};
 
 pub use conformance::{

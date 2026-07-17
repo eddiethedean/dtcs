@@ -4,6 +4,7 @@
 
 | Version | Breaking or notable changes |
 |---------|----------------------------|
+| **0.15.0** | **Portable Relational Profile (R1–R4):** operator registry; widened `project`/`filter`/`join`/`union`/`aggregate`/`group`/`sort` (entry v2, legacy params still valid); new field-shaping and distinct/limit actions; portable plan `dtcs.transform-plan/1`; semantic-family conformance profiles; `coalesce` nullBehavior → `defined`; join null keys no longer match. See [docs/user/migration-portable-relational.md](docs/user/migration-portable-relational.md). |
 | **0.11.0** | **Lineage:** mapping `operation` defaults to `dtcs:derive`; `flow` enum (`preserved`\|`derived`\|`aggregated`\|`filtered`\|`partitioned`\|`discarded`). **Actions:** SemanticAction `parameters` map required for dataset operators (`fields`, join keys, etc.). **COM:** first-class `guarantees` and `compatibility` fields; nested extension preservation. **Null semantics:** runtime distinguishes null vs missing (`{"$dtcs":"missing"}`) vs invalid (`{"$dtcs":"invalid", reason?}`). **Stdlib:** full Ch 17–19 catalog (dataset ops + `abs`/`min`/`max`/`contains`/`is_null`/`is_missing` + `one_of`/`equals`). |
 | **0.10.1** | Test suite verification (P2/P3): plan behavioral oracles, format equivalence, determinism, `RuntimeInvalid` conformance, binding smoke parity, automated security probe. |
 | **0.10.0** | Conformance profiles, `dtcs conformance` CLI, Python `conformance_*` APIs, WASM/Node bindings, `uv publish` migration. |
@@ -14,6 +15,33 @@
 | **0.2.0** | Extended validation (metadata, types, expressions, I/O interfaces). |
 
 For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/troubleshooting.md](docs/user/troubleshooting.md).
+
+## 0.15.0
+
+Portable Relational Profile — DTCS-R1 through R4 ([docs/DTCS_PORTABLE_SPEC_PROPOSAL.md](docs/DTCS_PORTABLE_SPEC_PROPOSAL.md)).
+
+**Specification:** [SPEC.md](SPEC.md) version **`2.0.0`** (draft). Document `dtcsVersion` prefers `"2.0.0"`; `"1.0.0"` remains accepted.
+
+### Features
+
+- Operator registry (`dtcs:eq`, `dtcs:add`, …) and profile registry (`portable-relational-kernel/1`, `portable-relational/1`, `portable-window/1`, `portable-complex-types/1`).
+- Widened dataset actions (entry version `2.0.0`) with legacy parameter subsets; new `with_fields`, `rename_fields`, `drop_fields`, `distinct`, `deduplicate`, `limit`, `window`.
+- Kernel/relational/advanced function families; `dtcs:coalesce` clarified to `defined` / first-present.
+- Portable plan export (`dtcs.transform-plan/1`) with registry version pins, canonical fingerprint, structured expression lowering, and security budgets.
+- Reference runtime: expression project/filter, multi-expression aggregates, join kinds, union-by-name, sort nulls, distinct/limit, window (`row_number`/`rank`/`lag`/`lead`), datetime (`current_date`/`date_add`/`date_diff`).
+- Structured expression COM `body` + string `expr` sugar; operators `%` and `<=>`.
+- Portable per-entry capability manifests; semantic-family conformance profiles; portable diagnostics.
+- Python/CLI: `plan_export_portable`, `plan_fingerprint`, `expression_to_structured`, `capability_portable_manifest`, `dtcs export-portable`.
+
+### SPEC
+
+- Chapter 13 §12.1 portable serialization; Chapter 23 §5.1 semantic-family profiles; Appendix A.3–A.4 and A.8 updates.
+
+### Migration notes
+
+See [docs/user/migration-portable-relational.md](docs/user/migration-portable-relational.md). Existing contracts using legacy `field`/`equals` filters and name-list projects remain valid.
+
+**Release:** push tag `v0.15.0` to publish to crates.io and PyPI.
 
 ## 0.11.0
 

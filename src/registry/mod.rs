@@ -74,6 +74,18 @@ pub fn is_known_function(function: &str) -> bool {
     resolve_default(function).is_some_and(|entry| entry.category == RegistryCategory::Function)
 }
 
+/// Returns `true` when `operator` is a recognized operator identifier.
+#[must_use]
+pub fn is_known_operator(operator: &str) -> bool {
+    resolve_default(operator).is_some_and(|entry| entry.category == RegistryCategory::Operator)
+}
+
+/// Returns `true` when `profile` is a recognized portable profile identifier.
+#[must_use]
+pub fn is_known_profile(profile: &str) -> bool {
+    resolve_default(profile).is_some_and(|entry| entry.category == RegistryCategory::Profile)
+}
+
 /// List entries from the default registry, optionally merged with a file.
 pub fn list(registry_path: Option<&Path>) -> Result<Vec<RegistryEntry>, DiagnosticReport> {
     let registry = match registry_path {

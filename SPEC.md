@@ -1,7 +1,7 @@
-# DTCS 1.0 Specification
+# DTCS 2.0 Specification
 
 **Status:** Draft\
-**Version:** 1.0.0-draft
+**Version:** 2.0.0
 
 # Chapter 1 --- Introduction
 
@@ -17,6 +17,23 @@ optimized, compiled, or executed.
 
 Unless explicitly identified as informative, every requirement in this
 specification is normative.
+
+### 1.1 Specification series
+
+This document is **DTCS 2.0.0**. It supersedes the DTCS 1.0.0-draft text
+as the governing specification for conforming implementations that claim
+`dtcsVersion: "2.0.0"`.
+
+DTCS 2.0 incorporates the Portable Relational Profile: structured
+expression nodes, operator and profile registries, widened Semantic
+Action and Function catalogs, canonical Transformation Plan
+serialization (`dtcs.transform-plan/1`), and semantic-family conformance
+profiles (Appendix A.8; Chapter 13 §12.1; Chapter 23 §5.1).
+
+Contracts authored for DTCS 1.0.0 remain valid under compatible
+implementations that continue to accept `dtcsVersion: "1.0.0"`, provided
+registry entry semantics for published identifiers are preserved as
+documented in migration guidance.
 
 ## 2. Design Goals
 
@@ -1424,6 +1441,26 @@ Expressions MAY reference:
 
 Expressions SHALL NOT directly produce side effects.
 
+### 3.1 Structured expression nodes
+
+Portable plans and the optional COM `body` field SHALL represent
+expressions as structured nodes. Authoring documents MAY supply a string
+`expr` as sugar; when both `expr` and `body` are present, `body` is
+authoritative.
+
+Structured nodes SHALL use a `kind` discriminator. The kernel node kinds
+are:
+
+-   `literal` --- boolean, string, integer, or decimal value
+-   `fieldRef` --- field reference (`target`)
+-   `unary` --- unary operator (`op`, `expr`)
+-   `binary` --- binary operator (`op`, `left`, `right`)
+-   `call` --- function invocation (`callee`, `args`)
+
+Operator identities in portable capability declarations MAY use registry
+identifiers (`dtcs:eq`) or short names (`eq`). Opaque host-language
+objects and `repr()` serialization are prohibited.
+
 ------------------------------------------------------------------------
 
 ## 4. Evaluation Context
@@ -2508,6 +2545,43 @@ representation.
 
 Serialization format is implementation specific unless defined by a DTCS
 profile.
+
+### 12.1 Portable plan serialization profile
+
+The Portable Relational Profile defines the canonical serialization
+identity `dtcs.transform-plan/1`.
+
+A portable plan document SHALL include:
+
+-   `profile` --- a portable profile identifier (for example
+    `dtcs:profile/portable-relational-kernel/1`)
+-   `specificationVersion` --- governing DTCS specification version
+-   `registryVersions` --- map of registry category to pinned version
+    (`actions`, `functions`, `operators`, `types`)
+-   `transformation` --- originating contract identity
+-   `inputs`, `parameters`, `actions`, `outputs`, `rules`, `lineage`
+-   `requirements` --- capability requirements
+-   `extensions` --- vendor extensions (optional)
+
+Portable plans SHALL:
+
+-   use data-only representation (no executable objects, host-language
+    `repr()`, live handles, resolved secrets, or raw SQL)
+-   apply canonical key ordering and meaningful sequence ordering
+-   bound bytes, depth, node count, and literal/collection size
+-   reject unknown mandatory constructs
+-   produce identical semantic fingerprints for equivalent plans under
+    the same profile and registry versions
+
+Internal COM plan IR (`nodes` / `dependencies`) MAY continue to be used
+as an implementation representation. Export to `dtcs.transform-plan/1`
+SHALL be deterministic.
+
+Security budgets for portable plans (default reference limits):
+
+-   maximum document bytes: 8 MiB
+-   maximum nesting depth: 128
+-   maximum expression/action nodes: 100_000
 
 ------------------------------------------------------------------------
 
@@ -4239,6 +4313,27 @@ Profiles SHALL identify:
 
 Profiles SHALL be machine readable.
 
+### 5.1 Semantic-family profiles
+
+In addition to implementation-class profiles, DTCS defines
+semantic-family profiles for portable relational transformations
+(Appendix A.8):
+
+-   `dtcs:profile/portable-relational-kernel/1`
+-   `dtcs:profile/portable-relational/1`
+-   `dtcs:profile/portable-window/1`
+-   `dtcs:profile/portable-complex-types/1`
+
+An implementation MAY claim both an implementation class and one or more
+semantic-family profiles. Capability declarations for compilers SHALL be
+keyed by exact registry entries (identifier and version) and MAY include
+signatures, semantic modes, limits, and known unsupported optional
+features.
+
+A semantic family SHALL NOT advance from Experimental to Standard until
+at least two independent compilers pass that family's conformance
+fixtures. False claims invalidate conformance.
+
 ------------------------------------------------------------------------
 
 ## 6. Mandatory Requirements
@@ -4946,24 +5041,61 @@ field targets unless a registry definition states otherwise:
 
 Dataset operators:
 
--   `dtcs:project` (category: projection) --- parameters: `fields`
-    (array of field names); lineageBehavior `preserve`
--   `dtcs:select` (category: selection) --- parameters: `field`,
-    optional `equals`; lineageBehavior `filter`
--   `dtcs:filter` (category: filtering) --- parameters: `field`,
-    optional `equals`; lineageBehavior `filter`
--   `dtcs:aggregate` (category: aggregation) --- parameters:
-    `groupBy`, `valueField`, `op`; lineageBehavior `aggregate`
--   `dtcs:group` (category: grouping) --- parameters: `groupBy`,
-    `valueField`, `op`; lineageBehavior `aggregate`
--   `dtcs:join` (category: joining) --- parameters: `right`,
-    `leftKey`, optional `rightKey`; lineageBehavior `derive`
--   `dtcs:sort` (category: sorting) --- parameters: `field`, optional
-    `descending`; lineageBehavior `preserve`
--   `dtcs:union` (category: union) --- parameters: `other`;
+-   `dtcs:project` (category: projection; entry version `2.0.0`) ---
+    parameter `fields`: legacy form is an array of field names; rich
+    form is an ordered array of names and/or `{expr, as}` objects. No
+    unselected field is implicitly retained. lineageBehavior `preserve`
+-   `dtcs:select` (category: selection; entry version `2.0.0`) ---
+    legacy parameters `field`, optional `equals`; rich parameter
+    `predicate` (Expression). lineageBehavior `filter`
+-   `dtcs:filter` (category: filtering; entry version `2.0.0`) ---
+    same parameters as `dtcs:select`. Predicate semantics: retain
+    `true`; discard `false`, `null`, and `missing`; fail (or
+    explicitly route) on `invalid`; never coerce `invalid` to
+    `false`. lineageBehavior `filter`
+-   `dtcs:with_fields` (category: projection) --- parameter
+    `assignments` (ordered `{as, expr}`); add or replace fields.
     lineageBehavior `derive`
+-   `dtcs:rename_fields` (category: projection) --- parameter
+    `mapping` (`old` → `new`); rename without changing value or type.
+    lineageBehavior `preserve`
+-   `dtcs:drop_fields` (category: projection) --- parameters
+    `fields`, optional `missingPolicy` (`error` default, or
+    `ignore`). lineageBehavior `discard`
+-   `dtcs:aggregate` (category: aggregation; entry version `2.0.0`) ---
+    legacy parameters `groupBy`, `valueField`, `op`; rich parameters
+    `groupBy` / `aggregates` expression lists, optional `filter`.
+    Missing grouping keys are distinct from null. lineageBehavior
+    `aggregate`
+-   `dtcs:group` (category: grouping; entry version `2.0.0`) --- same
+    parameters as `dtcs:aggregate`. lineageBehavior `aggregate`
+-   `dtcs:join` (category: joining; entry version `2.0.0`) --- legacy
+    parameters `right`, `leftKey`, optional `rightKey` (inner
+    equi-join). Rich parameters: `type` (`inner`, `left`, `right`,
+    `full`, `semi`, `anti`, `cross`), `on` / `predicate`, `nullSafe`,
+    `collisionPolicy`. Under entry version `2.0.0`, ordinary equality
+    SHALL NOT match null keys. lineageBehavior `derive`
+-   `dtcs:sort` (category: sorting; entry version `2.0.0`) --- legacy
+    parameters `field`, optional `descending`; rich parameter `keys`
+    (`expr`, `descending`, `nulls`). Outputs remain unordered without
+    sort. lineageBehavior `preserve`
+-   `dtcs:union` (category: union; entry version `2.0.0`) --- legacy
+    parameter `other` (positional append); rich parameters `mode`
+    (`positional` \| `byName`), `missingColumnPolicy`,
+    `duplicatePolicy`. lineageBehavior `derive`
+-   `dtcs:distinct` (category: selection) --- optional `fields`;
+    full-row distinct when omitted. lineageBehavior `filter`
+-   `dtcs:deduplicate` (category: selection) --- parameters `keys`,
+    `retain`; retain policy required; may be nondeterministic without
+    ordering. lineageBehavior `filter`
+-   `dtcs:limit` (category: selection) --- parameters `count`,
+    optional `offset`; nondeterministic without prior sort.
+    lineageBehavior `filter`
 -   `dtcs:partition` (category: partitioning) --- parameters: `field`;
     lineageBehavior `partition`
+-   `dtcs:window` (category: window; experimental) --- parameters
+    `partitionBy`, `orderBy`, `frame`, `functions`; profile
+    `dtcs:profile/portable-window/1`
 
 Lineage default operation:
 
@@ -4993,23 +5125,66 @@ The standard Function catalog is:
 -   `dtcs:lower` --- nullBehavior `propagate`
 -   `dtcs:upper` --- nullBehavior `propagate`
 -   `dtcs:concat` --- nullBehavior `propagate`; minimum two arguments
+-   `dtcs:concat_ws` --- nullBehavior `defined`; separator plus values
 -   `dtcs:substr` --- nullBehavior `propagate`
 -   `dtcs:replace` --- nullBehavior `propagate`
--   `dtcs:coalesce` --- nullBehavior `propagate`
+-   `dtcs:coalesce` (entry version `2.0.0`) --- nullBehavior `defined`;
+    returns the first present non-null, non-missing argument (skips
+    invalid); formerly incorrectly tagged `propagate`
+-   `dtcs:if_null` --- nullBehavior `defined`; replace null/missing
+-   `dtcs:null_if` --- nullBehavior `defined`; null when equal
+-   `dtcs:case_when` --- nullBehavior `defined`; conditional
+-   `dtcs:try_cast` --- nullBehavior `defined`; tolerant cast
+-   `dtcs:is_invalid` --- nullBehavior `defined`; true when invalid
 -   `dtcs:length` --- nullBehavior `propagate`
 -   `dtcs:to_string` --- nullBehavior `propagate`
 -   `dtcs:to_integer` --- nullBehavior `propagate`
 -   `dtcs:to_decimal` --- nullBehavior `propagate`
 -   `dtcs:abs` --- nullBehavior `propagate`; numeric absolute value
+-   `dtcs:round`, `dtcs:floor`, `dtcs:ceil`, `dtcs:power`, `dtcs:sqrt`
+    --- nullBehavior `propagate`
+-   `dtcs:least`, `dtcs:greatest` --- nullBehavior `propagate`
 -   `dtcs:min` --- nullBehavior `propagate`; variadic minimum
 -   `dtcs:max` --- nullBehavior `propagate`; variadic maximum
 -   `dtcs:contains` --- nullBehavior `propagate`; substring containment
+-   `dtcs:starts_with`, `dtcs:ends_with` --- nullBehavior `propagate`
 -   `dtcs:is_null` --- nullBehavior `defined`; true when the argument
     is null
 -   `dtcs:is_missing` --- nullBehavior `defined`; true when the
     argument is missing
+-   Aggregate family: `dtcs:count_all`, `dtcs:count`,
+    `dtcs:count_distinct`, `dtcs:sum`, `dtcs:average`
+-   Date/time family (experimental): `dtcs:current_date`,
+    `dtcs:current_timestamp`, `dtcs:date_add`, `dtcs:date_diff`
+-   Window family (experimental; profile
+    `dtcs:profile/portable-window/1`): `dtcs:row_number`, `dtcs:rank`,
+    `dtcs:dense_rank`, `dtcs:lag`, `dtcs:lead`
 
-All standard Functions listed above are deterministic.
+### A.4.1 Operators
+
+Operators are registered under `dtcs:stdlib.operators` and SHALL NOT
+share ambiguous identities with Functions.
+
+Comparison: `dtcs:eq`, `dtcs:not_eq`, `dtcs:lt`, `dtcs:lte`,
+`dtcs:gt`, `dtcs:gte`, `dtcs:null_safe_eq`
+
+Boolean: `dtcs:and`, `dtcs:or`, `dtcs:not`
+
+Arithmetic: `dtcs:add`, `dtcs:subtract`, `dtcs:multiply`,
+`dtcs:divide`, `dtcs:modulo`, `dtcs:negate`
+
+Membership: `dtcs:in`, `dtcs:between`
+
+Access: `dtcs:field`, `dtcs:index`, `dtcs:element_at`
+
+Each operator declares arity, accepted types, return type, promotion,
+null/missing/invalid and NaN behavior, errors, determinism, and
+optimizer-safe properties. Capability declarations MAY list short names
+(`eq`) and/or registry identifiers (`dtcs:eq`).
+
+All standard Functions listed above are deterministic unless marked
+otherwise (date/time and window families may be nondeterministic or
+non-run-stable).
 
 ------------------------------------------------------------------------
 
@@ -5080,3 +5255,32 @@ Semantic Actions SHALL apply their declared null-behavior with respect
 to these distinctions. Implementations SHALL NOT coerce missing or
 invalid values to null except where a standard library entry explicitly
 defines that behavior.
+
+------------------------------------------------------------------------
+
+## A.8 Portable Relational Profiles
+
+DTCS publishes semantic-family profiles orthogonal to implementation-class
+profiles (Chapter 23). Registry document `dtcs:stdlib.profiles` lists:
+
+-   `dtcs:profile/portable-relational-kernel/1` --- project, filter,
+    field shaping (`with_fields`, `rename_fields`, `drop_fields`),
+    scalar operators/functions, portable plan serialization
+-   `dtcs:profile/portable-relational/1` --- extends kernel with joins,
+    unions, grouping, aggregation, ordering, distinct, deduplicate,
+    limit, and aggregate functions
+-   `dtcs:profile/portable-window/1` --- windows and analytics
+    (experimental until two independent compilers pass)
+-   `dtcs:profile/portable-complex-types/1` --- arrays/lists, maps,
+    structs/objects (experimental); type aliases `array`→`list` and
+    `struct`→`object` are additive
+
+Plan serialization identity: `dtcs.transform-plan/1` (Chapter 13 §12.1).
+
+A semantic family advances from Experimental to Standard only after at
+least two independent compilers pass that family's conformance fixtures.
+False capability claims invalidate conformance.
+
+SQL-lowering compilers that claim a portable profile SHALL use bound
+parameters and safe identifiers; they SHALL NOT embed raw SQL or
+executable objects in portable plans.

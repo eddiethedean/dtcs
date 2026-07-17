@@ -48,6 +48,7 @@ pub fn parse_expression(source: &str) -> Result<Expr, ParseError> {
     Ok(expr)
 }
 
+#[allow(dead_code)]
 pub fn to_diagnostic(expression: &Expression, err: ParseError) -> Diagnostic {
     Diagnostic {
         id: codes::INVALID_EXPRESSION.to_string(),
@@ -143,12 +144,14 @@ impl<'a> Parser<'a> {
             let op = match &self.peek().kind {
                 TokenKind::Op("==") => Some(BinaryOp::Eq),
                 TokenKind::Op("!=") => Some(BinaryOp::Neq),
+                TokenKind::Op("<=>") => Some(BinaryOp::NullSafeEq),
                 TokenKind::Op("<") => Some(BinaryOp::Lt),
                 TokenKind::Op("<=") => Some(BinaryOp::Lte),
                 TokenKind::Op(">") => Some(BinaryOp::Gt),
                 TokenKind::Op(">=") => Some(BinaryOp::Gte),
                 TokenKind::Ident(name) if name == "in" => Some(BinaryOp::In),
                 TokenKind::Ident(name) if name == "contains" => Some(BinaryOp::Contains),
+                TokenKind::Ident(name) if name == "between" => Some(BinaryOp::Between),
                 _ => None,
             };
             let Some(op) = op else { break };
@@ -191,6 +194,7 @@ impl<'a> Parser<'a> {
             let op = match self.peek().kind {
                 TokenKind::Op("*") => Some(BinaryOp::Mul),
                 TokenKind::Op("/") => Some(BinaryOp::Div),
+                TokenKind::Op("%") => Some(BinaryOp::Mod),
                 _ => None,
             };
             let Some(op) = op else { break };
@@ -507,13 +511,23 @@ impl<'a> Lexer<'a> {
             }
             '<' => {
                 if self.try_match('=') {
-                    Ok(Token {
-                        kind: TokenKind::Op("<="),
-                        span: Span {
-                            start,
-                            end: start + 2,
-                        },
-                    })
+                    if self.try_match('>') {
+                        Ok(Token {
+                            kind: TokenKind::Op("<=>"),
+                            span: Span {
+                                start,
+                                end: start + 3,
+                            },
+                        })
+                    } else {
+                        Ok(Token {
+                            kind: TokenKind::Op("<="),
+                            span: Span {
+                                start,
+                                end: start + 2,
+                            },
+                        })
+                    }
                 } else {
                     Ok(Token {
                         kind: TokenKind::Op("<"),
@@ -604,6 +618,13 @@ impl<'a> Lexer<'a> {
             }),
             '/' => Ok(Token {
                 kind: TokenKind::Op("/"),
+                span: Span {
+                    start,
+                    end: start + 1,
+                },
+            }),
+            '%' => Ok(Token {
+                kind: TokenKind::Op("%"),
                 span: Span {
                     start,
                     end: start + 1,

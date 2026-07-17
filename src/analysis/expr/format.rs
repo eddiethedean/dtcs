@@ -75,8 +75,10 @@ fn binary_op_str(op: BinaryOp) -> &'static str {
         BinaryOp::Sub => "-",
         BinaryOp::Mul => "*",
         BinaryOp::Div => "/",
+        BinaryOp::Mod => "%",
         BinaryOp::Eq => "==",
         BinaryOp::Neq => "!=",
+        BinaryOp::NullSafeEq => "<=>",
         BinaryOp::Lt => "<",
         BinaryOp::Lte => "<=",
         BinaryOp::Gt => ">",
@@ -84,6 +86,7 @@ fn binary_op_str(op: BinaryOp) -> &'static str {
         BinaryOp::And => "&&",
         BinaryOp::Or => "||",
         BinaryOp::In => "in",
+        BinaryOp::Between => "between",
         BinaryOp::Contains => "contains",
     }
 }

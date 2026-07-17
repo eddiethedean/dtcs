@@ -81,6 +81,8 @@ pub enum RegistryCategory {
     SemanticAction,
     /// Function identifier.
     Function,
+    /// Operator identifier (`dtcs:eq`, …).
+    Operator,
     /// Rule identifier.
     Rule,
     /// Logical type identifier.
@@ -102,6 +104,7 @@ impl RegistryCategory {
         match self {
             Self::SemanticAction => "semanticAction",
             Self::Function => "function",
+            Self::Operator => "operator",
             Self::Rule => "rule",
             Self::LogicalType => "logicalType",
             Self::Diagnostic => "diagnostic",

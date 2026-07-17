@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 use crate::diagnostics::Diagnostic;
 
 pub use contract::check_contract;
-pub use expr::check_expression;
+pub use expr::{check_expression, from_structured_node, to_structured_node};
 
 /// Analysis report containing diagnostics and attachable findings.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]

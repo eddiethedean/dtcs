@@ -2,7 +2,7 @@
 
 Reference-implementation milestones for the Data Transformation Contract Standard. Uses **0.X** release phases only and covers **all 26 chapters** of [`SPEC.md`](SPEC.md).
 
-> **Maturity:** Spec is `1.0.0-draft`. Tooling is alpha. Status **Covered** below means the **reference implementation exercises that draft SPEC area** for the listed release — not that DTCS 1.0 is finalized or production-certified.
+> **Maturity:** Spec is `2.0.0` (draft). Tooling is alpha. Status **Covered** below means the **reference implementation exercises that draft SPEC area** for the listed release — not that DTCS 2.0 is finalized or production-certified.
 
 [`SPEC.md`](SPEC.md) is the source of truth. When this roadmap and the specification disagree, the specification wins.
 
@@ -24,6 +24,7 @@ Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-
 | **IV — Planning & execution** | [0.7](#phase-07-transformation-plan) · [0.8](#phase-08-plan-optimization) · [0.9](#phase-09-execution-pipeline) | Plan → optimize → compile → run |
 | **V — Certification** | [0.10](#phase-010-conformance-ecosystem) | Conformance, security, governance |
 | **VI — SPEC completeness** | [0.11](#phase-011-spec-completeness) | Full Ch 17–19 catalog; COM depth; completeness matrix |
+| **VII — Portable Relational** | [0.12](#phase-012-portable-relational-kernel) · [0.13](#phase-013-portable-relational) · [0.14](#phase-014-portable-conformance) · [0.15](#phase-015-portable-advanced) | Portable Relational Profile (DTCS-R1–R4) |
 
 ## Status overview
 
@@ -40,6 +41,10 @@ Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-
 | **0.9** | [Execution Pipeline](#phase-09-execution-pipeline) | Ch 14–16 | **Covered** (`0.9.0`) |
 | **0.10** | [Conformance & Ecosystem](#phase-010-conformance-ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Covered** (`0.10.1`) |
 | **0.11** | [SPEC Completeness](#phase-011-spec-completeness) | Ch 4–8, 10, 12, 14–19 (deepening); Appendix A | **Covered** (`0.11.0`) |
+| **0.12** | [Portable Relational Kernel](#phase-012-portable-relational-kernel) | Ch 8, 13 §12.1, 17–18, A.3–A.4, A.8 | **Covered** (`0.15.0`) |
+| **0.13** | [Portable Relational](#phase-013-portable-relational) | Ch 10, 17–18; joins/unions/aggs | **Covered** (`0.15.0`) |
+| **0.14** | [Portable Conformance](#phase-014-portable-conformance) | Ch 14, 23 §5.1, 24 | **Covered** (`0.15.0`) |
+| **0.15** | [Portable Advanced](#phase-015-portable-advanced) | Windows, datetime, complex types | **Covered** (`0.15.0`; experimental profiles) |
 
 ## SPEC chapter index
 
@@ -534,6 +539,67 @@ Close remaining SPEC gaps in the reference implementation: complete the Ch 17–
 - [x] [SPEC Appendix A](SPEC.md#appendix-a-standard-library-catalog-normative) published (normative identifier catalog)
 - [x] [`docs/implementation/spec-completeness.md`](docs/implementation/spec-completeness.md): all 26 chapters Full except intentional N/A non-goals
 - [x] Package versions at `0.11.0` (crates.io / PyPI / bindings)
+
+---
+
+## Phase 0.12 — Portable Relational Kernel
+
+**Status:** Covered in `0.15.0` (shipped with R1–R4 together)  
+**Proposal:** [docs/DTCS_PORTABLE_SPEC_PROPOSAL.md](docs/DTCS_PORTABLE_SPEC_PROPOSAL.md) DTCS-R1  
+**Profile:** `dtcs:profile/portable-relational-kernel/1`
+
+### Deliverables
+
+- [x] Operator registry (`dtcs:stdlib.operators`) and `RegistryCategory::Operator`
+- [x] Widened `dtcs:project` / `dtcs:filter` (entry v2) with legacy subset acceptance
+- [x] `dtcs:with_fields`, `dtcs:rename_fields`, `dtcs:drop_fields`
+- [x] Kernel functions (`case_when`, `if_null`, `null_if`, `try_cast`, `is_invalid`); `coalesce` v2
+- [x] Portable plan envelope `dtcs.transform-plan/1` + fingerprint + security budgets
+- [x] SPEC Ch 13 §12.1, Appendix A updates, A.8 profiles
+
+---
+
+## Phase 0.13 — Portable Relational
+
+**Status:** Covered in `0.15.0`  
+**Proposal:** DTCS-R2  
+**Profile:** `dtcs:profile/portable-relational/1`
+
+### Deliverables
+
+- [x] Rich `join` / `union` / `group` / `aggregate` / `sort` (entry v2); null keys do not match
+- [x] `dtcs:distinct`, `dtcs:deduplicate`, `dtcs:limit`
+- [x] Aggregate function family (`count_all`, `count`, `count_distinct`, `sum`, `average`)
+- [x] Missing ≠ null grouping keys in reference runtime
+
+---
+
+## Phase 0.14 — Portable Conformance
+
+**Status:** Covered in `0.15.0`  
+**Proposal:** DTCS-R3
+
+### Deliverables
+
+- [x] Semantic-family conformance profiles alongside implementation-class profiles
+- [x] Portable diagnostics (`unknown-profile`, `plan-budget-exceeded`, …)
+- [x] Executable-object rejection and plan budgets tested
+- [x] Ch 23 §5.1 dual-compiler gate language; capability operator ids
+
+---
+
+## Phase 0.15 — Portable Advanced
+
+**Status:** Covered in `0.15.0` (window/datetime/complex profiles experimental)  
+**Proposal:** DTCS-R4  
+**Profiles:** `dtcs:profile/portable-window/1`, `dtcs:profile/portable-complex-types/1`
+
+### Deliverables
+
+- [x] `dtcs:window` action + window functions registered (experimental; runtime capability gap)
+- [x] Date/time function family registered (experimental)
+- [x] Complex-types profile with additive `array`/`struct` aliases
+- [x] SQL-lowering requirements in SPEC A.8 (no raw SQL in portable plans)
 
 ---
 

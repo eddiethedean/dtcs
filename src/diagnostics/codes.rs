@@ -92,6 +92,18 @@ pub const PRECONDITION_VIOLATION: &str = "dtcs:precondition-violation";
 pub const POSTCONDITION_VIOLATION: &str = "dtcs:postcondition-violation";
 /// General runtime execution error.
 pub const RUNTIME_ERROR: &str = "dtcs:runtime-error";
+/// Unknown portable profile or registry entry.
+pub const UNKNOWN_PROFILE: &str = "dtcs:unknown-profile";
+/// Portable plan security budget exceeded.
+pub const PLAN_BUDGET_EXCEEDED: &str = "dtcs:plan-budget-exceeded";
+/// Portable plan rejected executable or host-language object.
+pub const EXECUTABLE_OBJECT_REJECTED: &str = "dtcs:executable-object-rejected";
+/// Expression typing or value-state coercion failure.
+pub const EXPRESSION_TYPE_ERROR: &str = "dtcs:expression-type-error";
+/// Ordering or determinism requirement violated.
+pub const DETERMINISM_VIOLATION: &str = "dtcs:determinism-violation";
+/// Unsupported optional portable capability.
+pub const UNSUPPORTED_PORTABLE_FEATURE: &str = "dtcs:unsupported-portable-feature";
 
 /// All standardized diagnostic identifiers registered by this implementation.
 pub const ALL_CODES: &[&str] = &[
@@ -141,4 +153,10 @@ pub const ALL_CODES: &[&str] = &[
     PRECONDITION_VIOLATION,
     POSTCONDITION_VIOLATION,
     RUNTIME_ERROR,
+    UNKNOWN_PROFILE,
+    PLAN_BUDGET_EXCEEDED,
+    EXECUTABLE_OBJECT_REJECTED,
+    EXPRESSION_TYPE_ERROR,
+    DETERMINISM_VIOLATION,
+    UNSUPPORTED_PORTABLE_FEATURE,
 ];

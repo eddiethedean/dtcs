@@ -22,11 +22,15 @@ from dtcs._native import parse_path as _parse_path
 from dtcs._native import plan_lower as _plan_lower
 from dtcs._native import plan_optimize as _plan_optimize
 from dtcs._native import plan_equivalent as _plan_equivalent
+from dtcs._native import plan_export_portable as _plan_export_portable
+from dtcs._native import plan_fingerprint as _plan_fingerprint
+from dtcs._native import expression_to_structured as _expression_to_structured
 from dtcs._native import plan_topological_order as _plan_topological_order
 from dtcs._native import plan_validate as _plan_validate
 from dtcs._native import registry_list as _registry_list
 from dtcs._native import registry_load as _registry_load
 from dtcs._native import registry_resolve as _registry_resolve
+from dtcs._native import capability_portable_manifest as _capability_portable_manifest
 from dtcs._native import spec_version as _spec_version
 from dtcs._native import validate_contract as _validate_contract
 from dtcs._native import validate_document as _validate_document
@@ -89,6 +93,24 @@ def plan_equivalent(before: dict, after: dict) -> bool:
     return _plan_equivalent(before, after)
 
 
+def plan_export_portable(
+    plan: dict,
+    profile: str = "dtcs:profile/portable-relational-kernel/1",
+) -> dict:
+    """Export a transformation plan to the portable envelope."""
+    return _plan_export_portable(plan, profile)
+
+
+def plan_fingerprint(portable_plan: dict) -> str:
+    """Return the SHA-256 semantic fingerprint of a portable plan."""
+    return _plan_fingerprint(portable_plan)
+
+
+def expression_to_structured(source: str) -> dict:
+    """Lower a string expression to a structured node tree."""
+    return _expression_to_structured(source)
+
+
 def plan_topological_order(contract: dict, plan: dict) -> list[str]:
     """Return topological execution order for a lowered plan."""
     return _plan_topological_order(contract, plan)
@@ -122,6 +144,13 @@ def inspect(contract: dict) -> str:
 def capability_reference_profile() -> dict:
     """Return the embedded reference engine capability profile."""
     return _capability_reference_profile()
+
+
+def capability_portable_manifest(
+    profile: str = "dtcs:profile/portable-relational-kernel/1",
+) -> dict:
+    """Return the portable per-entry capability manifest for a profile."""
+    return _capability_portable_manifest(profile)
 
 
 def capability_match(plan: dict, profile: dict | None = None) -> dict:
@@ -206,6 +235,7 @@ __all__ = [
     "__version__",
     "analyze",
     "capability_match",
+    "capability_portable_manifest",
     "capability_reference_profile",
     "compile_plan",
     "compat_analyze",
@@ -213,6 +243,7 @@ __all__ = [
     "conformance_run",
     "evolve_analyze",
     "execution_validate",
+    "expression_to_structured",
     "inspect",
     "is_valid",
     "lineage_analyze",
@@ -220,6 +251,8 @@ __all__ = [
     "parse",
     "parse_and_validate",
     "parse_file",
+    "plan_export_portable",
+    "plan_fingerprint",
     "plan_lower",
     "plan_optimize",
     "plan_equivalent",

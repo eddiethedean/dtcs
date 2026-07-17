@@ -13,9 +13,18 @@ use super::null_behavior::NullBehavior;
 pub struct Expression {
     /// Stable expression identifier.
     pub id: String,
-    /// Expression body.
+    /// Expression body as authoring sugar (string grammar).
+    ///
+    /// Portable plans prefer [`Self::body`] structured nodes; when both are
+    /// present, `body` is authoritative.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub expr: Option<String>,
+    /// Structured expression node tree (SPEC Chapter 8 §3.1).
+    ///
+    /// Canonical portable representation. Node shapes use a `kind` discriminator
+    /// (`literal`, `fieldRef`, `unary`, `binary`, `call`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body: Option<Value>,
     /// Declared logical type (SPEC Chapter 4 §11).
     #[serde(default, rename = "type", skip_serializing_if = "Option::is_none")]
     pub type_name: Option<String>,

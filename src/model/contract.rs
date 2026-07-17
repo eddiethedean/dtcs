@@ -10,7 +10,7 @@ use super::{
 };
 
 /// Supported DTCS specification versions for this implementation.
-pub const SUPPORTED_DTCS_VERSIONS: &[&str] = &["1.0.0", "1.0.0-draft"];
+pub const SUPPORTED_DTCS_VERSIONS: &[&str] = &["2.0.0", "1.0.0", "1.0.0-draft"];
 
 /// A DTCS Transformation Contract — the canonical root object.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

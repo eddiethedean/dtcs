@@ -474,6 +474,47 @@ fn runtime_execute(
     value_to_py(py, &crate::runtime::execute(&plan, &inputs))
 }
 
+/// Export a transformation plan to the portable envelope (`dtcs.transform-plan/1`).
+#[pyfunction]
+#[pyo3(signature = (plan, profile=None))]
+fn plan_export_portable(
+    py: Python<'_>,
+    plan: &Bound<'_, PyAny>,
+    profile: Option<&str>,
+) -> PyResult<Py<PyAny>> {
+    let plan = plan_from_py(py, plan)?;
+    let profile = profile.unwrap_or(crate::plan::KERNEL_PROFILE);
+    let portable = crate::plan::export_portable_plan(&plan, profile)
+        .map_err(|e| PyValueError::new_err(e))?;
+    value_to_py(py, &portable)
+}
+
+/// Compute the semantic fingerprint of a portable plan object.
+#[pyfunction]
+fn plan_fingerprint(py: Python<'_>, portable_plan: &Bound<'_, PyAny>) -> PyResult<String> {
+    let json_str = py_to_json_str(py, portable_plan, "portable_plan")?;
+    let portable: crate::plan::PortablePlan = serde_json::from_str(&json_str)
+        .map_err(|e| PyValueError::new_err(format!("invalid portable plan: {e}")))?;
+    portable
+        .fingerprint()
+        .map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Lower a string expression to a structured node.
+#[pyfunction]
+fn expression_to_structured(py: Python<'_>, source: &str) -> PyResult<Py<PyAny>> {
+    let node = crate::to_structured_node(source).map_err(PyValueError::new_err)?;
+    value_to_py(py, &node)
+}
+
+/// Reference portable capability manifest for a profile.
+#[pyfunction]
+#[pyo3(signature = (profile=None))]
+fn capability_portable_manifest(py: Python<'_>, profile: Option<&str>) -> PyResult<Py<PyAny>> {
+    let profile = profile.unwrap_or(crate::plan::KERNEL_PROFILE);
+    value_to_py(py, &crate::reference_portable_manifest(profile))
+}
+
 /// Emit the implementation capability declaration (Ch 23 §9).
 #[pyfunction]
 #[pyo3(signature = (profile=None))]
@@ -513,6 +554,9 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(plan_validate, m)?)?;
     m.add_function(wrap_pyfunction!(plan_optimize, m)?)?;
     m.add_function(wrap_pyfunction!(plan_equivalent, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_export_portable, m)?)?;
+    m.add_function(wrap_pyfunction!(plan_fingerprint, m)?)?;
+    m.add_function(wrap_pyfunction!(expression_to_structured, m)?)?;
     m.add_function(wrap_pyfunction!(metadata_validate, m)?)?;
     m.add_function(wrap_pyfunction!(validate_document, m)?)?;
     m.add_function(wrap_pyfunction!(inspect, m)?)?;
@@ -524,6 +568,7 @@ fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(registry_resolve, m)?)?;
     m.add_function(wrap_pyfunction!(registry_load, m)?)?;
     m.add_function(wrap_pyfunction!(capability_reference_profile, m)?)?;
+    m.add_function(wrap_pyfunction!(capability_portable_manifest, m)?)?;
     m.add_function(wrap_pyfunction!(capability_match, m)?)?;
     m.add_function(wrap_pyfunction!(compile_plan, m)?)?;
     m.add_function(wrap_pyfunction!(execution_validate, m)?)?;

@@ -1,6 +1,6 @@
 {
   "name": "@eddiethedean/dtcs-wasm",
-  "version": "0.11.0",
+  "version": "0.15.0",
   "description": "WebAssembly bindings for the DTCS reference implementation",
   "type": "module",
   "files": [

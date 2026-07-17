@@ -4,6 +4,7 @@ mod builtin;
 #[path = "match.rs"]
 mod matching;
 mod model;
+mod portable;
 mod requirements;
 mod validate;
 
@@ -12,6 +13,7 @@ pub use matching::{match_plan, match_plan_with_registry};
 pub use model::{
     CapabilityCategories, CapabilityGap, CapabilityMatchReport, EngineCapabilityDeclaration,
 };
+pub use portable::{reference_portable_manifest, EntryCapability, PortableCapabilityManifest};
 pub use requirements::PlanRequirements;
 pub use validate::validate;
 

@@ -1,0 +1,33 @@
+id: "dtcs:stdlib.profiles"
+version: "1.0.0"
+governingSpecification: "2.0.0"
+publicationStatus: "standard"
+entries:
+  dtcs:profile/portable-relational-kernel/1:
+    name: "Portable Relational Kernel"
+    category: "profile"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"profile","family":"portable-relational-kernel","requiredActions":["dtcs:project","dtcs:filter","dtcs:with_fields","dtcs:rename_fields","dtcs:drop_fields"],"requiredOperators":["dtcs:eq","dtcs:and","dtcs:or","dtcs:not","dtcs:add","dtcs:subtract","dtcs:multiply","dtcs:divide"],"requiredFunctions":["dtcs:coalesce","dtcs:case_when","dtcs:if_null","dtcs:null_if","dtcs:try_cast","dtcs:is_invalid"],"planProfile":"dtcs.transform-plan/1"}
+  dtcs:profile/portable-relational/1:
+    name: "Portable Relational"
+    category: "profile"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"profile","family":"portable-relational","extends":"dtcs:profile/portable-relational-kernel/1","requiredActions":["dtcs:join","dtcs:union","dtcs:group","dtcs:aggregate","dtcs:sort","dtcs:distinct","dtcs:deduplicate","dtcs:limit"],"requiredFunctions":["dtcs:count_all","dtcs:count","dtcs:count_distinct","dtcs:sum","dtcs:average"],"planProfile":"dtcs.transform-plan/1"}
+  dtcs:profile/portable-window/1:
+    name: "Portable Window"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-window","extends":"dtcs:profile/portable-relational/1","requiredActions":["dtcs:window"],"requiredFunctions":["dtcs:row_number","dtcs:rank","dtcs:dense_rank","dtcs:lag","dtcs:lead"],"planProfile":"dtcs.transform-plan/1"}
+  dtcs:profile/portable-complex-types/1:
+    name: "Portable Complex Types"
+    category: "profile"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"profile","family":"portable-complex-types","extends":"dtcs:profile/portable-relational-kernel/1","requiredTypes":["list","map","object"],"typeAliases":{"array":"list","struct":"object"},"planProfile":"dtcs.transform-plan/1"}

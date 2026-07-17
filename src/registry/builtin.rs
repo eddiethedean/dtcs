@@ -58,6 +58,16 @@ pub fn builtin_registry() -> RegistryDocument {
         include_bytes!("builtin/rules.yaml"),
         "builtin/rules.yaml",
     );
+    merge_builtin_doc(
+        &mut registry,
+        include_bytes!("builtin/operators.yaml"),
+        "builtin/operators.yaml",
+    );
+    merge_builtin_doc(
+        &mut registry,
+        include_bytes!("builtin/profiles.yaml"),
+        "builtin/profiles.yaml",
+    );
 
     registry
 }

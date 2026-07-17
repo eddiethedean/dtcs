@@ -90,6 +90,7 @@ nav:
       - Conformance: user/conformance.md
       - Extensions & registries: user/extensions-and-registries.md
       - Migration 0.11: user/migration-0.11.md
+      - Portable Relational migration: user/migration-portable-relational.md
       - Limits & deployment: user/limits.md
       - Troubleshooting: user/troubleshooting.md
       - FAQ: user/faq.md

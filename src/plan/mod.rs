@@ -5,6 +5,7 @@ mod graph;
 mod lowering;
 mod model;
 mod optimize;
+mod portable;
 mod rule_key;
 mod validate;
 
@@ -17,5 +18,10 @@ pub use model::{
 };
 pub use optimize::{
     optimize, optimize_with_registry, OptimizeOptions, OptimizeResult, TransformRecord,
+};
+pub use portable::{
+    export_portable_plan, COMPLEX_TYPES_PROFILE, KERNEL_PROFILE, MAX_PORTABLE_PLAN_BYTES,
+    MAX_PORTABLE_PLAN_DEPTH, MAX_PORTABLE_PLAN_NODES, RELATIONAL_PROFILE, TRANSFORM_PLAN_IDENTITY,
+    WINDOW_PROFILE, PortablePlan, RegistryVersions,
 };
 pub use validate::{plan_as_contract, validate, validate_with_registry};

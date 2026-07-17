@@ -38,6 +38,10 @@ enum StdlibDefinition {
         /// Parameter names from the registry definition (string list form).
         #[serde(default)]
         parameters: Option<Vec<String>>,
+        /// Legacy parameter subset that remains valid under widened schemas.
+        #[serde(default)]
+        #[serde(rename = "legacyParameters")]
+        legacy_parameters: Option<Vec<String>>,
     },
     #[serde(rename = "rule")]
     Rule {
@@ -267,7 +271,8 @@ fn validate_stdlib_action(
         target_type,
         target_nullable_allowed,
         target_kind,
-        parameters: required_params,
+        parameters: catalog_params,
+        legacy_parameters,
     }) = parsed
     else {
         return;
@@ -311,7 +316,12 @@ fn validate_stdlib_action(
                 );
             }
         }
-        validate_dataset_action_parameters(ctx, action, required_params.as_deref());
+        validate_dataset_action_parameters(
+            ctx,
+            action,
+            catalog_params.as_deref(),
+            legacy_parameters.as_deref(),
+        );
         return;
     }
 
@@ -538,14 +548,68 @@ fn parameter_value_matches_type(value: &serde_json::Value, expected: &str) -> bo
 fn validate_dataset_action_parameters(
     ctx: &mut ValidationContext,
     action: &crate::model::SemanticAction,
-    required: Option<&[String]>,
+    catalog: Option<&[String]>,
+    legacy: Option<&[String]>,
 ) {
-    let Some(required) = required else {
+    let Some(catalog) = catalog else {
         return;
     };
-    // Present in the catalog list but optional at runtime.
-    const OPTIONAL: &[&str] = &["equals", "descending", "rightKey"];
+    // Present in the catalog list but optional at runtime / rich-form alternatives.
+    const OPTIONAL: &[&str] = &[
+        "equals",
+        "descending",
+        "rightKey",
+        "predicate",
+        "type",
+        "on",
+        "nullSafe",
+        "collisionPolicy",
+        "keys",
+        "mode",
+        "missingColumnPolicy",
+        "duplicatePolicy",
+        "aggregates",
+        "filter",
+        "missingPolicy",
+        "offset",
+        "retain",
+        "partitionBy",
+        "orderBy",
+        "frame",
+        "functions",
+    ];
     let object_ref = format!("semanticActions.{}.parameters", action.id);
+
+    // Rich alternative forms that satisfy the action without the legacy key set.
+    let rich_ok = match action.action.as_str() {
+        "dtcs:filter" | "dtcs:select" => action.parameters.contains_key("predicate"),
+        "dtcs:sort" => action.parameters.contains_key("keys"),
+        "dtcs:aggregate" | "dtcs:group" => action.parameters.contains_key("aggregates"),
+        "dtcs:join" => {
+            action.parameters.contains_key("on")
+                || action.parameters.contains_key("predicate")
+                || action
+                    .parameters
+                    .get("type")
+                    .and_then(|v| v.as_str())
+                    == Some("cross")
+        }
+        "dtcs:with_fields" => action.parameters.contains_key("assignments"),
+        "dtcs:rename_fields" => action.parameters.contains_key("mapping"),
+        "dtcs:drop_fields" => action.parameters.contains_key("fields"),
+        "dtcs:distinct" => true, // fields optional
+        "dtcs:deduplicate" => {
+            action.parameters.contains_key("keys") && action.parameters.contains_key("retain")
+        }
+        "dtcs:limit" => action.parameters.contains_key("count"),
+        "dtcs:window" => action.parameters.contains_key("functions"),
+        _ => false,
+    };
+    if rich_ok {
+        return;
+    }
+
+    let required = legacy.unwrap_or(catalog);
     for name in required {
         if OPTIONAL.contains(&name.as_str()) {
             continue;
@@ -929,11 +993,13 @@ mod tests {
                 target_nullable_allowed,
                 target_kind,
                 parameters,
+                legacy_parameters,
             }) => {
                 assert_eq!(target_type.as_deref(), Some("string"));
                 assert_eq!(target_nullable_allowed, Some(false));
                 assert_eq!(target_kind, None);
                 assert_eq!(parameters, None);
+                assert_eq!(legacy_parameters, None);
             }
             other => panic!("unexpected: {other:?}"),
         }

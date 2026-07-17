@@ -1,6 +1,6 @@
 id: "dtcs:stdlib.rules"
 version: "1.0.0"
-governingSpecification: "1.0.0-draft"
+governingSpecification: "2.0.0"
 publicationStatus: "standard"
 entries:
   dtcs:not_null:

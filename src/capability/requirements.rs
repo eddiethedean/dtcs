@@ -208,8 +208,10 @@ fn binary_op_name(op: BinaryOp) -> &'static str {
         BinaryOp::Sub => "sub",
         BinaryOp::Mul => "mul",
         BinaryOp::Div => "div",
+        BinaryOp::Mod => "mod",
         BinaryOp::Eq => "eq",
         BinaryOp::Neq => "neq",
+        BinaryOp::NullSafeEq => "nullSafeEq",
         BinaryOp::Lt => "lt",
         BinaryOp::Lte => "lte",
         BinaryOp::Gt => "gt",
@@ -217,6 +219,7 @@ fn binary_op_name(op: BinaryOp) -> &'static str {
         BinaryOp::And => "and",
         BinaryOp::Or => "or",
         BinaryOp::In => "in",
+        BinaryOp::Between => "between",
         BinaryOp::Contains => "contains",
     }
 }

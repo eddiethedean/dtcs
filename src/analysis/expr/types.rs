@@ -185,10 +185,12 @@ fn infer_binary_type(
     match op {
         BinaryOp::Eq
         | BinaryOp::Neq
+        | BinaryOp::NullSafeEq
         | BinaryOp::Lt
         | BinaryOp::Lte
         | BinaryOp::Gt
-        | BinaryOp::Gte => {
+        | BinaryOp::Gte
+        | BinaryOp::Between => {
             if type_compatible(left, right) == TypeCompatibility::Incompatible {
                 return Err((
                     codes::INVALID_TYPE,
@@ -202,7 +204,7 @@ fn infer_binary_type(
             }
             Ok(LogicalType::Primitive("boolean".into()))
         }
-        BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div => {
+        BinaryOp::Add | BinaryOp::Sub | BinaryOp::Mul | BinaryOp::Div | BinaryOp::Mod => {
             infer_arithmetic_type(op, left, right)
         }
         BinaryOp::In | BinaryOp::Contains => Ok(LogicalType::Primitive("boolean".into())),

@@ -1,0 +1,152 @@
+id: "dtcs:stdlib.operators"
+version: "1.0.0"
+governingSpecification: "2.0.0"
+publicationStatus: "standard"
+entries:
+  dtcs:eq:
+    name: "Equal"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"eq"}
+  dtcs:not_eq:
+    name: "Not Equal"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"neq"}
+  dtcs:lt:
+    name: "Less Than"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"lt"}
+  dtcs:lte:
+    name: "Less Than Or Equal"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"lte"}
+  dtcs:gt:
+    name: "Greater Than"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"gt"}
+  dtcs:gte:
+    name: "Greater Than Or Equal"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"gte"}
+  dtcs:null_safe_eq:
+    name: "Null-Safe Equal"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"comparison","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"nullSafeEq"}
+  dtcs:and:
+    name: "And"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"boolean","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"and"}
+  dtcs:or:
+    name: "Or"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"boolean","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"or"}
+  dtcs:not:
+    name: "Not"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":1,"category":"boolean","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"not"}
+  dtcs:add:
+    name: "Add"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"arithmetic","returnType":"numeric","deterministic":true,"nullBehavior":"propagate","shortName":"add"}
+  dtcs:subtract:
+    name: "Subtract"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"arithmetic","returnType":"numeric","deterministic":true,"nullBehavior":"propagate","shortName":"sub"}
+  dtcs:multiply:
+    name: "Multiply"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"arithmetic","returnType":"numeric","deterministic":true,"nullBehavior":"propagate","shortName":"mul"}
+  dtcs:divide:
+    name: "Divide"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"arithmetic","returnType":"numeric","deterministic":true,"nullBehavior":"propagate","shortName":"div"}
+  dtcs:modulo:
+    name: "Modulo"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"arithmetic","returnType":"numeric","deterministic":true,"nullBehavior":"propagate","shortName":"mod"}
+  dtcs:negate:
+    name: "Negate"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":1,"category":"arithmetic","returnType":"numeric","deterministic":true,"nullBehavior":"propagate","shortName":"negate"}
+  dtcs:in:
+    name: "In"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"membership","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"in"}
+  dtcs:between:
+    name: "Between"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":3,"category":"membership","returnType":"boolean","deterministic":true,"nullBehavior":"defined","shortName":"between"}
+  dtcs:field:
+    name: "Field Access"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"access","returnType":"sameAsField","deterministic":true,"nullBehavior":"defined","shortName":"field"}
+  dtcs:index:
+    name: "Index Access"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"access","returnType":"sameAsElement","deterministic":true,"nullBehavior":"defined","shortName":"index"}
+  dtcs:element_at:
+    name: "Element At"
+    category: "operator"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"operator","arity":2,"category":"access","returnType":"sameAsElement","deterministic":true,"nullBehavior":"defined","shortName":"elementAt"}

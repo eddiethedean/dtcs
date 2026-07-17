@@ -1,6 +1,6 @@
 id: "dtcs:stdlib.semanticActions"
-version: "1.0.0"
-governingSpecification: "1.0.0-draft"
+version: "2.0.0"
+governingSpecification: "2.0.0"
 publicationStatus: "standard"
 entries:
   dtcs:lowercase:
@@ -48,59 +48,101 @@ entries:
   dtcs:project:
     name: "Project"
     category: "semanticAction"
-    version: "1.0.0"
+    version: "2.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["fields"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["fields"],"legacyParameters":["fields"],"richParameters":["fields"],"fieldForms":["name","expression"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
   dtcs:select:
     name: "Select"
     category: "semanticAction"
-    version: "1.0.0"
+    version: "2.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"selection","targetKind":"dataset","parameters":["field","equals"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"selection","targetKind":"dataset","parameters":["field","equals","predicate"],"legacyParameters":["field","equals"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined"}
   dtcs:filter:
     name: "Filter"
     category: "semanticAction"
+    version: "2.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"filtering","targetKind":"dataset","parameters":["field","equals","predicate"],"legacyParameters":["field","equals"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined","invalidPredicate":"fail"}
+  dtcs:with_fields:
+    name: "With Fields"
+    category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"filtering","targetKind":"dataset","parameters":["field","equals"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["assignments"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+  dtcs:rename_fields:
+    name: "Rename Fields"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["mapping"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
+  dtcs:drop_fields:
+    name: "Drop Fields"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"projection","targetKind":"dataset","parameters":["fields","missingPolicy"],"deterministic":true,"lineageBehavior":"discard","nullBehavior":"defined"}
   dtcs:aggregate:
     name: "Aggregate"
     category: "semanticAction"
-    version: "1.0.0"
+    version: "2.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"aggregation","targetKind":"dataset","parameters":["groupBy","valueField","op"],"deterministic":true,"lineageBehavior":"aggregate","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"aggregation","targetKind":"dataset","parameters":["groupBy","valueField","op","aggregates","filter"],"legacyParameters":["groupBy","valueField","op"],"deterministic":true,"lineageBehavior":"aggregate","nullBehavior":"defined"}
   dtcs:group:
     name: "Group"
     category: "semanticAction"
-    version: "1.0.0"
+    version: "2.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"grouping","targetKind":"dataset","parameters":["groupBy","valueField","op"],"deterministic":true,"lineageBehavior":"aggregate","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"grouping","targetKind":"dataset","parameters":["groupBy","valueField","op","aggregates","filter"],"legacyParameters":["groupBy","valueField","op"],"deterministic":true,"lineageBehavior":"aggregate","nullBehavior":"defined"}
   dtcs:join:
     name: "Join"
     category: "semanticAction"
-    version: "1.0.0"
+    version: "2.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"joining","targetKind":"dataset","parameters":["right","leftKey","rightKey"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"joining","targetKind":"dataset","parameters":["right","leftKey","rightKey","type","on","predicate","nullSafe","collisionPolicy"],"legacyParameters":["right","leftKey","rightKey"],"joinTypes":["inner","left","right","full","semi","anti","cross"],"nullKeyEquality":"never","deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
   dtcs:sort:
     name: "Sort"
     category: "semanticAction"
-    version: "1.0.0"
+    version: "2.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"sorting","targetKind":"dataset","parameters":["field","descending"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"sorting","targetKind":"dataset","parameters":["field","descending","keys"],"legacyParameters":["field","descending"],"deterministic":true,"lineageBehavior":"preserve","nullBehavior":"defined"}
   dtcs:union:
     name: "Union"
+    category: "semanticAction"
+    version: "2.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"union","targetKind":"dataset","parameters":["other","mode","missingColumnPolicy","duplicatePolicy"],"legacyParameters":["other"],"modes":["positional","byName"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+  dtcs:distinct:
+    name: "Distinct"
     category: "semanticAction"
     version: "1.0.0"
     status: "standard"
     definition: |
-      {"kind":"semanticAction","category":"union","targetKind":"dataset","parameters":["other"],"deterministic":true,"lineageBehavior":"derive","nullBehavior":"defined"}
+      {"kind":"semanticAction","category":"selection","targetKind":"dataset","parameters":["fields"],"deterministic":true,"lineageBehavior":"filter","nullBehavior":"defined"}
+  dtcs:deduplicate:
+    name: "Deduplicate"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"selection","targetKind":"dataset","parameters":["keys","retain"],"deterministic":false,"lineageBehavior":"filter","nullBehavior":"defined"}
+  dtcs:limit:
+    name: "Limit"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"semanticAction","category":"selection","targetKind":"dataset","parameters":["count","offset"],"deterministic":false,"lineageBehavior":"filter","nullBehavior":"defined"}
   dtcs:partition:
     name: "Partition"
     category: "semanticAction"
@@ -108,6 +150,13 @@ entries:
     status: "standard"
     definition: |
       {"kind":"semanticAction","category":"partitioning","targetKind":"dataset","parameters":["field"],"deterministic":true,"lineageBehavior":"partition","nullBehavior":"defined"}
+  dtcs:window:
+    name: "Window"
+    category: "semanticAction"
+    version: "1.0.0"
+    status: "experimental"
+    definition: |
+      {"kind":"semanticAction","category":"window","targetKind":"dataset","parameters":["partitionBy","orderBy","frame","functions"],"deterministic":false,"lineageBehavior":"derive","nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
   dtcs:derive:
     name: "Derive"
     category: "semanticAction"
