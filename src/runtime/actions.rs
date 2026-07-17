@@ -224,9 +224,7 @@ fn apply_filter(
             let value = eval_expression_on_row(predicate, row)?;
             match value {
                 RuntimeValue::Boolean(true) => kept.push(row.clone()),
-                RuntimeValue::Boolean(false)
-                | RuntimeValue::Null
-                | RuntimeValue::Missing(_) => {}
+                RuntimeValue::Boolean(false) | RuntimeValue::Null | RuntimeValue::Missing(_) => {}
                 RuntimeValue::Invalid(inv) => {
                     return Err(format!(
                         "filter predicate produced invalid{}",
@@ -237,9 +235,7 @@ fn apply_filter(
                     ));
                 }
                 other => {
-                    return Err(format!(
-                        "filter predicate must be boolean, got {other:?}"
-                    ));
+                    return Err(format!("filter predicate must be boolean, got {other:?}"));
                 }
             }
         }
@@ -553,13 +549,7 @@ fn apply_join(
 
     let uses_keys = left_key.is_some();
     if join_type == "cross" || (!uses_keys && predicate.is_some()) {
-        let out = join_cartesian(
-            &left_ds,
-            &right_ds,
-            join_type,
-            predicate,
-            collision_policy,
-        )?;
+        let out = join_cartesian(&left_ds, &right_ds, join_type, predicate, collision_policy)?;
         workspaces.insert(target.to_string(), out);
         return Ok(());
     }
@@ -685,9 +675,7 @@ fn null_pad_template(rows: &[Row]) -> Row {
     let mut template = BTreeMap::new();
     for row in rows {
         for key in row.keys() {
-            template
-                .entry(key.clone())
-                .or_insert(RuntimeValue::Null);
+            template.entry(key.clone()).or_insert(RuntimeValue::Null);
         }
     }
     template
@@ -760,9 +748,9 @@ fn apply_multi_aggregate(
         if let Some(pred) = filter_expr {
             match eval_expression_on_row(pred, &row)? {
                 RuntimeValue::Boolean(true) => {}
-                RuntimeValue::Boolean(false)
-                | RuntimeValue::Null
-                | RuntimeValue::Missing(_) => continue,
+                RuntimeValue::Boolean(false) | RuntimeValue::Null | RuntimeValue::Missing(_) => {
+                    continue
+                }
                 RuntimeValue::Invalid(inv) => {
                     return Err(format!(
                         "aggregate filter produced invalid{}",
@@ -1201,7 +1189,11 @@ fn parse_window_frame(value: Option<&Value>) -> Result<WindowFrame, String> {
     let obj = value
         .as_object()
         .ok_or_else(|| "window frame must be an object".to_string())?;
-    let unit = match obj.get("type").or_else(|| obj.get("unit")).and_then(Value::as_str) {
+    let unit = match obj
+        .get("type")
+        .or_else(|| obj.get("unit"))
+        .and_then(Value::as_str)
+    {
         Some("rows") | None => FrameUnit::Rows,
         Some("range") => FrameUnit::Range,
         Some(other) => return Err(format!("unknown window frame type '{other}'")),
@@ -1581,7 +1573,11 @@ fn compare_values(a: &RuntimeValue, b: &RuntimeValue) -> std::cmp::Ordering {
     compare_values_with_nulls(a, b, Nulls::Last)
 }
 
-fn compare_values_with_nulls(a: &RuntimeValue, b: &RuntimeValue, nulls: Nulls) -> std::cmp::Ordering {
+fn compare_values_with_nulls(
+    a: &RuntimeValue,
+    b: &RuntimeValue,
+    nulls: Nulls,
+) -> std::cmp::Ordering {
     let a_null = matches!(
         a,
         RuntimeValue::Null | RuntimeValue::Missing(_) | RuntimeValue::Invalid(_)

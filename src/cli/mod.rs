@@ -457,9 +457,7 @@ pub fn run(cli: Cli) -> miette::Result<i32> {
             if fingerprint {
                 println!(
                     "{}",
-                    portable
-                        .fingerprint()
-                        .map_err(|e| miette::miette!("{e}"))?
+                    portable.fingerprint().map_err(|e| miette::miette!("{e}"))?
                 );
             } else {
                 println!(

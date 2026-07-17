@@ -59,7 +59,7 @@ pub enum UnaryOp {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum BinaryOp {
-/// Binary operators.
+    /// Binary operators.
     Add,
     Sub,
     Mul,

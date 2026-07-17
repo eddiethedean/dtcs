@@ -10,7 +10,8 @@ use crate::runtime::model::{
 
 /// Parse and evaluate an expression string against a single row (unqualified field names).
 pub fn eval_expression_on_row(source: &str, row: &Row) -> Result<RuntimeValue, String> {
-    let expr = parse_expression(source).map_err(|e| format!("expression parse error: {}", e.message))?;
+    let expr =
+        parse_expression(source).map_err(|e| format!("expression parse error: {}", e.message))?;
     evaluate_expr_on_row(&expr, row)
 }
 
@@ -77,8 +78,10 @@ pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, Stri
             }
         },
         Expr::Call { callee, args, .. } => {
-            let evaluated_args: Result<Vec<_>, _> =
-                args.iter().map(|arg| evaluate_expr_on_row(arg, row)).collect();
+            let evaluated_args: Result<Vec<_>, _> = args
+                .iter()
+                .map(|arg| evaluate_expr_on_row(arg, row))
+                .collect();
             call_function(callee, &evaluated_args?)
         }
     }
@@ -295,9 +298,9 @@ fn evaluate_binary(
         BinaryOp::Lt | BinaryOp::Lte | BinaryOp::Gt | BinaryOp::Gte => {
             compare_ordered(op, left, right).map(RuntimeValue::Boolean)
         }
-        BinaryOp::Between => Err(
-            "between is ternary; use `value between lo and hi` (parsed as dtcs:between)".into(),
-        ),
+        BinaryOp::Between => {
+            Err("between is ternary; use `value between lo and hi` (parsed as dtcs:between)".into())
+        }
         BinaryOp::In => match right {
             RuntimeValue::List(items) => Ok(RuntimeValue::Boolean(
                 items.iter().any(|item| values_equal(left, item)),

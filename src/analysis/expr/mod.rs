@@ -101,9 +101,8 @@ pub fn check_expression(
         }
         Err(mut diag) => {
             diag.object_ref = Some(format!("expressions.{}", expression.id));
-            diag.remediation = Some(
-                "Fix field references, operators, or function calls in the expression".into(),
-            );
+            diag.remediation =
+                Some("Fix field references, operators, or function calls in the expression".into());
             out.diagnostics.push(diag);
         }
     }

@@ -94,10 +94,7 @@ fn run_test_case(
         return result;
     }
 
-    if matches!(
-        test.assertion,
-        ConformanceAssertion::PortableDifferential
-    ) {
+    if matches!(test.assertion, ConformanceAssertion::PortableDifferential) {
         return super::portable::run_portable_differential_case(
             fixtures_dir,
             &test.fixture,

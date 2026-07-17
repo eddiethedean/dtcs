@@ -588,11 +588,7 @@ fn validate_dataset_action_parameters(
         "dtcs:join" => {
             action.parameters.contains_key("on")
                 || action.parameters.contains_key("predicate")
-                || action
-                    .parameters
-                    .get("type")
-                    .and_then(|v| v.as_str())
-                    == Some("cross")
+                || action.parameters.get("type").and_then(|v| v.as_str()) == Some("cross")
         }
         "dtcs:with_fields" => action.parameters.contains_key("assignments"),
         "dtcs:rename_fields" => action.parameters.contains_key("mapping"),

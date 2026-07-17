@@ -332,8 +332,12 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             Ok(RuntimeValue::String(parts.join(&sep)))
         }
         "dtcs:starts_with" => {
-            let haystack = args.first().ok_or("dtcs:starts_with requires two arguments")?;
-            let needle = args.get(1).ok_or("dtcs:starts_with requires two arguments")?;
+            let haystack = args
+                .first()
+                .ok_or("dtcs:starts_with requires two arguments")?;
+            let needle = args
+                .get(1)
+                .ok_or("dtcs:starts_with requires two arguments")?;
             match (haystack, needle) {
                 (RuntimeValue::Null, _) | (_, RuntimeValue::Null) => Ok(RuntimeValue::Null),
                 (RuntimeValue::String(h), RuntimeValue::String(n)) => {
@@ -343,7 +347,9 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             }
         }
         "dtcs:ends_with" => {
-            let haystack = args.first().ok_or("dtcs:ends_with requires two arguments")?;
+            let haystack = args
+                .first()
+                .ok_or("dtcs:ends_with requires two arguments")?;
             let needle = args.get(1).ok_or("dtcs:ends_with requires two arguments")?;
             match (haystack, needle) {
                 (RuntimeValue::Null, _) | (_, RuntimeValue::Null) => Ok(RuntimeValue::Null),
@@ -413,9 +419,7 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             // Deterministic fixture clock for the reference runtime (run-stable within a process).
             Ok(RuntimeValue::Date(reference_clock_date()))
         }
-        "dtcs:current_timestamp" => {
-            Ok(RuntimeValue::DateTime(reference_clock_timestamp()))
-        }
+        "dtcs:current_timestamp" => Ok(RuntimeValue::DateTime(reference_clock_timestamp())),
         "dtcs:date_add" => {
             if args.len() < 2 {
                 return Err("dtcs:date_add requires date and integer amount".into());
@@ -452,7 +456,9 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .as_str()
                 .ok_or("dtcs:date_diff requires date strings")?;
             let unit = args.get(2).and_then(RuntimeValue::as_str).unwrap_or("day");
-            Ok(RuntimeValue::Integer(diff_iso_dates_unit(left, right, unit)?))
+            Ok(RuntimeValue::Integer(diff_iso_dates_unit(
+                left, right, unit,
+            )?))
         }
         "dtcs:date_trunc" => {
             if args.len() != 2 {
@@ -474,12 +480,16 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             let (unit, value) = if args[0].as_str().is_some_and(is_date_unit) {
                 (
                     args[0].as_str().unwrap(),
-                    args[1].as_str().ok_or("dtcs:extract value must be date string")?,
+                    args[1]
+                        .as_str()
+                        .ok_or("dtcs:extract value must be date string")?,
                 )
             } else {
                 (
                     args[1].as_str().ok_or("dtcs:extract unit must be string")?,
-                    args[0].as_str().ok_or("dtcs:extract value must be date string")?,
+                    args[0]
+                        .as_str()
+                        .ok_or("dtcs:extract value must be date string")?,
                 )
             };
             Ok(RuntimeValue::Integer(extract_date_part(value, unit)?))
@@ -727,10 +737,7 @@ fn parse_datetime_parts(value: &str) -> Result<(String, u32, u32, u32, i32), Str
     let minute: u32 = parts[1]
         .parse()
         .map_err(|_| format!("invalid minute in '{value}'"))?;
-    let second: u32 = parts
-        .get(2)
-        .and_then(|s| s.parse().ok())
-        .unwrap_or(0);
+    let second: u32 = parts.get(2).and_then(|s| s.parse().ok()).unwrap_or(0);
     Ok((date, hour, minute, second, offset_minutes))
 }
 
@@ -790,8 +797,8 @@ fn apply_fixed_offset(value: &str, offset: &str) -> Result<String, String> {
     let offset_minutes = parse_offset_minutes(offset)?;
     let (date, hour, minute, second, current_offset) = parse_datetime_parts(value)?;
     let (y, m, d) = parse_ymd(&date)?;
-    let mut total_minutes =
-        days_from_civil(y, m, d) * 24 * 60 + hour as i64 * 60 + minute as i64 - current_offset as i64;
+    let mut total_minutes = days_from_civil(y, m, d) * 24 * 60 + hour as i64 * 60 + minute as i64
+        - current_offset as i64;
     total_minutes += offset_minutes as i64;
     let day = total_minutes.div_euclid(24 * 60);
     let rem = total_minutes.rem_euclid(24 * 60);
@@ -859,15 +866,10 @@ fn eval_field_access(
     container: &RuntimeValue,
     field: &RuntimeValue,
 ) -> Result<RuntimeValue, String> {
-    let name = field
-        .as_str()
-        .ok_or("dtcs:field name must be a string")?;
+    let name = field.as_str().ok_or("dtcs:field name must be a string")?;
     match container {
         RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
-        RuntimeValue::Map(map) => Ok(map
-            .get(name)
-            .cloned()
-            .unwrap_or_else(RuntimeValue::missing)),
+        RuntimeValue::Map(map) => Ok(map.get(name).cloned().unwrap_or_else(RuntimeValue::missing)),
         other => Err(format!("dtcs:field requires map/object, got {other:?}")),
     }
 }
@@ -880,9 +882,7 @@ fn eval_index_access(
     match container {
         RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
         RuntimeValue::List(items) => {
-            let idx = index
-                .as_integer()
-                .ok_or("list index must be an integer")?;
+            let idx = index.as_integer().ok_or("list index must be an integer")?;
             if idx < 0 {
                 return if null_on_oob {
                     Ok(RuntimeValue::Null)

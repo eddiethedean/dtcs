@@ -156,14 +156,16 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
         }
     }
     for op in REFERENCE_OPERATORS {
-        operators.entry((*op).to_string()).or_insert(EntryCapability {
-            supported: true,
-            version: Some("1.0.0".into()),
-            semantic_modes: Vec::new(),
-            limits: IndexMap::new(),
-            notes: Vec::new(),
-            tier: "certified".into(),
-        });
+        operators
+            .entry((*op).to_string())
+            .or_insert(EntryCapability {
+                supported: true,
+                version: Some("1.0.0".into()),
+                semantic_modes: Vec::new(),
+                limits: IndexMap::new(),
+                notes: Vec::new(),
+                tier: "certified".into(),
+            });
     }
     for ty in &legacy.categories.logical_types {
         types.insert(
@@ -343,7 +345,10 @@ mod tests {
         let manifest = reference_portable_manifest("dtcs:profile/portable-relational/1");
         validate_capability_accuracy(&manifest).expect("reference should be accurate");
         assert_eq!(
-            manifest.semantic_modes.get("ianaTimezone").map(String::as_str),
+            manifest
+                .semantic_modes
+                .get("ianaTimezone")
+                .map(String::as_str),
             Some("unsupported")
         );
         assert_eq!(

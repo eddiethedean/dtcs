@@ -484,8 +484,8 @@ fn plan_export_portable(
 ) -> PyResult<Py<PyAny>> {
     let plan = plan_from_py(py, plan)?;
     let profile = profile.unwrap_or(crate::plan::KERNEL_PROFILE);
-    let portable = crate::plan::export_portable_plan(&plan, profile)
-        .map_err(|e| PyValueError::new_err(e))?;
+    let portable =
+        crate::plan::export_portable_plan(&plan, profile).map_err(|e| PyValueError::new_err(e))?;
     value_to_py(py, &portable)
 }
 

@@ -6,8 +6,8 @@ use dtcs::plan::{export_portable_plan, KERNEL_PROFILE, TRANSFORM_PLAN_IDENTITY};
 use dtcs::runtime::actions::{apply_dataset_action, is_dataset_action};
 use dtcs::runtime::functions::call_function;
 use dtcs::{
-    is_known_action, is_known_function, is_known_operator, is_known_profile, parse_validate_and_plan,
-    DocumentFormat, PortablePlan, Row, RuntimeValue,
+    is_known_action, is_known_function, is_known_operator, is_known_profile,
+    parse_validate_and_plan, DocumentFormat, PortablePlan, Row, RuntimeValue,
 };
 use indexmap::IndexMap;
 use serde_json::json;
@@ -36,7 +36,9 @@ fn registry_exposes_portable_kernel_entries() {
     assert!(is_known_function("dtcs:is_invalid"));
     assert!(is_known_function("dtcs:count_all"));
     assert!(is_known_function("dtcs:row_number"));
-    assert!(is_known_profile("dtcs:profile/portable-relational-kernel/1"));
+    assert!(is_known_profile(
+        "dtcs:profile/portable-relational-kernel/1"
+    ));
     assert!(is_known_profile("dtcs:profile/portable-relational/1"));
     assert!(is_known_profile("dtcs:profile/portable-window/1"));
     assert!(is_known_profile("dtcs:profile/portable-complex-types/1"));
@@ -276,7 +278,10 @@ fn structured_expression_round_trip_and_capability_manifest() {
     assert!(manifest.operators.contains_key("dtcs:eq"));
     assert!(manifest.functions.contains_key("dtcs:coalesce"));
     assert_eq!(
-        manifest.limits.get("maxPortablePlanBytes").map(String::as_str),
+        manifest
+            .limits
+            .get("maxPortablePlanBytes")
+            .map(String::as_str),
         Some("8388608")
     );
 }
@@ -330,10 +335,7 @@ fn sort_by_expression_and_union_duplicate_policy() {
         json!([{ "expr": "a + b", "descending": true }]),
     );
     apply_dataset_action("dtcs:sort", "t", &params, &mut workspaces).unwrap();
-    assert_eq!(
-        workspaces["t"][0].get("a"),
-        Some(&RuntimeValue::Integer(1))
-    );
+    assert_eq!(workspaces["t"][0].get("a"), Some(&RuntimeValue::Integer(1)));
 
     workspaces.insert(
         "u".into(),
@@ -426,10 +428,7 @@ fn aggregate_group_by_expression_and_empty_input() {
         ],
     );
     let mut params = IndexMap::new();
-    params.insert(
-        "groupBy".into(),
-        json!([{ "expr": "v > 10", "as": "big" }]),
-    );
+    params.insert("groupBy".into(), json!([{ "expr": "v > 10", "as": "big" }]));
     params.insert(
         "aggregates".into(),
         json!([{ "as": "n", "op": "count_all" }]),
@@ -484,10 +483,7 @@ fn sort_mixed_integer_decimal_and_group_key_types() {
         workspaces["t"][0].get("v"),
         Some(&RuntimeValue::Decimal(1.0))
     );
-    assert_eq!(
-        workspaces["t"][2].get("v"),
-        Some(&RuntimeValue::Integer(3))
-    );
+    assert_eq!(workspaces["t"][2].get("v"), Some(&RuntimeValue::Integer(3)));
 
     workspaces.insert(
         "g".into(),
@@ -600,10 +596,7 @@ fn datetime_preserves_time_and_hour_diff() {
         ],
     )
     .unwrap();
-    assert_eq!(
-        added,
-        RuntimeValue::DateTime("2026-01-02T15:30:00Z".into())
-    );
+    assert_eq!(added, RuntimeValue::DateTime("2026-01-02T15:30:00Z".into()));
 
     let hours = call_function(
         "dtcs:date_diff",
@@ -705,15 +698,12 @@ fn window_frame_first_last_and_date_units() {
         ],
     )
     .unwrap();
-    assert_eq!(
-        trunc,
-        RuntimeValue::DateTime("2026-03-01T00:00:00Z".into())
-    );
+    assert_eq!(trunc, RuntimeValue::DateTime("2026-03-01T00:00:00Z".into()));
 
-    assert!(dtcs::validate_capability_accuracy(&dtcs::reference_portable_manifest(
-        KERNEL_PROFILE
-    ))
-    .is_ok());
+    assert!(
+        dtcs::validate_capability_accuracy(&dtcs::reference_portable_manifest(KERNEL_PROFILE))
+            .is_ok()
+    );
 }
 
 #[test]
@@ -741,11 +731,7 @@ fn field_index_element_at_access_ops() {
         RuntimeValue::Integer(2)
     );
     assert_eq!(
-        call_function(
-            "dtcs:element_at",
-            &[list, RuntimeValue::Integer(99)]
-        )
-        .unwrap(),
+        call_function("dtcs:element_at", &[list, RuntimeValue::Integer(99)]).unwrap(),
         RuntimeValue::Null
     );
 }

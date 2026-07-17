@@ -43,7 +43,7 @@ def _load_plan_manifest() -> list[dict]:
 
 
 def test_spec_version() -> None:
-    assert dtcs.SPEC_VERSION.endswith("draft")
+    assert dtcs.SPEC_VERSION == "2.0.0"
     assert dtcs.__version__
 
 
@@ -694,7 +694,7 @@ def test_cli_run_customer_normalize() -> None:
 def test_conformance_declare() -> None:
     declaration = dtcs.conformance_declare()
     assert declaration["primaryProfile"] == "integrated-platform"
-    assert len(declaration["profiles"]) == 8
+    assert len(declaration["profiles"]) == 12
 
 
 def test_conformance_run_integrated_platform() -> None:

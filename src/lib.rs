@@ -79,10 +79,11 @@ pub use analysis::{
     AnalysisReport,
 };
 pub use capability::{
-    discover as discover_capabilities, match_plan, match_plan_with_registry, reference_profile,
-    reference_portable_manifest, validate as validate_capabilities, validate_capability_accuracy,
-    CapabilityMatchReport, EngineCapabilityDeclaration, EntryCapability, PortableCapabilityManifest,
-    REFERENCE_CERTIFIED_FEATURES, REFERENCE_UNSUPPORTED_CLAIMS,
+    discover as discover_capabilities, match_plan, match_plan_with_registry,
+    reference_portable_manifest, reference_profile, validate as validate_capabilities,
+    validate_capability_accuracy, CapabilityMatchReport, EngineCapabilityDeclaration,
+    EntryCapability, PortableCapabilityManifest, REFERENCE_CERTIFIED_FEATURES,
+    REFERENCE_UNSUPPORTED_CLAIMS,
 };
 pub use compatibility::{
     analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,

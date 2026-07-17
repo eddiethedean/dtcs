@@ -14,6 +14,7 @@ strict: true
 # index.md is a symlink to docs/README.md; exclude only that hub duplicate.
 exclude_docs: |
   /README.md
+  DTCS_PORTABLE_SPEC_PROPOSAL.md
 
 theme:
   name: material
@@ -105,7 +106,8 @@ nav:
       - Node: api/node.md
   - Specification:
       - SPEC.md: SPEC.md
-      - Completeness matrix: implementation/spec-completeness.md
+      - Spec completeness: implementation/spec-completeness.md
+      - Portable conformance: implementation/portable-conformance.md
       - Changelog: https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md
       - Roadmap: https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md
   - Contribute:

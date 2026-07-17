@@ -129,7 +129,10 @@ pub fn run_portable_differential_case(
         }
     };
 
-    for mode in [PortableEvalMode::Direct, PortableEvalMode::StructuredLowering] {
+    for mode in [
+        PortableEvalMode::Direct,
+        PortableEvalMode::StructuredLowering,
+    ] {
         let result = run_portable_fixture(&fixture, mode);
         if let Some(expect_err) = &fixture.expect_error {
             match result {

@@ -306,7 +306,9 @@ fn lower_action_value_exprs(value: Value) -> Value {
             }
             Value::Object(out)
         }
-        Value::Array(items) => Value::Array(items.into_iter().map(lower_action_value_exprs).collect()),
+        Value::Array(items) => {
+            Value::Array(items.into_iter().map(lower_action_value_exprs).collect())
+        }
         other => other,
     }
 }

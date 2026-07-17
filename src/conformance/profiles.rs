@@ -80,11 +80,7 @@ pub fn all_profiles() -> Vec<ConformanceProfile> {
     profiles
 }
 
-fn semantic_profile(
-    id: &str,
-    class: ImplementationClass,
-    optional: &[&str],
-) -> ConformanceProfile {
+fn semantic_profile(id: &str, class: ImplementationClass, optional: &[&str]) -> ConformanceProfile {
     ConformanceProfile {
         id: id.to_string(),
         implementation_class: class,
