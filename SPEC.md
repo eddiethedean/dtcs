@@ -1,7 +1,7 @@
-# DTCS 2.0 Specification
+# DTCS 3.0 Specification
 
 **Status:** Draft\
-**Version:** 2.0.0
+**Version:** 3.0.0
 
 # Chapter 1 --- Introduction
 
@@ -20,20 +20,25 @@ specification is normative.
 
 ### 1.1 Specification series
 
-This document is **DTCS 2.0.0**. It supersedes the DTCS 1.0.0-draft text
-as the governing specification for conforming implementations that claim
-`dtcsVersion: "2.0.0"`.
+This document is **DTCS 3.0.0**. It supersedes DTCS 2.0.0 as the governing
+specification for conforming implementations that claim
+`dtcsVersion: "3.0.0"`.
 
-DTCS 2.0 incorporates the Portable Relational Profile: structured
-expression nodes, operator and profile registries, widened Semantic
-Action and Function catalogs, canonical Transformation Plan
-serialization (`dtcs.transform-plan/1`), and semantic-family conformance
-profiles (Appendix A.8; Chapter 13 §12.1; Chapter 23 §5.1).
+DTCS 3.0 incorporates Rich Portable Analytics: bounded lambda Expressions,
+advanced string and regular-expression Functions, strict conversions,
+statistical aggregates, complex-value transforms, reshape and set actions,
+IANA temporal semantics, controlled nondeterminism, structural nested-field
+evolution, expanded capability declarations, and canonical Transformation
+Plan serialization (`dtcs.transform-plan/2`). These additions are organized
+as independently claimable semantic-family profiles (Chapter 27; Appendix
+A.9).
 
-Contracts authored for DTCS 1.0.0 remain valid under compatible
+DTCS 3.0 retains the meanings of identifiers published by DTCS 2.0. Valid
+DTCS 2.0 contracts and `dtcs.transform-plan/1` artifacts remain readable by
+compatible implementations. Migration to `dtcs.transform-plan/2` SHALL NOT
+change their semantics. Contracts authored for DTCS 1.0.0 remain valid under
 implementations that continue to accept `dtcsVersion: "1.0.0"`, provided
-registry entry semantics for published identifiers are preserved as
-documented in migration guidance.
+published registry-entry semantics are preserved.
 
 ## 2. Design Goals
 
@@ -2548,13 +2553,15 @@ profile.
 
 ### 12.1 Portable plan serialization profile
 
-The Portable Relational Profile defines the canonical serialization
-identity `dtcs.transform-plan/1`.
+DTCS 3.0 defines the canonical serialization identity
+`dtcs.transform-plan/2`. Implementations conforming to DTCS 3.0 SHALL also
+read valid `dtcs.transform-plan/1` documents and SHALL migrate them to version
+2 without semantic change.
 
 A portable plan document SHALL include:
 
 -   `profile` --- a portable profile identifier (for example
-    `dtcs:profile/portable-relational-kernel/1`)
+    `dtcs:profile/portable-relational-kernel/2`)
 -   `specificationVersion` --- governing DTCS specification version
 -   `registryVersions` --- map of registry category to pinned version
     (`actions`, `functions`, `operators`, `types`)
@@ -2573,9 +2580,19 @@ Portable plans SHALL:
 -   produce identical semantic fingerprints for equivalent plans under
     the same profile and registry versions
 
-Internal COM plan IR (`nodes` / `dependencies`) MAY continue to be used
-as an implementation representation. Export to `dtcs.transform-plan/1`
-SHALL be deterministic.
+Version 2 portable plans MAY contain bounded `lambda` Expression nodes,
+generator actions, explicit semantic modes, and the resource and environment
+requirements defined in Chapter 27. They SHALL use canonical serialization
+for all such constructs. Every semantic input, including registry and profile
+versions, lambda scope, grammar versions, timezone-data requirements, random
+algorithms and seeds, error modes, ordering policies, collision policies, and
+observable resource limits, SHALL contribute to the semantic fingerprint.
+Display names, comments, source locations, and non-semantic explanatory
+metadata SHALL NOT contribute to the semantic fingerprint.
+
+Internal COM plan IR (`nodes` / `dependencies`) MAY continue to be used as an
+implementation representation. Export to `dtcs.transform-plan/2` SHALL be
+deterministic.
 
 Security budgets for portable plans (default reference limits):
 
@@ -4317,18 +4334,36 @@ Profiles SHALL be machine readable.
 
 In addition to implementation-class profiles, DTCS defines
 semantic-family profiles for portable relational transformations
-(Appendix A.8):
+(Appendix A.8 and Appendix A.9):
 
 -   `dtcs:profile/portable-relational-kernel/1`
 -   `dtcs:profile/portable-relational/1`
 -   `dtcs:profile/portable-window/1`
 -   `dtcs:profile/portable-complex-types/1`
+-   `dtcs:profile/portable-relational-kernel/2`
+-   `dtcs:profile/portable-relational/2`
+-   `dtcs:profile/portable-string-advanced/1`
+-   `dtcs:profile/portable-conversion/1`
+-   `dtcs:profile/portable-statistics/1`
+-   `dtcs:profile/portable-complex-values/1`
+-   `dtcs:profile/portable-reshape/1`
+-   `dtcs:profile/portable-relational-extended/1`
+-   `dtcs:profile/portable-temporal-iana/1`
+-   `dtcs:profile/portable-nondeterministic/1`
+-   `dtcs:profile/portable-window/2`
 
 An implementation MAY claim both an implementation class and one or more
 semantic-family profiles. Capability declarations for compilers SHALL be
 keyed by exact registry entries (identifier and version) and MAY include
 signatures, semantic modes, limits, and known unsupported optional
 features.
+
+DTCS 3.0 capability declarations SHALL identify accepted Transformation Plan
+protocol versions; complete and partial profile claims; supported entry and
+semantic-mode versions; regex, Unicode, timezone-data, random-algorithm, and
+format-grammar versions; applicable resource budgets; ordering and
+deterministic-execution guarantees; and compile-time or runtime conditions.
+Capability analysis SHALL report the narrowest unsupported requirement.
 
 A semantic family SHALL NOT advance from Experimental to Standard until
 at least two independent compilers pass that family's conformance
@@ -4694,6 +4729,12 @@ version they implement.
 Conformance to one specification version SHALL NOT imply conformance to
 another.
 
+An implementation claiming DTCS 3.0 conformance SHALL identify whether it
+accepts `dtcs.transform-plan/1`, `dtcs.transform-plan/2`, or both. A DTCS 3.0
+Planner, Compiler, Runtime, or Integrated Platform that accepts portable plans
+SHALL accept both versions and SHALL preserve semantics during version 1 to
+version 2 migration.
+
 ------------------------------------------------------------------------
 
 ## 6. Contract Versions
@@ -4987,6 +5028,263 @@ administration, extension review, conformance maintenance, and lifecycle
 management, DTCS enables an open, sustainable standards ecosystem
 capable of supporting independent implementations for many years.
 
+
+------------------------------------------------------------------------
+
+# Chapter 27 --- Rich Portable Analytics
+
+## 1. Purpose
+
+This chapter defines the DTCS 3.0 semantic families required for rich,
+portable dataframe-style analytics. The requirements remain independent of
+Python, SQL, PySpark, and any backend-native expression language.
+
+## 2. Design Goals
+
+Rich Portable Analytics SHALL:
+
+-   preserve implementation independence and data-only plans
+-   make each advanced semantic family independently discoverable and
+    testable
+-   define value-state, type, error, ordering, and determinism behavior
+-   support safe lowering to dataframe, distributed, and SQL Engines
+-   reject unsupported behavior instead of approximating it
+-   keep validation and planning bounded without reading source rows
+
+Rich Portable Analytics SHALL NOT standardize arbitrary SQL text, backend
+expression strings, language ASTs, executable user code, serialized closures,
+physical partition counts, cache placement, orchestration, storage, resource
+acquisition, or unbounded schema discovery from runtime data.
+
+## 3. Lambda Expressions
+
+DTCS 3.0 adds the structured Expression node kind `lambda`. A lambda node
+SHALL contain `parameters`, an ordered non-empty array of unique parameter
+names, and `body`, one structured Expression node.
+
+A lambda Expression SHALL:
+
+-   be data-only and contain no executable object
+-   reference only its parameters, literals, plan parameters, and outer
+    fields explicitly permitted by the invoking Function
+-   use registered Operators and Functions
+-   obey plan depth, node, byte, and evaluation budgets
+-   occur only as an argument to a Function whose registry entry declares
+    lambda support
+
+Lambda parameters use lexical scope. An inner parameter shadows an outer
+parameter with the same name. A `fieldRef` with `scope: "lambda"` SHALL resolve
+to the nearest enclosing lambda parameter. Implementations SHALL evaluate
+lambda arguments in declared parameter order and SHALL NOT capture undeclared
+host or Runtime state. Conditional Operators and Functions SHALL evaluate only
+the selected branch when their registry semantics declare short-circuit
+behavior.
+
+## 4. String and Regular-Expression Profile
+
+Profile `dtcs:profile/portable-string-advanced/1` defines advanced string and
+regular-expression Functions.
+
+String operations SHALL measure positions and lengths in Unicode code points
+unless an entry explicitly declares another unit. Case conversion and case
+folding SHALL be locale independent and SHALL declare the Unicode data
+version. The profile contains the Functions `dtcs:trim`, `dtcs:ltrim`,
+`dtcs:rtrim`, `dtcs:normalize_whitespace`, `dtcs:split`,
+`dtcs:join_strings`, `dtcs:pad_left`, `dtcs:pad_right`, `dtcs:repeat`,
+`dtcs:reverse`, `dtcs:translate`, `dtcs:position`, `dtcs:lower_unicode`,
+`dtcs:upper_unicode`, and `dtcs:casefold`.
+
+The profile also contains `dtcs:regex_matches`, `dtcs:regex_contains`,
+`dtcs:regex_extract`, `dtcs:regex_extract_all`, `dtcs:regex_replace`, and
+`dtcs:regex_split`. A plan using these Functions SHALL identify a registered
+portable regex grammar and Unicode version. The grammar SHALL define flags,
+capture numbering, zero-length matches, replacement references, and invalid
+pattern behavior. Unsupported constructs SHALL fail capability analysis.
+Implementations SHALL enforce declared regex complexity and input-length
+budgets.
+
+## 5. Conversion and Parsing Profile
+
+Profile `dtcs:profile/portable-conversion/1` contains `dtcs:cast`,
+`dtcs:try_cast`, `dtcs:parse_date`, `dtcs:parse_time`,
+`dtcs:parse_datetime`, `dtcs:format_date`, `dtcs:format_datetime`,
+`dtcs:parse_decimal`, and `dtcs:parse_boolean`.
+
+`dtcs:cast` performs strict conversion and applies the declared error mode to
+invalid input. `dtcs:try_cast` performs tolerant conversion and requires an
+explicit invalid-result policy. Every conversion SHALL define overflow,
+underflow, rounding, precision, null, missing, invalid, NaN, and infinity
+behavior. Date and time format strings SHALL identify a DTCS format grammar;
+they SHALL NOT silently use backend-native tokens. Decimal and boolean parsing
+SHALL be locale independent unless an explicit registered locale mode is
+present.
+
+## 6. Statistical Aggregate Profile
+
+Profile `dtcs:profile/portable-statistics/1` contains `dtcs:variance`,
+`dtcs:stddev`, `dtcs:covariance`, `dtcs:correlation`, `dtcs:median`,
+`dtcs:quantile`, `dtcs:first`, `dtcs:last`, `dtcs:collect_list`, and
+`dtcs:collect_set`.
+
+Variance, standard deviation, and covariance SHALL declare population or
+sample mode. Correlation SHALL declare its method; Pearson is the standard
+method in version 1 of this profile. Quantiles SHALL declare exact or an
+explicitly identified approximate mode. First, last, and collection
+aggregates SHALL declare ordering and null policies.
+
+Every statistical entry SHALL define degrees of freedom, numeric promotion,
+decimal handling, empty and all-null input, NaN and infinity behavior,
+overflow, result nullability, and order sensitivity. Approximate modes SHALL
+also declare algorithm identity, error bounds, merge behavior, and
+determinism. Collection aggregates SHALL enforce an explicit size limit.
+
+## 7. Complex-Value Profile
+
+Profile `dtcs:profile/portable-complex-values/1` contains constructors
+`dtcs:list`, `dtcs:map`, `dtcs:object`, and `dtcs:tuple`; accessors and
+transforms `dtcs:size`, `dtcs:list_contains`, `dtcs:list_position`,
+`dtcs:list_slice`, `dtcs:list_concat`, `dtcs:list_sort`, `dtcs:map_keys`,
+`dtcs:map_values`, `dtcs:map_entries`, `dtcs:map_from_entries`,
+`dtcs:map_concat`, `dtcs:object_names`, and `dtcs:object_values`; and
+higher-order Functions `dtcs:transform`, `dtcs:filter_values`, `dtcs:exists`,
+`dtcs:forall`, `dtcs:reduce`, `dtcs:zip_with`, `dtcs:map_filter`,
+`dtcs:transform_keys`, and `dtcs:transform_values`.
+
+The profile extends the compatible subset of
+`dtcs:profile/portable-complex-types/1`. It SHALL define collection order,
+zero-based indexing, negative-index behavior, out-of-bounds access, null
+elements, duplicate map keys, object field order, type unification, lambda
+evaluation, and resource budgets. A plan SHALL state its duplicate-key and
+collision policies. An implementation SHALL NOT substitute host-language map
+or object behavior when it differs from those policies.
+
+## 8. Generator and Reshape Profile
+
+Profile `dtcs:profile/portable-reshape/1` contains `dtcs:explode`,
+`dtcs:pivot`, and `dtcs:unpivot`.
+
+`dtcs:explode` SHALL declare its input Expression, output fields, whether it is
+outer, and whether it emits a position. It SHALL define behavior for lists,
+maps, null, missing, invalid, and empty values; output ordering; positional
+origin; field collisions; and maximum row expansion.
+
+Pivot categories SHALL be declared in the plan or bounded by a planning
+artifact. Ordinary validation and planning SHALL NOT read source rows to
+discover an unbounded output schema. Pivot and unpivot SHALL define category
+ordering, output naming, duplicate-cell aggregation, null categories, and
+collision behavior.
+
+## 9. Extended Relational Profile
+
+Profile `dtcs:profile/portable-relational-extended/1` contains
+`dtcs:intersect`, `dtcs:except`, `dtcs:sample`, `dtcs:random_split`,
+`dtcs:repartition`, and `dtcs:coalesce_partitions`.
+
+Intersect and except SHALL declare distinct or all mode and positional or
+by-name alignment. Sampling SHALL declare fraction or count mode, replacement
+policy, and seed policy. Random split SHALL declare weights, seed policy, and
+assignment algorithm. Seeded operations SHALL identify a portable
+pseudorandom algorithm, seed width, and stable row-identity requirement, and
+SHALL be independent of physical partitioning. Without stable row identity,
+the plan SHALL classify the result as nondeterministic or fail a determinism
+requirement.
+
+Repartition expresses a logical distribution requirement only.
+`dtcs:coalesce_partitions` is an optional physical hint and SHALL NOT alter row
+semantics.
+
+## 10. Temporal Profile
+
+Profile `dtcs:profile/portable-temporal-iana/1` defines IANA timezone
+identifiers, timezone-data version requirements, ambiguous and nonexistent
+local-time policies, calendar-aware arithmetic, ISO-week extraction,
+explicit week-start modes, declared sub-minute precision, and interval
+construction and comparison. It contains `dtcs:to_timezone`,
+`dtcs:from_utc`, and `dtcs:to_utc`.
+
+A plan SHALL record the required timezone-data version or compatible range.
+An implementation unable to provide compatible data SHALL reject the
+requirement rather than silently use host timezone data. Month-end, leap-day,
+ambiguous-time, and nonexistent-time behavior SHALL be explicit.
+
+## 11. Controlled Nondeterminism Profile
+
+Profile `dtcs:profile/portable-nondeterministic/1` contains `dtcs:random`,
+`dtcs:random_normal`, `dtcs:uuid`, `dtcs:run_id`, and
+`dtcs:run_timestamp`.
+
+Every call SHALL be classified as `deterministic`, `run-stable`,
+`seeded-stable`, or `nondeterministic`. Random Functions SHALL identify their
+algorithm, seed policy, and numeric domain. UUID generation SHALL identify its
+UUID version and representation. Run identifiers and timestamps SHALL remain
+stable within one logical run.
+
+Determinism classification SHALL affect fingerprints, caching, retries,
+incremental execution, and idempotency analysis. Optimizers SHALL NOT
+duplicate, reorder, or eliminate a call when doing so changes observable
+results.
+
+## 12. Window Profile Version 2
+
+Profile `dtcs:profile/portable-window/2` extends the compatible subset of
+`dtcs:profile/portable-window/1` with `dtcs:ntile`, `dtcs:percent_rank`,
+`dtcs:cume_dist`, `dtcs:nth_value`, explicit `ignoreNulls`, named windows,
+safe inheritance, and registered exclusion modes. It SHALL define peer, tie,
+NaN, and range-frame semantics precisely. Unsupported exclusion or
+backend-specific frame modes SHALL remain separate capability requirements.
+
+## 13. Nested Schema Evolution
+
+Nested field paths SHALL be represented as structural path segments rather
+than ambiguous dotted strings. Actions `dtcs:with_nested_fields`,
+`dtcs:rename_nested_fields`, and `dtcs:drop_nested_fields` SHALL define
+missing-parent behavior, automatic parent creation, list traversal, field
+order, collisions, nullability, and compatibility impact. Logical schema
+changes SHALL remain distinct from physical storage-schema mutation.
+
+## 14. Error and Value-State Semantics
+
+Every registry entry introduced by this chapter SHALL define behavior for
+present, null, missing, invalid, NaN, positive and negative infinity, type
+mismatch, overflow, underflow, and resource-budget exhaustion where
+applicable.
+
+Expression error mode SHALL be one of `fail`, `invalid`, `null`, or `route`.
+The `route` mode is valid only when the containing action declares an
+invalid-output path. A plan SHALL select the mode explicitly. Implementations
+SHALL NOT infer it from backend defaults.
+
+## 15. Security and Resource Requirements
+
+DTCS 3.0 retains the prohibition on executable objects and raw SQL. Plans
+SHALL declare or inherit enforceable limits for regex complexity, lambda
+evaluation, collection construction, generator expansion, pivot columns,
+aggregate state, and collected values. Implementations SHALL validate random
+seeds and the provenance of timezone, Unicode, locale, regex, and format data.
+
+Plans, Diagnostics, conformance artifacts, and fingerprints SHALL NOT contain
+resolved secrets or source rows. Diagnostics SHALL be bounded and SHALL NOT
+echo sensitive input values.
+
+## 16. Conformance
+
+Each profile in this chapter SHALL publish machine-readable positive,
+negative, boundary, and hostile-input fixtures covering canonicalization,
+typing, Diagnostics, value states, numeric boundaries, Unicode, temporal
+boundaries, determinism, and resource limits as applicable. Cross-Engine
+differential results SHALL be included before graduation.
+
+A new semantic family SHALL remain Experimental until two independent
+Compilers pass all mandatory fixtures. Reference implementation self-tests do
+not constitute two independent Compilers. Unsupported backend behavior SHALL
+fail capability analysis without approximation.
+
+## 17. Summary
+
+Rich Portable Analytics expands DTCS while preserving a small portable
+kernel. Independently claimable profiles allow Engines to advertise precise
+support and fail closed when semantics, environmental data, or budgets cannot
+be honored.
 
 ------------------------------------------------------------------------
 
@@ -5287,7 +5585,10 @@ profiles (Chapter 23). Registry document `dtcs:stdlib.profiles` lists:
     structs/objects (experimental); type aliases `array`→`list` and
     `struct`→`object` are additive
 
-Plan serialization identity: `dtcs.transform-plan/1` (Chapter 13 §12.1).
+DTCS 2.0 plan serialization identity: `dtcs.transform-plan/1`. DTCS 3.0 plan
+serialization identity: `dtcs.transform-plan/2` (Chapter 13 §12.1). DTCS 3.0
+implementations SHALL read version 1 plans and migrate them without semantic
+change.
 
 A semantic family advances from Experimental to Standard only after at
 least two independent compilers pass that family's conformance fixtures.
@@ -5296,3 +5597,41 @@ False capability claims invalidate conformance.
 SQL-lowering compilers that claim a portable profile SHALL use bound
 parameters and safe identifiers; they SHALL NOT embed raw SQL or
 executable objects in portable plans.
+
+------------------------------------------------------------------------
+
+## A.9 DTCS 3.0 Rich Portable Analytics Profiles
+
+The DTCS 3.0 profile catalog is:
+
+-   `dtcs:profile/portable-relational-kernel/2` --- Standard after plan-v1
+    migration fixtures pass
+-   `dtcs:profile/portable-relational/2` --- Standard after plan-v1
+    migration fixtures pass
+-   `dtcs:profile/portable-string-advanced/1` --- Experimental
+-   `dtcs:profile/portable-conversion/1` --- Experimental
+-   `dtcs:profile/portable-statistics/1` --- Experimental
+-   `dtcs:profile/portable-complex-values/1` --- Experimental
+-   `dtcs:profile/portable-reshape/1` --- Experimental
+-   `dtcs:profile/portable-relational-extended/1` --- Experimental
+-   `dtcs:profile/portable-temporal-iana/1` --- Experimental
+-   `dtcs:profile/portable-nondeterministic/1` --- Experimental
+-   `dtcs:profile/portable-window/2` --- Candidate pending conformance by two
+    independent Compilers
+
+Profile composition SHALL be explicit. Claiming an advanced profile SHALL NOT
+implicitly claim an unrelated family. The normative identifiers belonging to
+each profile are listed in Chapter 27. Every registry entry SHALL additionally
+publish its purpose, parameters, type rules, value-state and error behavior,
+lineage effect, determinism classification, compatibility rules, applicable
+resource limits, and semantic entry version.
+
+`dtcs:profile/portable-complex-types/1` maps to the compatible subset of
+`dtcs:profile/portable-complex-values/1`. Constructors and lambda Functions
+are additional capabilities. `dtcs:profile/portable-window/1` maps to the
+compatible subset of `dtcs:profile/portable-window/2`.
+
+Field Semantic Actions retain their published identities. Where a Function
+shares a lexical identifier with a field Semantic Action, registry category
+and structured plan position SHALL disambiguate the entry. Implementations
+SHALL NOT infer the registry category from backend overload resolution.

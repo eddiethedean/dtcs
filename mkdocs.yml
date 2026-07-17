@@ -15,6 +15,7 @@ strict: true
 exclude_docs: |
   /README.md
   DTCS_PORTABLE_SPEC_PROPOSAL.md
+  DTCS_3_0_SPEC_PROPOSAL.md
 
 theme:
   name: material
