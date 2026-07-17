@@ -48,6 +48,13 @@ DTCS 1.0 and 2.0 contracts remain accepted. Valid `dtcs.transform-plan/1` envelo
 
 See [docs/user/migration-0.13.md](docs/user/migration-0.13.md).
 
+### Fixes and docs (included in this release)
+
+- Runtime SPEC honesty: `i64::MIN` abs/negate overflow errors; negative list indexes; nested list path mutation; range-frame overflow checks; temporal timezone coerce; median = quantile(0.5); sorted `collect_set`; explode/pivot/sample/map_concat/regex/stats gates; plan `/2` requires explicit `errorMode`.
+- Living docs/examples prefer Spec `3.0.0` / tools `0.13`; pip/crates-only API samples; Spec 3.0 example contract; adoption maturity softened; conformance manifest sync check in CI.
+
+**Release:** push tag `v0.13.0` from this commit to publish crates.io / PyPI (registries still on `0.12.0` until the tag publishes successfully). npm publish runs only when `NPM_TOKEN` is set.
+
 ## 0.12.0
 
 Phase 0.12 — Portable Relational Profile (DTCS-R1 through R4) in one release ([docs/DTCS_PORTABLE_SPEC_PROPOSAL.md](docs/DTCS_PORTABLE_SPEC_PROPOSAL.md)).
