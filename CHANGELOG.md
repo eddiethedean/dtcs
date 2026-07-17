@@ -19,20 +19,32 @@ For upgrade questions, see [docs/user/faq.md](docs/user/faq.md) and [docs/user/t
 
 ## 0.13.0
 
-DTCS 3.0 / tools 0.13 release.
+DTCS 3.0 / tools 0.13 release. Spec `3.0.0` (draft); tooling alpha.
 
 ### Features
 
-- Canonical `dtcs.transform-plan/2` output with deterministic migration of valid v1 envelopes.
-- 3.0 capability declarations: protocol/profile claims, semantic environments, modes, budgets, and guarantees.
-- Category-aware registry lookup so standard Semantic Actions and Functions may share an identifier such as `dtcs:trim`.
-- Bounded lambda AST nodes and reference-runtime support for `transform`, `filter_values`, `exists`, and `forall`.
-- Reference-runtime support for core advanced string/regex, conversion, complex-value, explode, unpivot, set-operation, and seeded sampling behavior.
-- Rich Portable Analytics profile declarations and initial conformance coverage.
+- **Reference runtime (A.9 family identifiers):** string-advanced, conversion, statistics, complex-values HOFs, reshape (including pivot), set / sample / `random_split`, nested field actions, IANA temporal with policies, seeded nondeterminism via `xorshift64star/1`, and window/2 (`ntile`, `percent_rank`, `cume_dist`, `nth_value`).
+- **Plan v2:** canonical `dtcs.transform-plan/2` with deterministic v1 migrate; fingerprint pins (`unicode-15.1`, `dtcs-regex/1`, `iana-2025b`, `xorshift64star/1`); explicit `errorMode`.
+- Category-aware registry lookup (Actions and Functions may share an identifier such as `dtcs:trim`); bounded lambda AST / HOFs (`transform`, `filter_values`, `exists`, `forall`).
+- Rich Portable Analytics profile declarations (Ch 27 / A.9).
+
+### Maturity
+
+- Advanced A.9 profiles remain **Experimental**; `portable-window/2` is **Candidate**.
+- **Certified** only where dual-path fixtures exist (kernel relational 2.0 surface).
+- **WASM / Node:** `parse` / `validate` / `conformanceDeclare` only — no full 3.0 runtime.
+
+### Non-goals
+
+- Second production compiler in-repo; Standard graduation of Experimental A.9 families.
 
 ### Compatibility
 
-DTCS 1.0 and 2.0 contracts remain accepted. Valid `dtcs.transform-plan/1` envelopes are accepted and migrated to v2 without changing their envelope semantics. New profile families remain experimental or candidate until their independent-conformance criteria are met.
+DTCS 1.0 and 2.0 contracts remain accepted. Valid `dtcs.transform-plan/1` envelopes are accepted and migrated to v2 without changing their envelope semantics.
+
+### Migration notes
+
+See [docs/user/migration-0.13.md](docs/user/migration-0.13.md).
 
 ## 0.12.0
 
@@ -55,9 +67,10 @@ Phase 0.12 — Portable Relational Profile (DTCS-R1 through R4) in one release (
 
 - Chapter 13 §12.1 portable serialization; Chapter 23 §5.1 semantic-family profiles; Appendix A.3–A.4 and A.8 updates.
 
-### Non-goals
+### Non-goals (0.12 surface)
 
-- Second production compiler in-repo; IANA/DST timezones; explode/unnest/map_entries.
+- Second production compiler in-repo.
+- IANA/DST timezones and explode/unnest/map_entries were non-goals for the **0.12** fixed-offset / access-only surface; **superseded by 0.13** (Ch 27 / A.9 Experimental profiles). See [0.13.0](#0130).
 
 ### Migration notes
 

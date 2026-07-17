@@ -25,7 +25,7 @@ Patch or other prerelease strings (`"1.0.1"`, `"2.0.1"`, `"3.0.1"`, `"3.0.0-draf
 
 ## What Spec 3.0 changes for authors
 
-Prefer `"3.0.0"` when you use Rich Portable Analytics profiles, plan-v2 envelopes, lambdas, advanced string/regex functions, reshape actions, or controlled nondeterminism. DTCS 2.0 contracts remain accepted.
+Prefer `"3.0.0"` when you use Rich Portable Analytics profiles, plan-v2 envelopes, lambdas, advanced string/regex functions, reshape actions, or controlled nondeterminism. DTCS 2.0 contracts remain accepted. Upgrade steps: [migration-0.13.md](migration-0.13.md).
 
 ## Verify locally
 
@@ -42,5 +42,6 @@ dtcs version --json
 
 - [getting-started.md](getting-started.md)
 - [troubleshooting.md](troubleshooting.md#validation-errors)
+- [migration-0.13.md](migration-0.13.md)
 - [migration-0.12.md](migration-0.12.md)
 - [CHANGELOG.md](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md)

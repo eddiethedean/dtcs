@@ -40,10 +40,12 @@ Adopter-facing `dtcs run --input` and Python `runtime_execute` use the **runtime
 
 Manifest entries use assertion kind `portableDifferential` and profile ids such as:
 
-- `dtcs:profile/portable-relational-kernel/1`
-- `dtcs:profile/portable-relational/1`
-- `dtcs:profile/portable-window/1`
+- `dtcs:profile/portable-relational-kernel/1` (and `/2`)
+- `dtcs:profile/portable-relational/1` (and `/2`)
+- `dtcs:profile/portable-window/1` (and Candidate `/2`)
 - `dtcs:profile/portable-complex-types/1`
+
+**DTCS 3.0 / A.9:** Advanced Rich Portable Analytics family profiles (`portable-string-advanced`, `portable-conversion`, `portable-statistics`, `portable-complex-values`, `portable-reshape`, `portable-relational-extended`, `portable-temporal-iana`, `portable-nondeterministic`) are **Experimental**. Treat Experimental claims as reference-surface coverage, not Standard certification.
 
 ## In-repo dual path
 

@@ -15,7 +15,8 @@ pub use model::{
 };
 pub use portable::{
     reference_portable_manifest, validate_capability_accuracy, EntryCapability,
-    PortableCapabilityManifest, REFERENCE_CERTIFIED_FEATURES, REFERENCE_UNSUPPORTED_CLAIMS,
+    PortableCapabilityManifest, REFERENCE_CERTIFIED_FEATURES, REFERENCE_EXPERIMENTAL_FEATURES,
+    REFERENCE_UNSUPPORTED_CLAIMS,
 };
 pub use requirements::PlanRequirements;
 pub use validate::validate;

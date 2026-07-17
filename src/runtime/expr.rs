@@ -3,6 +3,7 @@
 use crate::analysis::expr::ast::{BinaryOp, Expr, LiteralValue, UnaryOp};
 use crate::analysis::expr::parse::parse_expression;
 use crate::runtime::conversion::integer_to_decimal;
+use crate::runtime::error_mode::{apply_error_mode, ErrorMode};
 use crate::runtime::functions::call_function;
 use crate::runtime::model::{
     lookup_field, parse_qualified_field_with_interfaces, FieldLookup, Row, RuntimeValue,
@@ -10,9 +11,21 @@ use crate::runtime::model::{
 
 /// Parse and evaluate an expression string against a single row (unqualified field names).
 pub fn eval_expression_on_row(source: &str, row: &Row) -> Result<RuntimeValue, String> {
+    eval_expression_on_row_with_mode(source, row, ErrorMode::Fail)
+}
+
+/// Parse and evaluate an expression, applying the given plan-level error mode on failure.
+pub fn eval_expression_on_row_with_mode(
+    source: &str,
+    row: &Row,
+    mode: ErrorMode,
+) -> Result<RuntimeValue, String> {
     let expr =
         parse_expression(source).map_err(|e| format!("expression parse error: {}", e.message))?;
-    evaluate_expr_on_row(&expr, row)
+    match evaluate_expr_on_row(&expr, row) {
+        Ok(value) => Ok(value),
+        Err(err) => apply_error_mode(mode, err),
+    }
 }
 
 /// Evaluate an expression AST against a single row.
@@ -198,11 +211,31 @@ fn evaluate_expr_with_interfaces(
 fn is_lambda_function(callee: &str) -> bool {
     matches!(
         callee,
-        "dtcs:transform" | "dtcs:filter_values" | "dtcs:exists" | "dtcs:forall"
+        "dtcs:transform"
+            | "dtcs:filter_values"
+            | "dtcs:exists"
+            | "dtcs:forall"
+            | "dtcs:reduce"
+            | "dtcs:zip_with"
+            | "dtcs:map_filter"
+            | "dtcs:transform_keys"
+            | "dtcs:transform_values"
     )
 }
 
 fn evaluate_lambda_call(callee: &str, args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
+    match callee {
+        "dtcs:reduce" => evaluate_reduce(args, row),
+        "dtcs:zip_with" => evaluate_zip_with(args, row),
+        "dtcs:map_filter" => evaluate_map_filter(args, row),
+        "dtcs:transform_keys" | "dtcs:transform_values" => {
+            evaluate_map_transform(callee, args, row)
+        }
+        _ => evaluate_list_lambda(callee, args, row),
+    }
+}
+
+fn evaluate_list_lambda(callee: &str, args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
     if args.len() != 2 {
         return Err(format!("{callee} requires a collection and lambda"));
     }
@@ -219,6 +252,9 @@ fn evaluate_lambda_call(callee: &str, args: &[Expr], row: &Row) -> Result<Runtim
     let RuntimeValue::List(values) = collection else {
         return Err(format!("{callee} requires a list"));
     };
+    if values.len() > 100_000 {
+        return Err("lambda evaluation exceeds collection budget".into());
+    }
     let mut mapped = Vec::with_capacity(values.len());
     for (index, value) in values.iter().cloned().enumerate() {
         let mut lambda_row = row.clone();
@@ -247,6 +283,125 @@ fn evaluate_lambda_call(callee: &str, args: &[Expr], row: &Row) -> Result<Runtim
         )),
         _ => unreachable!(),
     }
+}
+
+fn evaluate_reduce(args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
+    if args.len() != 3 {
+        return Err("dtcs:reduce requires list, initial, and lambda".into());
+    }
+    let RuntimeValue::List(values) = evaluate_expr_on_row(&args[0], row)? else {
+        return Err("dtcs:reduce requires a list".into());
+    };
+    let mut acc = evaluate_expr_on_row(&args[1], row)?;
+    let Expr::Lambda {
+        parameters, body, ..
+    } = &args[2]
+    else {
+        return Err("dtcs:reduce requires a lambda".into());
+    };
+    if parameters.len() != 2 {
+        return Err("dtcs:reduce lambda requires (acc, value)".into());
+    }
+    for value in values {
+        let mut lambda_row = row.clone();
+        lambda_row.insert(parameters[0].clone(), acc);
+        lambda_row.insert(parameters[1].clone(), value);
+        acc = evaluate_expr_on_row(body, &lambda_row)?;
+    }
+    Ok(acc)
+}
+
+fn evaluate_zip_with(args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
+    if args.len() != 3 {
+        return Err("dtcs:zip_with requires left, right, and lambda".into());
+    }
+    let RuntimeValue::List(left) = evaluate_expr_on_row(&args[0], row)? else {
+        return Err("dtcs:zip_with requires lists".into());
+    };
+    let RuntimeValue::List(right) = evaluate_expr_on_row(&args[1], row)? else {
+        return Err("dtcs:zip_with requires lists".into());
+    };
+    let Expr::Lambda {
+        parameters, body, ..
+    } = &args[2]
+    else {
+        return Err("dtcs:zip_with requires a lambda".into());
+    };
+    if parameters.len() != 2 {
+        return Err("dtcs:zip_with lambda requires two parameters".into());
+    }
+    let len = left.len().min(right.len());
+    let mut out = Vec::with_capacity(len);
+    for i in 0..len {
+        let mut lambda_row = row.clone();
+        lambda_row.insert(parameters[0].clone(), left[i].clone());
+        lambda_row.insert(parameters[1].clone(), right[i].clone());
+        out.push(evaluate_expr_on_row(body, &lambda_row)?);
+    }
+    Ok(RuntimeValue::List(out))
+}
+
+fn evaluate_map_filter(args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
+    if args.len() != 2 {
+        return Err("dtcs:map_filter requires map and lambda".into());
+    }
+    let RuntimeValue::Map(map) = evaluate_expr_on_row(&args[0], row)? else {
+        return Err("dtcs:map_filter requires a map".into());
+    };
+    let Expr::Lambda {
+        parameters, body, ..
+    } = &args[1]
+    else {
+        return Err("dtcs:map_filter requires a lambda".into());
+    };
+    if parameters.len() != 2 {
+        return Err("dtcs:map_filter lambda requires (key, value)".into());
+    }
+    let mut out = std::collections::BTreeMap::new();
+    for (key, value) in map {
+        let mut lambda_row = row.clone();
+        lambda_row.insert(parameters[0].clone(), RuntimeValue::String(key.clone()));
+        lambda_row.insert(parameters[1].clone(), value.clone());
+        if evaluate_expr_on_row(body, &lambda_row)?.as_bool() == Some(true) {
+            out.insert(key, value);
+        }
+    }
+    Ok(RuntimeValue::Map(out))
+}
+
+fn evaluate_map_transform(callee: &str, args: &[Expr], row: &Row) -> Result<RuntimeValue, String> {
+    if args.len() != 2 {
+        return Err(format!("{callee} requires map and lambda"));
+    }
+    let RuntimeValue::Map(map) = evaluate_expr_on_row(&args[0], row)? else {
+        return Err(format!("{callee} requires a map"));
+    };
+    let Expr::Lambda {
+        parameters, body, ..
+    } = &args[1]
+    else {
+        return Err(format!("{callee} requires a lambda"));
+    };
+    if parameters.len() != 2 {
+        return Err(format!("{callee} lambda requires (key, value)"));
+    }
+    let mut out = std::collections::BTreeMap::new();
+    for (key, value) in map {
+        let mut lambda_row = row.clone();
+        lambda_row.insert(parameters[0].clone(), RuntimeValue::String(key.clone()));
+        lambda_row.insert(parameters[1].clone(), value.clone());
+        let result = evaluate_expr_on_row(body, &lambda_row)?;
+        if callee == "dtcs:transform_keys" {
+            let new_key = result
+                .as_str()
+                .ok_or("dtcs:transform_keys must return string keys")?
+                .to_string();
+            out.insert(new_key, value);
+        } else {
+            out.insert(key, result);
+        }
+    }
+    Ok(RuntimeValue::Map(out))
 }
 
 fn literal_to_runtime(value: &LiteralValue) -> RuntimeValue {

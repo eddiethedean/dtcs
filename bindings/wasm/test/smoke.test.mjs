@@ -45,7 +45,7 @@ test("wasm bindings smoke test", async (t) => {
   }
 
   wasm.initSync({ module: readFileSync(join(pkgRoot, "dtcs_wasm_bg.wasm")) });
-  assert.equal(wasm.specVersion(), "2.0.0");
+  assert.equal(wasm.specVersion(), "3.0.0");
 
   const customerParsed = wasm.parseDocument(
     readFileSync(join(fixtures, "valid_customer.yaml")),
@@ -78,5 +78,5 @@ test("wasm bindings smoke test", async (t) => {
 
   const declaration = wasm.conformanceDeclare();
   assert.equal(declaration.primaryProfile, "integrated-platform");
-  assert.equal(declaration.profiles.length, 12);
+  assert.equal(declaration.profiles.length, 23);
 });

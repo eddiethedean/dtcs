@@ -2,16 +2,20 @@
 
 pub mod actions;
 mod conversion;
+pub mod error_mode;
 pub mod expr;
 pub mod functions;
 mod lineage;
 mod model;
+pub mod prng;
 mod reference;
+pub mod regex_gate;
 pub mod rules;
 mod runtime_trait;
 mod validate;
 mod value_serde;
 
+pub use error_mode::{apply_error_mode, parse_error_mode, ErrorMode};
 pub use model::{
     parse_qualified_field, parse_qualified_field_with_interfaces, Dataset, QualifiedField, Row,
     RuntimeInputs, RuntimeOutputs, RuntimeValue,

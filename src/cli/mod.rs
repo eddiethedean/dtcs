@@ -72,7 +72,7 @@ pub enum Command {
         #[arg(long)]
         registry: Option<PathBuf>,
         /// Portable profile identifier.
-        #[arg(long, default_value = "dtcs:profile/portable-relational-kernel/1")]
+        #[arg(long, default_value = "dtcs:profile/portable-relational-kernel/2")]
         profile: String,
         /// Emit only the semantic fingerprint.
         #[arg(long)]

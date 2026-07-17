@@ -83,7 +83,7 @@ pub use capability::{
     reference_portable_manifest, reference_profile, validate as validate_capabilities,
     validate_capability_accuracy, CapabilityMatchReport, EngineCapabilityDeclaration,
     EntryCapability, PortableCapabilityManifest, REFERENCE_CERTIFIED_FEATURES,
-    REFERENCE_UNSUPPORTED_CLAIMS,
+    REFERENCE_EXPERIMENTAL_FEATURES, REFERENCE_UNSUPPORTED_CLAIMS,
 };
 pub use compatibility::{
     analyze as analyze_compatibility, analyze_evolution, ChangeCategory, ComparisonScope,

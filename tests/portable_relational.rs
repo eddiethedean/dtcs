@@ -54,29 +54,40 @@ fn registry_exposes_dtcs_3_analytics_profiles_and_entries() {
     for profile in [
         dtcs::STRING_ADVANCED_PROFILE,
         dtcs::CONVERSION_PROFILE,
+        dtcs::STATISTICS_PROFILE,
         dtcs::COMPLEX_VALUES_PROFILE,
         dtcs::RESHAPE_PROFILE,
         dtcs::RELATIONAL_EXTENDED_PROFILE,
         dtcs::TEMPORAL_IANA_PROFILE,
         dtcs::NONDETERMINISTIC_PROFILE,
+        dtcs::WINDOW_PROFILE,
     ] {
         assert!(is_known_profile(profile), "missing profile {profile}");
     }
     for function in [
         "dtcs:trim",
         "dtcs:regex_matches",
+        "dtcs:regex_extract",
         "dtcs:cast",
+        "dtcs:parse_date",
         "dtcs:list",
         "dtcs:transform",
+        "dtcs:variance",
+        "dtcs:median",
+        "dtcs:ntile",
+        "dtcs:reduce",
     ] {
         assert!(is_known_function(function), "missing function {function}");
     }
     for action in [
         "dtcs:explode",
         "dtcs:unpivot",
+        "dtcs:pivot",
         "dtcs:intersect",
         "dtcs:except",
         "dtcs:sample",
+        "dtcs:random_split",
+        "dtcs:with_nested_fields",
     ] {
         assert!(is_known_action(action), "missing action {action}");
     }
@@ -312,6 +323,7 @@ fn portable_plan_rejects_executable_objects() {
         rules: vec![],
         lineage: vec![],
         requirements: Default::default(),
+        error_mode: None,
         extensions: Default::default(),
     };
     let err = portable.validate_budgets().unwrap_err();
@@ -855,4 +867,174 @@ fn field_index_element_at_access_ops() {
         call_function("dtcs:element_at", &[list, RuntimeValue::Integer(99)]).unwrap(),
         RuntimeValue::Null
     );
+}
+
+#[test]
+fn reshape_set_sample_and_statistics_behaviors() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! { "k" => RuntimeValue::String("a".into()), "p" => RuntimeValue::String("x".into()), "v" => RuntimeValue::Integer(1) },
+            btreemap! { "k" => RuntimeValue::String("a".into()), "p" => RuntimeValue::String("y".into()), "v" => RuntimeValue::Integer(2) },
+            btreemap! { "k" => RuntimeValue::String("b".into()), "p" => RuntimeValue::String("x".into()), "v" => RuntimeValue::Integer(3) },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert("keys".into(), json!(["k"]));
+    params.insert("pivot".into(), json!("p"));
+    params.insert("value".into(), json!("v"));
+    params.insert("categories".into(), json!(["x", "y"]));
+    apply_dataset_action("dtcs:pivot", "t", &params, &mut workspaces).unwrap();
+    assert_eq!(workspaces["t"].len(), 2);
+
+    workspaces.insert(
+        "left".into(),
+        vec![
+            btreemap! { "id" => RuntimeValue::Integer(1) },
+            btreemap! { "id" => RuntimeValue::Integer(2) },
+        ],
+    );
+    workspaces.insert(
+        "right".into(),
+        vec![btreemap! { "id" => RuntimeValue::Integer(2) }],
+    );
+    let mut set_params = IndexMap::new();
+    set_params.insert("other".into(), json!("right"));
+    set_params.insert("mode".into(), json!("distinct"));
+    apply_dataset_action("dtcs:intersect", "left", &set_params, &mut workspaces).unwrap();
+    assert_eq!(workspaces["left"].len(), 1);
+
+    workspaces.insert(
+        "s".into(),
+        (0..10)
+            .map(|i| btreemap! { "i" => RuntimeValue::Integer(i) })
+            .collect(),
+    );
+    let mut sample_params = IndexMap::new();
+    sample_params.insert("count".into(), json!(3));
+    sample_params.insert("seed".into(), json!(42));
+    let original = workspaces["s"].clone();
+    apply_dataset_action("dtcs:sample", "s", &sample_params, &mut workspaces).unwrap();
+    assert_eq!(workspaces["s"].len(), 3);
+    let first = workspaces["s"].clone();
+    workspaces.insert("s".into(), original);
+    apply_dataset_action("dtcs:sample", "s", &sample_params, &mut workspaces).unwrap();
+    assert_eq!(workspaces["s"], first);
+
+    assert_eq!(
+        call_function(
+            "dtcs:median",
+            &[
+                RuntimeValue::Decimal(1.0),
+                RuntimeValue::Decimal(2.0),
+                RuntimeValue::Decimal(3.0),
+            ]
+        )
+        .unwrap(),
+        RuntimeValue::Decimal(2.0)
+    );
+    assert!(call_function(
+        "dtcs:regex_extract",
+        &[
+            RuntimeValue::String("abc123".into()),
+            RuntimeValue::String(r"(\d+)".into()),
+            RuntimeValue::Integer(1),
+        ]
+    )
+    .unwrap()
+    .as_str()
+    .is_some_and(|s| s == "123"));
+    assert!(call_function(
+        "dtcs:regex_matches",
+        &[
+            RuntimeValue::String("a".into()),
+            RuntimeValue::String("a(?=b)".into()),
+        ]
+    )
+    .is_err());
+
+    let mut nested = BTreeMap::new();
+    nested.insert(
+        "t".into(),
+        vec![btreemap! {
+            "obj" => RuntimeValue::Map({
+                let mut m = BTreeMap::new();
+                m.insert("a".into(), RuntimeValue::Integer(1));
+                m
+            })
+        }],
+    );
+    let mut nested_params = IndexMap::new();
+    nested_params.insert(
+        "assignments".into(),
+        json!([{
+            "path": [{"kind":"field","name":"obj"},{"kind":"field","name":"b"}],
+            "value": 2
+        }]),
+    );
+    apply_dataset_action("dtcs:with_nested_fields", "t", &nested_params, &mut nested).unwrap();
+    match nested["t"][0].get("obj") {
+        Some(RuntimeValue::Map(map)) => {
+            assert_eq!(map.get("b"), Some(&RuntimeValue::Integer(2)));
+        }
+        other => panic!("expected map, got {other:?}"),
+    }
+}
+
+#[test]
+fn window_v2_and_seeded_random_are_stable() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! { "v" => RuntimeValue::Integer(1) },
+            btreemap! { "v" => RuntimeValue::Integer(2) },
+            btreemap! { "v" => RuntimeValue::Integer(3) },
+            btreemap! { "v" => RuntimeValue::Integer(4) },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert("orderBy".into(), json!([{"field":"v"}]));
+    params.insert(
+        "functions".into(),
+        json!([
+            {"as":"tile","function":"ntile","n":2},
+            {"as":"pr","function":"percent_rank"},
+            {"as":"cd","function":"cume_dist"}
+        ]),
+    );
+    apply_dataset_action("dtcs:window", "t", &params, &mut workspaces).unwrap();
+    assert!(workspaces["t"][0].contains_key("tile"));
+    assert!(workspaces["t"][0].contains_key("pr"));
+    assert!(workspaces["t"][0].contains_key("cd"));
+
+    let a = call_function("dtcs:random", &[RuntimeValue::Integer(7)]).unwrap();
+    let b = call_function("dtcs:random", &[RuntimeValue::Integer(7)]).unwrap();
+    assert_eq!(a, b);
+}
+
+#[test]
+fn portable_plan_pins_requirements_and_error_mode() {
+    let yaml = include_str!("../examples/minimal.dtcs.yaml");
+    let planned = parse_validate_and_plan(yaml.as_bytes(), DocumentFormat::Yaml);
+    let plan = planned.plan.expect("plan should lower");
+    let portable = export_portable_plan(&plan, KERNEL_PROFILE).expect("export portable");
+    assert_eq!(portable.plan_identity, TRANSFORM_PLAN_IDENTITY);
+    assert_eq!(portable.error_mode.as_deref(), Some("fail"));
+    assert_eq!(
+        portable
+            .requirements
+            .get("unicodeVersion")
+            .and_then(|v| v.as_str()),
+        Some("unicode-15.1")
+    );
+    assert_eq!(
+        portable
+            .requirements
+            .get("randomAlgorithm")
+            .and_then(|v| v.as_str()),
+        Some("xorshift64star/1")
+    );
+    assert!(portable.fingerprint().is_ok());
 }

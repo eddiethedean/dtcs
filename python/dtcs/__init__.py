@@ -95,7 +95,7 @@ def plan_equivalent(before: dict, after: dict) -> bool:
 
 def plan_export_portable(
     plan: dict,
-    profile: str = "dtcs:profile/portable-relational-kernel/1",
+    profile: str = "dtcs:profile/portable-relational-kernel/2",
 ) -> dict:
     """Export a transformation plan to the portable envelope."""
     return _plan_export_portable(plan, profile)
@@ -147,7 +147,7 @@ def capability_reference_profile() -> dict:
 
 
 def capability_portable_manifest(
-    profile: str = "dtcs:profile/portable-relational-kernel/1",
+    profile: str = "dtcs:profile/portable-relational-kernel/2",
 ) -> dict:
     """Return the portable per-entry capability manifest for a profile."""
     return _capability_portable_manifest(profile)

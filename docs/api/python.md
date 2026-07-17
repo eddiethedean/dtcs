@@ -7,12 +7,12 @@ CLI JSON shapes in [json-output.md](../user/json-output.md) use the same camelCa
 ## Install
 
 ```bash
-pip install 'dtcs==0.12.0'
+pip install 'dtcs==0.13.0'
 ```
 
 ```python
 import dtcs
-print(dtcs.__version__)   # package version, e.g. "0.12.0"
+print(dtcs.__version__)   # package version, e.g. "0.13.0"
 print(dtcs.SPEC_VERSION)  # "3.0.0"
 ```
 
@@ -123,7 +123,7 @@ assert len(result["outputs"]["customer_clean"]) == 2
 
 | Function | Arguments | Returns |
 |----------|-----------|---------|
-| `plan_export_portable(plan, profile=...)` | lowered plan dict; default profile `dtcs:profile/portable-relational-kernel/1` | portable plan dict (`identity`, nodes, …) |
+| `plan_export_portable(plan, profile=...)` | lowered plan dict; default profile `dtcs:profile/portable-relational-kernel/2` | portable plan dict (`planIdentity`, nodes, …) |
 | `plan_fingerprint(portable_plan)` | portable plan dict | SHA-256 hex string |
 | `expression_to_structured(source)` | expression source string | structured AST dict |
 | `capability_portable_manifest(profile=...)` | portable profile id | per-entry capability manifest |
@@ -136,7 +136,7 @@ plan = dtcs.plan_lower(contract)["plan"]
 portable = dtcs.plan_export_portable(plan)
 fp = dtcs.plan_fingerprint(portable)
 manifest = dtcs.capability_portable_manifest()
-assert portable["identity"] == "dtcs.transform-plan/1"
+assert portable["planIdentity"] == "dtcs.transform-plan/2"
 assert isinstance(fp, str) and len(fp) == 64
 ```
 
@@ -160,5 +160,5 @@ Most APIs return diagnostic dicts and do **not** raise for invalid contracts. Ex
 ## See also
 
 - [Rust API](rust.md) · [WASM](wasm.md) · [Node](node.md)
-- [migration-0.12.md](../user/migration-0.12.md)
+- [migration-0.13.md](../user/migration-0.13.md)
 - [cli-guide.md](../user/cli-guide.md#export-portable)

@@ -1,6 +1,6 @@
 # Conformance certification
 
-Offline conformance profiles and a certification suite per [SPEC.md](../SPEC.md) Chapter 23. Phase 0.10 introduced the machinery; Phase 0.11 deepens Analyzer assertions; Phase 0.12 adds portable semantic-family profiles and `portableDifferential` fixtures.
+Offline conformance profiles and a certification suite per [SPEC.md](../SPEC.md) Chapter 23. Phase 0.10 introduced the machinery; Phase 0.11 deepens Analyzer assertions; Phase 0.12 adds portable semantic-family profiles and `portableDifferential` fixtures; Phase 0.13 adds DTCS 3.0 / A.9 Rich Portable Analytics profiles (mostly Experimental).
 
 ## Profiles
 
@@ -29,6 +29,10 @@ Analyzer profile capabilities include `compatibilityAnalysis`, `evolutionAnalysi
 | `dtcs:profile/portable-relational/1` | Rich relational ops |
 | `dtcs:profile/portable-window/1` | Window frames |
 | `dtcs:profile/portable-complex-types/1` | Complex access |
+
+### DTCS 3.0 / A.9 profiles (0.13)
+
+Kernel/relational `/2` defaults accompany plan v2. Advanced A.9 families (`portable-string-advanced`, `portable-conversion`, `portable-statistics`, `portable-complex-values`, `portable-reshape`, `portable-relational-extended`, `portable-temporal-iana`, `portable-nondeterministic`) are **Experimental**; `portable-window/2` is **Candidate**. Certified dual-path fixtures remain focused on the kernel relational 2.0 surface.
 
 Implementer details and dual-path gates: [portable-conformance.md](../implementation/portable-conformance.md).
 

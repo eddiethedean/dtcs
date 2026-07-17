@@ -22,6 +22,8 @@ from dtcs import (
     is_valid,
     lineage_analyze,
     parse_file,
+    plan_export_portable,
+    plan_fingerprint,
     plan_lower,
     plan_optimize,
     plan_topological_order,
@@ -158,6 +160,23 @@ def _build_parser() -> argparse.ArgumentParser:
     plan_parser.add_argument("path", type=Path)
     plan_parser.add_argument("--registry", type=Path, default=None)
     plan_parser.add_argument("--json", action="store_true")
+
+    export_parser = subparsers.add_parser(
+        "export-portable",
+        help="Export a portable transformation plan (dtcs.transform-plan/2)",
+    )
+    export_parser.add_argument("path", type=Path)
+    export_parser.add_argument("--registry", type=Path, default=None)
+    export_parser.add_argument(
+        "--profile",
+        default="dtcs:profile/portable-relational-kernel/2",
+        help="Portable profile identifier",
+    )
+    export_parser.add_argument(
+        "--fingerprint",
+        action="store_true",
+        help="Emit only the semantic fingerprint",
+    )
 
     optimize_parser = subparsers.add_parser(
         "optimize",
@@ -466,6 +485,40 @@ def main(argv: list[str] | None = None) -> int:
             order = plan_topological_order(contract, plan)
             if order:
                 print(f"order: {' -> '.join(order)}")
+        return 0
+
+    if args.command == "export-portable":
+        registry_path = str(args.registry) if args.registry else None
+        contract = _load_valid_contract(
+            args.path,
+            json_output=True,
+            registry_path=registry_path,
+        )
+        try:
+            result = plan_lower(contract, registry_path)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if not is_valid({"diagnostics": result.get("diagnostics", [])}):
+            _render_report(
+                {"diagnostics": result.get("diagnostics", [])},
+                json_output=True,
+                mode="diagnostics",
+            )
+            return 1
+        plan = result.get("plan")
+        if plan is None:
+            print("plan lowering succeeded without a plan", file=sys.stderr)
+            return 1
+        try:
+            portable = plan_export_portable(plan, args.profile)
+        except ValueError as error:
+            print(str(error), file=sys.stderr)
+            return 1
+        if args.fingerprint:
+            print(plan_fingerprint(portable))
+        else:
+            print(json.dumps(portable, indent=2))
         return 0
 
     if args.command == "optimize":

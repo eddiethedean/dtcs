@@ -157,8 +157,8 @@ pub fn reference_profile() -> EngineCapabilityDeclaration {
             semantic_versions: BTreeMap::from([
                 ("regexGrammar".into(), "dtcs-regex/1".into()),
                 ("formatGrammar".into(), "dtcs-format/1".into()),
-                ("unicode".into(), "unicode-16.0".into()),
-                ("timezoneData".into(), "iana-system".into()),
+                ("unicode".into(), "unicode-15.1".into()),
+                ("timezoneData".into(), "iana-2025b".into()),
                 ("randomAlgorithm".into(), "xorshift64star/1".into()),
             ]),
             resource_limits: BTreeMap::from([
@@ -181,7 +181,12 @@ pub fn reference_profile() -> EngineCapabilityDeclaration {
             semantic_modes: BTreeMap::from([
                 (
                     "error".into(),
-                    vec!["fail".into(), "invalid".into(), "null".into()],
+                    vec![
+                        "fail".into(),
+                        "invalid".into(),
+                        "null".into(),
+                        "route".into(),
+                    ],
                 ),
                 (
                     "determinism".into(),

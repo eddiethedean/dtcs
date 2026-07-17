@@ -1,7 +1,7 @@
 //! Stdlib function execution.
 
 use crate::runtime::model::RuntimeValue;
-use chrono::{DateTime, LocalResult, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, LocalResult, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use chrono_tz::Tz;
 use std::sync::OnceLock;
 
@@ -133,14 +133,18 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         "dtcs:upper_unicode" => Ok(RuntimeValue::String(
             string_arg(args, 0, callee)?.to_uppercase(),
         )),
-        "dtcs:regex_matches" | "dtcs:regex_contains" | "dtcs:regex_replace" => {
+        "dtcs:regex_matches"
+        | "dtcs:regex_contains"
+        | "dtcs:regex_replace"
+        | "dtcs:regex_extract"
+        | "dtcs:regex_extract_all"
+        | "dtcs:regex_split" => {
             let text = string_arg(args, 0, callee)?;
             if text.len() > 1_048_576 {
                 return Err("regex input exceeds budget".into());
             }
             let pattern = string_arg(args, 1, callee)?;
-            let regex = regex::Regex::new(pattern)
-                .map_err(|error| format!("invalid portable regex: {error}"))?;
+            let regex = super::regex_gate::compile_dtcs_regex(pattern)?;
             match callee {
                 "dtcs:regex_matches" => {
                     Ok(RuntimeValue::Boolean(regex.find(text).is_some_and(
@@ -148,12 +152,339 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                     )))
                 }
                 "dtcs:regex_contains" => Ok(RuntimeValue::Boolean(regex.is_match(text))),
-                _ => Ok(RuntimeValue::String(
+                "dtcs:regex_replace" => Ok(RuntimeValue::String(
                     regex
                         .replace_all(text, string_arg(args, 2, callee)?)
                         .into_owned(),
                 )),
+                "dtcs:regex_extract" => {
+                    let group = args.get(2).and_then(RuntimeValue::as_integer).unwrap_or(0);
+                    Ok(match regex.captures(text) {
+                        Some(caps) => caps
+                            .get(group as usize)
+                            .map(|m| RuntimeValue::String(m.as_str().into()))
+                            .unwrap_or(RuntimeValue::Null),
+                        None => RuntimeValue::Null,
+                    })
+                }
+                "dtcs:regex_extract_all" => {
+                    let group =
+                        args.get(2).and_then(RuntimeValue::as_integer).unwrap_or(0) as usize;
+                    Ok(RuntimeValue::List(
+                        regex
+                            .captures_iter(text)
+                            .filter_map(|caps| {
+                                caps.get(group)
+                                    .map(|m| RuntimeValue::String(m.as_str().into()))
+                            })
+                            .collect(),
+                    ))
+                }
+                "dtcs:regex_split" => Ok(RuntimeValue::List(
+                    regex
+                        .split(text)
+                        .map(|part| RuntimeValue::String(part.into()))
+                        .collect(),
+                )),
+                _ => unreachable!(),
             }
+        }
+        "dtcs:translate" => {
+            let text = string_arg(args, 0, callee)?;
+            let from = string_arg(args, 1, callee)?;
+            let to = string_arg(args, 2, callee)?;
+            let from_chars: Vec<char> = from.chars().collect();
+            let to_chars: Vec<char> = to.chars().collect();
+            Ok(RuntimeValue::String(
+                text.chars()
+                    .map(|c| {
+                        from_chars
+                            .iter()
+                            .position(|f| *f == c)
+                            .and_then(|i| to_chars.get(i).copied())
+                            .unwrap_or(c)
+                    })
+                    .collect(),
+            ))
+        }
+        "dtcs:parse_date" => {
+            let text = string_arg(args, 0, callee)?;
+            let format = args
+                .get(1)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("%Y-%m-%d");
+            NaiveDate::parse_from_str(text, format)
+                .map(|d| RuntimeValue::Date(d.format("%Y-%m-%d").to_string()))
+                .map_err(|_| format!("{callee} failed to parse date"))
+        }
+        "dtcs:parse_time" => {
+            let text = string_arg(args, 0, callee)?;
+            let format = args
+                .get(1)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("%H:%M:%S");
+            NaiveTime::parse_from_str(text, format)
+                .map(|t| RuntimeValue::Time(t.format("%H:%M:%S").to_string()))
+                .map_err(|_| format!("{callee} failed to parse time"))
+        }
+        "dtcs:parse_datetime" => {
+            let text = string_arg(args, 0, callee)?;
+            if let Ok(dt) = DateTime::parse_from_rfc3339(text) {
+                return Ok(RuntimeValue::DateTime(dt.to_rfc3339()));
+            }
+            let format = args
+                .get(1)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("%Y-%m-%dT%H:%M:%S");
+            NaiveDateTime::parse_from_str(text, format)
+                .map(|d| RuntimeValue::DateTime(d.format("%Y-%m-%dT%H:%M:%S").to_string()))
+                .map_err(|_| format!("{callee} failed to parse datetime"))
+        }
+        "dtcs:format_date" => {
+            let text = string_arg(args, 0, callee)?;
+            let format = args
+                .get(1)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("%Y-%m-%d");
+            NaiveDate::parse_from_str(text, "%Y-%m-%d")
+                .map(|d| RuntimeValue::String(d.format(format).to_string()))
+                .map_err(|_| format!("{callee} requires YYYY-MM-DD date"))
+        }
+        "dtcs:format_datetime" => {
+            let text = string_arg(args, 0, callee)?;
+            let format = args
+                .get(1)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("%Y-%m-%dT%H:%M:%S");
+            if let Ok(dt) = DateTime::parse_from_rfc3339(text) {
+                return Ok(RuntimeValue::String(dt.format(format).to_string()));
+            }
+            NaiveDateTime::parse_from_str(text, "%Y-%m-%dT%H:%M:%S")
+                .map(|d| RuntimeValue::String(d.format(format).to_string()))
+                .map_err(|_| format!("{callee} requires datetime value"))
+        }
+        "dtcs:list_position" => {
+            let RuntimeValue::List(items) =
+                args.first().ok_or("dtcs:list_position requires list")?
+            else {
+                return Err("dtcs:list_position requires list".into());
+            };
+            let needle = args.get(1).ok_or("dtcs:list_position requires value")?;
+            Ok(RuntimeValue::Integer(
+                items
+                    .iter()
+                    .position(|item| item == needle)
+                    .map(|i| i as i64)
+                    .unwrap_or(-1),
+            ))
+        }
+        "dtcs:list_slice" => {
+            let RuntimeValue::List(items) = args.first().ok_or("dtcs:list_slice requires list")?
+            else {
+                return Err("dtcs:list_slice requires list".into());
+            };
+            let start = args
+                .get(1)
+                .and_then(RuntimeValue::as_integer)
+                .unwrap_or(0)
+                .max(0) as usize;
+            let end = args
+                .get(2)
+                .and_then(RuntimeValue::as_integer)
+                .map(|v| v.max(0) as usize)
+                .unwrap_or(items.len())
+                .min(items.len());
+            let start = start.min(end);
+            Ok(RuntimeValue::List(items[start..end].to_vec()))
+        }
+        "dtcs:list_sort" => {
+            let RuntimeValue::List(mut items) = args
+                .first()
+                .cloned()
+                .ok_or("dtcs:list_sort requires list")?
+            else {
+                return Err("dtcs:list_sort requires list".into());
+            };
+            items.sort_by(|a, b| compare_ordered_values(a, b).unwrap_or(std::cmp::Ordering::Equal));
+            Ok(RuntimeValue::List(items))
+        }
+        "dtcs:map_entries" => match args.first().ok_or("dtcs:map_entries requires map")? {
+            RuntimeValue::Map(map) => Ok(RuntimeValue::List(
+                map.iter()
+                    .map(|(k, v)| {
+                        RuntimeValue::List(vec![RuntimeValue::String(k.clone()), v.clone()])
+                    })
+                    .collect(),
+            )),
+            RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
+            _ => Err("dtcs:map_entries requires map".into()),
+        },
+        "dtcs:map_from_entries" => {
+            let RuntimeValue::List(entries) =
+                args.first().ok_or("dtcs:map_from_entries requires list")?
+            else {
+                return Err("dtcs:map_from_entries requires list".into());
+            };
+            let mut map = std::collections::BTreeMap::new();
+            for entry in entries {
+                let RuntimeValue::List(pair) = entry else {
+                    return Err("dtcs:map_from_entries requires [key, value] pairs".into());
+                };
+                if pair.len() != 2 {
+                    return Err("dtcs:map_from_entries requires [key, value] pairs".into());
+                }
+                let key = string_value(&pair[0], callee)?.to_string();
+                map.insert(key, pair[1].clone());
+            }
+            Ok(RuntimeValue::Map(map))
+        }
+        "dtcs:map_concat" => {
+            let mut out = std::collections::BTreeMap::new();
+            for value in args {
+                let RuntimeValue::Map(map) = value else {
+                    return Err("dtcs:map_concat requires maps".into());
+                };
+                out.extend(map.clone());
+            }
+            Ok(RuntimeValue::Map(out))
+        }
+        "dtcs:object_names" => match args.first().ok_or("dtcs:object_names requires object")? {
+            RuntimeValue::Map(map) => Ok(RuntimeValue::List(
+                map.keys().cloned().map(RuntimeValue::String).collect(),
+            )),
+            RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
+            _ => Err("dtcs:object_names requires object".into()),
+        },
+        "dtcs:object_values" => match args.first().ok_or("dtcs:object_values requires object")? {
+            RuntimeValue::Map(map) => Ok(RuntimeValue::List(map.values().cloned().collect())),
+            RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
+            _ => Err("dtcs:object_values requires object".into()),
+        },
+        "dtcs:variance" | "dtcs:stddev" => {
+            let nums: Vec<f64> = args.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.len() < 2 {
+                return Ok(RuntimeValue::Null);
+            }
+            let mean = nums.iter().sum::<f64>() / nums.len() as f64;
+            let var =
+                nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (nums.len() - 1) as f64;
+            Ok(if callee == "dtcs:stddev" {
+                RuntimeValue::Decimal(var.sqrt())
+            } else {
+                RuntimeValue::Decimal(var)
+            })
+        }
+        "dtcs:covariance" => {
+            if args.len() != 2 {
+                return Err("dtcs:covariance requires two lists".into());
+            }
+            let (RuntimeValue::List(xs), RuntimeValue::List(ys)) = (&args[0], &args[1]) else {
+                return Err("dtcs:covariance requires two lists".into());
+            };
+            let pairs: Vec<(f64, f64)> = xs
+                .iter()
+                .zip(ys.iter())
+                .filter_map(|(x, y)| Some((x.as_decimal()?, y.as_decimal()?)))
+                .collect();
+            if pairs.len() < 2 {
+                return Ok(RuntimeValue::Null);
+            }
+            let n = pairs.len() as f64;
+            let mx = pairs.iter().map(|(x, _)| x).sum::<f64>() / n;
+            let my = pairs.iter().map(|(_, y)| y).sum::<f64>() / n;
+            let cov = pairs.iter().map(|(x, y)| (x - mx) * (y - my)).sum::<f64>() / (n - 1.0);
+            Ok(RuntimeValue::Decimal(cov))
+        }
+        "dtcs:correlation" => {
+            if args.len() != 2 {
+                return Err("dtcs:correlation requires two lists".into());
+            }
+            let (RuntimeValue::List(xs), RuntimeValue::List(ys)) = (&args[0], &args[1]) else {
+                return Err("dtcs:correlation requires two lists".into());
+            };
+            let pairs: Vec<(f64, f64)> = xs
+                .iter()
+                .zip(ys.iter())
+                .filter_map(|(x, y)| Some((x.as_decimal()?, y.as_decimal()?)))
+                .collect();
+            if pairs.len() < 2 {
+                return Ok(RuntimeValue::Null);
+            }
+            let n = pairs.len() as f64;
+            let mx = pairs.iter().map(|(x, _)| x).sum::<f64>() / n;
+            let my = pairs.iter().map(|(_, y)| y).sum::<f64>() / n;
+            let mut num = 0.0;
+            let mut dx = 0.0;
+            let mut dy = 0.0;
+            for (x, y) in &pairs {
+                let a = x - mx;
+                let b = y - my;
+                num += a * b;
+                dx += a * a;
+                dy += b * b;
+            }
+            if dx == 0.0 || dy == 0.0 {
+                return Ok(RuntimeValue::Null);
+            }
+            Ok(RuntimeValue::Decimal(num / (dx.sqrt() * dy.sqrt())))
+        }
+        "dtcs:median" => {
+            let mut nums: Vec<f64> = args.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.is_empty() {
+                return Ok(RuntimeValue::Null);
+            }
+            nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            let mid = nums.len() / 2;
+            Ok(RuntimeValue::Decimal(if nums.len() % 2 == 0 {
+                (nums[mid - 1] + nums[mid]) / 2.0
+            } else {
+                nums[mid]
+            }))
+        }
+        "dtcs:quantile" => {
+            let q = args
+                .last()
+                .and_then(RuntimeValue::as_decimal)
+                .ok_or("dtcs:quantile requires quantile in [0,1]")?;
+            if !(0.0..=1.0).contains(&q) {
+                return Err("dtcs:quantile requires quantile in [0,1]".into());
+            }
+            let mut nums: Vec<f64> = args[..args.len().saturating_sub(1)]
+                .iter()
+                .filter_map(RuntimeValue::as_decimal)
+                .collect();
+            if nums.is_empty() {
+                return Ok(RuntimeValue::Null);
+            }
+            nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+            // nearest-rank
+            let rank = ((q * nums.len() as f64).ceil() as usize).max(1);
+            Ok(RuntimeValue::Decimal(nums[rank - 1]))
+        }
+        "dtcs:first" => Ok(args.first().cloned().unwrap_or(RuntimeValue::Null)),
+        "dtcs:last" => Ok(args.last().cloned().unwrap_or(RuntimeValue::Null)),
+        "dtcs:collect_list" => {
+            if args.len() > 1_000_000 {
+                return Err("collect_list exceeds collectionElements budget".into());
+            }
+            Ok(RuntimeValue::List(args.to_vec()))
+        }
+        "dtcs:collect_set" => {
+            let mut out = Vec::new();
+            for value in args {
+                if !out.iter().any(|existing| existing == value) {
+                    out.push(value.clone());
+                }
+                if out.len() > 1_000_000 {
+                    return Err("collect_set exceeds collectionElements budget".into());
+                }
+            }
+            Ok(RuntimeValue::List(out))
         }
         "dtcs:cast" | "dtcs:try_cast" => {
             if args.len() != 2 {
@@ -242,20 +573,52 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         "dtcs:to_utc" => {
             let local = string_arg(args, 0, callee)?;
             let zone = parse_timezone(string_arg(args, 1, callee)?)?;
+            let ambiguous = args
+                .get(2)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("reject");
+            let nonexistent = args
+                .get(3)
+                .map(|v| string_value(v, callee))
+                .transpose()?
+                .unwrap_or("reject");
             let naive = NaiveDateTime::parse_from_str(local, "%Y-%m-%dT%H:%M:%S")
+                .or_else(|_| NaiveDateTime::parse_from_str(local, "%Y-%m-%dT%H:%M:%S%.f"))
                 .map_err(|_| "dtcs:to_utc requires local YYYY-MM-DDTHH:MM:SS value".to_string())?;
             let zoned = match zone.from_local_datetime(&naive) {
                 LocalResult::Single(value) => value,
-                LocalResult::Ambiguous(_, _) => {
-                    return Err(
-                        "dtcs:to_utc rejects ambiguous local time without explicit policy".into(),
-                    )
-                }
-                LocalResult::None => {
-                    return Err(
-                        "dtcs:to_utc rejects nonexistent local time without explicit policy".into(),
-                    )
-                }
+                LocalResult::Ambiguous(earliest, latest) => match ambiguous {
+                    "earliest" => earliest,
+                    "latest" => latest,
+                    "reject" => {
+                        return Err(
+                            "dtcs:to_utc rejects ambiguous local time without explicit policy"
+                                .into(),
+                        )
+                    }
+                    other => return Err(format!("unsupported ambiguousPolicy '{other}'")),
+                },
+                LocalResult::None => match nonexistent {
+                    "shift_forward" => zone
+                        .from_local_datetime(&naive)
+                        .latest()
+                        .or_else(|| {
+                            // Fall forward by one hour when the local instant does not exist.
+                            zone.from_local_datetime(&(naive + chrono::Duration::hours(1)))
+                                .single()
+                        })
+                        .ok_or_else(|| {
+                            "dtcs:to_utc could not shift nonexistent local time forward".to_string()
+                        })?,
+                    "reject" => {
+                        return Err(
+                            "dtcs:to_utc rejects nonexistent local time without explicit policy"
+                                .into(),
+                        )
+                    }
+                    other => return Err(format!("unsupported nonexistentPolicy '{other}'")),
+                },
             };
             Ok(RuntimeValue::DateTime(
                 zoned.with_timezone(&Utc).to_rfc3339(),
@@ -296,7 +659,9 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                     * (2.0 * std::f64::consts::PI * u2).cos(),
             ))
         }
-        "dtcs:uuid" => Ok(RuntimeValue::String(uuid::Uuid::new_v4().to_string())),
+        "dtcs:uuid" => Ok(RuntimeValue::String(
+            uuid::Uuid::new_v4().to_string().to_ascii_lowercase(),
+        )),
         "dtcs:run_id" => Ok(RuntimeValue::String(run_id().clone())),
         "dtcs:run_timestamp" => Ok(RuntimeValue::DateTime(run_timestamp().clone())),
         "dtcs:concat" => {
@@ -765,7 +1130,8 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             Ok(RuntimeValue::DateTime(apply_fixed_offset(value, offset)?))
         }
         "dtcs:row_number" | "dtcs:rank" | "dtcs:dense_rank" | "dtcs:lag" | "dtcs:lead"
-        | "dtcs:first_value" | "dtcs:last_value" => Err(format!(
+        | "dtcs:first_value" | "dtcs:last_value" | "dtcs:ntile" | "dtcs:percent_rank"
+        | "dtcs:cume_dist" | "dtcs:nth_value" => Err(format!(
             "{callee} must be used with dtcs:window (not as a scalar call)"
         )),
         other => Err(format!("unsupported function '{other}'")),
@@ -1214,12 +1580,7 @@ fn parse_timezone(value: &str) -> Result<Tz, String> {
 }
 
 fn unit_random(seed: u64) -> f64 {
-    let mut state = seed.max(1);
-    state ^= state >> 12;
-    state ^= state << 25;
-    state ^= state >> 27;
-    let value = state.wrapping_mul(0x2545_F491_4F6C_DD1D);
-    (value >> 11) as f64 / ((1_u64 << 53) as f64)
+    super::prng::XorShift64Star::new(seed).next_f64()
 }
 
 fn run_id() -> &'static String {

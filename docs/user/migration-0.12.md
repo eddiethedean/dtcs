@@ -50,6 +50,7 @@ dtcs export-portable your_contract.yaml --fingerprint
 
 ## Next
 
+- Prefer Spec 3.0 / tools 0.13 when adopting Rich Portable Analytics: [migration-0.13.md](migration-0.13.md)
 - [getting-started.md](getting-started.md)
 - [cli-guide.md](cli-guide.md#export-portable)
 - [api/python.md](../api/python.md#portable-plans)

@@ -94,6 +94,7 @@ nav:
       - Error taxonomy: user/error-taxonomy.md
       - Diagnostic catalog: user/diagnostic-catalog.md
       - Extensions & registries: user/extensions-and-registries.md
+      - Migration 0.13: user/migration-0.13.md
       - Migration 0.12: user/migration-0.12.md
       - Portable Relational migration: user/migration-portable-relational.md
       - Migration 0.11 (historical): user/migration-0.11.md

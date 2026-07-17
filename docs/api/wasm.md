@@ -2,12 +2,12 @@
 
 Package: [`@eddiethedean/dtcs-wasm`](https://github.com/eddiethedean/dtcs/tree/main/bindings/wasm).
 
-**Maturity:** experimental / optional publish (see release runbook `NPM_TOKEN`). Pin versions explicitly when consuming from npm. Package version tracks tools `0.12.x`.
+**Maturity:** experimental / optional publish (see release runbook `NPM_TOKEN`). Pin versions explicitly when consuming from npm. Package version tracks tools `0.13.x`.
 
 ## Install
 
 ```bash
-npm install @eddiethedean/dtcs-wasm@0.12.0
+npm install @eddiethedean/dtcs-wasm@0.13.0
 ```
 
 ## Surface (intentionally small)
@@ -20,7 +20,7 @@ npm install @eddiethedean/dtcs-wasm@0.12.0
 | `conformanceDeclare(profile?)` | optional profile id | capability declaration object |
 | `specVersion()` | — | `"3.0.0"` |
 
-**Not included in WASM builds** (size): full `conformanceRun`, plan/optimize/compile/run, `export-portable`. Use the Rust CLI or Python package for certification and execution.
+**3.0 surface limits:** WASM exposes **parse / validate / `conformanceDeclare` only** — no full Spec 3.0 reference runtime, plan export, optimize/compile/run, or offline `conformanceRun`. Use the Rust CLI or Python package for Rich Portable Analytics execution and certification.
 
 ## Parity vs CLI / Python
 

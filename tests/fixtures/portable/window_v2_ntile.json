@@ -1,0 +1,32 @@
+{
+  "id": "window-v2-ntile",
+  "actions": [
+    {
+      "action": "dtcs:window",
+      "target": "t",
+      "parameters": {
+        "orderBy": [{ "field": "v" }],
+        "functions": [
+          { "as": "tile", "function": "ntile", "n": 2 },
+          { "as": "pr", "function": "percent_rank" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      { "v": 1 },
+      { "v": 2 },
+      { "v": 3 },
+      { "v": 4 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "v": 1, "tile": 1, "pr": 0.0 },
+      { "v": 2, "tile": 1, "pr": 0.3333333333333333 },
+      { "v": 3, "tile": 2, "pr": 0.6666666666666666 },
+      { "v": 4, "tile": 2, "pr": 1.0 }
+    ]
+  }
+}

@@ -117,6 +117,9 @@ pub struct PortablePlan {
     /// Capability / engine requirements.
     #[serde(default)]
     pub requirements: IndexMap<String, Value>,
+    /// Plan-level expression error mode (`fail` | `invalid` | `null` | `route`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub error_mode: Option<String>,
     /// Vendor extensions.
     #[serde(default, skip_serializing_if = "IndexMap::is_empty")]
     pub extensions: IndexMap<String, Value>,
@@ -197,6 +200,7 @@ impl PortablePlan {
                 requirements.insert("dependencies".into(), deps);
             }
         }
+        insert_fingerprint_pins(&mut requirements, "fail");
 
         Self {
             plan_identity: TRANSFORM_PLAN_IDENTITY.into(),
@@ -211,6 +215,7 @@ impl PortablePlan {
             rules,
             lineage,
             requirements,
+            error_mode: Some("fail".into()),
             extensions: plan.extensions.clone(),
         }
     }
@@ -264,7 +269,39 @@ impl PortablePlan {
         if contains_executable_marker(&serde_json::from_slice(&bytes).unwrap_or(Value::Null)) {
             return Err("portable plan rejects executable or host-language objects".into());
         }
+        if let Some(mode) = &self.error_mode {
+            match mode.as_str() {
+                "fail" | "invalid" | "null" => {}
+                "route" => {
+                    if !self.requirements.contains_key("invalidOutput") {
+                        return Err("errorMode 'route' requires requirements.invalidOutput".into());
+                    }
+                }
+                other => {
+                    return Err(format!(
+                        "unsupported errorMode '{other}'; expected fail|invalid|null|route"
+                    ));
+                }
+            }
+        }
         Ok(())
+    }
+}
+
+/// Insert default fingerprint requirement pins when missing.
+fn insert_fingerprint_pins(requirements: &mut IndexMap<String, Value>, error_mode: &str) {
+    let pins = [
+        ("regexGrammar", "dtcs-regex/1"),
+        ("formatGrammar", "dtcs-format/1"),
+        ("unicodeVersion", "unicode-15.1"),
+        ("timezoneData", "iana-2025b"),
+        ("randomAlgorithm", "xorshift64star/1"),
+        ("errorMode", error_mode),
+    ];
+    for (key, value) in pins {
+        requirements
+            .entry(key.into())
+            .or_insert_with(|| Value::String(value.into()));
     }
 }
 

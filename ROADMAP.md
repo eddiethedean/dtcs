@@ -1,8 +1,8 @@
 # DTCS Roadmap
 
-Reference-implementation milestones for the Data Transformation Contract Standard. Uses **0.X** release phases only and covers **all 26 chapters** of [`SPEC.md`](SPEC.md).
+Reference-implementation milestones for the Data Transformation Contract Standard. Uses **0.X** release phases only and covers **all 27 chapters** of [`SPEC.md`](SPEC.md).
 
-> **Maturity:** Spec is `2.0.0` (draft). Tooling is alpha. Status **Covered** below means the **reference implementation exercises that draft SPEC area** for the listed release — not that DTCS 2.0 is finalized or production-certified.
+> **Maturity:** Spec is `3.0.0` (draft). Tooling is alpha at `0.13`. Status **Covered** below means the **reference implementation exercises that draft SPEC area** for the listed release — not that DTCS 3.0 is finalized or production-certified. Advanced A.9 profiles remain Experimental; `portable-window/2` is Candidate.
 
 [`SPEC.md`](SPEC.md) is the source of truth. When this roadmap and the specification disagree, the specification wins.
 
@@ -14,7 +14,7 @@ Reference-implementation milestones for the Data Transformation Contract Standar
 
 ## Tiers
 
-Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-core-concepts) pipeline.
+Phases are grouped into tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-core-concepts) pipeline.
 
 | Tier | Phases | Pipeline stage |
 |------|--------|----------------|
@@ -25,6 +25,7 @@ Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-
 | **V — Certification** | [0.10](#phase-010-conformance-ecosystem) | Conformance, security, governance |
 | **VI — SPEC completeness** | [0.11](#phase-011-spec-completeness) | Full Ch 17–19 catalog; COM depth; completeness matrix |
 | **VII — Portable Relational** | [0.12](#phase-012-portable-relational-profile) | Portable Relational Profile (DTCS-R1–R4) |
+| **VIII — Rich Portable Analytics** | [0.13](#phase-013-dtcs-30-rich-portable-analytics) | DTCS 3.0 Rich Portable Analytics (Ch 27 / A.9) |
 
 ## Status overview
 
@@ -42,6 +43,7 @@ Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-
 | **0.10** | [Conformance & Ecosystem](#phase-010-conformance-ecosystem) | Ch 1 §10, 2 §14, 23–24, 26 | **Covered** (`0.10.1`) |
 | **0.11** | [SPEC Completeness](#phase-011-spec-completeness) | Ch 4–8, 10, 12, 14–19 (deepening); Appendix A | **Covered** (`0.11.0`) |
 | **0.12** | [Portable Relational Profile](#phase-012-portable-relational-profile) | Ch 8, 13 §12.1, 14, 16–18, 23 §5.1, A.3–A.4, A.8 | **Covered** (`0.12.0`) |
+| **0.13** | [DTCS 3.0 Rich Portable Analytics](#phase-013-dtcs-30-rich-portable-analytics) | Ch 27, A.9 | **Covered** (`0.13.0` reference); Advanced profiles Experimental / `window/2` Candidate |
 
 ## SPEC chapter index
 
@@ -73,6 +75,7 @@ Phases are grouped into six tiers that follow the [Ch 2 §13](SPEC.md#chapter-2-
 | 24 | [Security Considerations](SPEC.md#chapter-24-security-considerations) | 0.10 | Covered |
 | 25 | [Versioning](SPEC.md#chapter-25-versioning) | 0.3 | Covered |
 | 26 | [Governance](SPEC.md#chapter-26-governance) | 0.10 | Covered |
+| 27 | [Rich Portable Analytics](SPEC.md#chapter-27-rich-portable-analytics) | 0.13 | Covered (reference) — A.9 Advanced Experimental; `portable-window/2` Candidate |
 
 Chapter-level evidence matrix: [`docs/implementation/spec-completeness.md`](docs/implementation/spec-completeness.md). Normative identifier catalog: [SPEC Appendix A](SPEC.md#appendix-a-standard-library-catalog-normative).
 
@@ -579,8 +582,42 @@ Ships the full Portable Relational Profile in one release: kernel operators and 
 
 - [x] `dtcs:window` with rows/range frames; `row_number`/`rank`/`dense_rank`/`lag`/`lead`/`first_value`/`last_value`; framed aggregates
 - [x] Datetime family: day/month/year/hour/minute; `date_trunc` / `extract` / `at_timezone` (fixed-offset)
-- [x] Complex-types profile: `array`/`struct` aliases + executable access ops (explode/unnest non-goal)
+- [x] Complex-types profile: `array`/`struct` aliases + executable access ops
 - [x] Package versions at `0.12.0` (crates.io / PyPI / bindings)
+
+> **Superseded by 0.13:** Phase 0.12 treated IANA/DST timezones and explode/unnest as non-goals for the fixed-offset / access-only portable surface. Those capabilities land in Tier VIII (Ch 27 / A.9) as Experimental profiles — see [Phase 0.13](#phase-013-dtcs-30-rich-portable-analytics).
+
+---
+
+## Phase 0.13 — DTCS 3.0 Rich Portable Analytics
+
+**Status:** Covered in `0.13.0` (reference)  
+**Proposal:** [docs/DTCS_3_0_SPEC_PROPOSAL.md](docs/DTCS_3_0_SPEC_PROPOSAL.md) (3.0-R1–R5)  
+**SPEC:** [Ch 27](SPEC.md#chapter-27-rich-portable-analytics), [Appendix A.9](SPEC.md#a9-dtcs-30-rich-portable-analytics-profiles)
+
+Ships the DTCS 3.0 Rich Portable Analytics reference surface: plan v2, A.9 family identifiers, and maturity-honest profile status (Advanced Experimental; `portable-window/2` Candidate). Certified dual-path fixtures remain focused on the kernel relational 2.0 surface.
+
+### R1–R5 status (reference surface)
+
+| Slice | Focus | Status |
+|-------|--------|--------|
+| **R1** | Protocol / plan v2, lambdas, `errorMode`, fingerprint pins, migration | Done |
+| **R2** | Deterministic expression families (string-advanced, conversion, statistics, complex-values) | Done |
+| **R3** | Relational expansion (reshape/pivot, set, sample, nested field actions) | Done |
+| **R4** | IANA temporal + controlled nondeterminism (`xorshift64star/1`) | Done |
+| **R5** | Conformance surface / profile graduation posture | Complete for reference; Standard graduation remains a non-goal |
+
+### Deliverables
+
+- [x] Canonical portable plan `dtcs.transform-plan/2` with v1 migrate; defaults `portable-relational-kernel/2` / `portable-relational/2`
+- [x] Fingerprint pins: `unicode-15.1`, `dtcs-regex/1`, `iana-2025b`, `xorshift64star/1`; explicit `errorMode`
+- [x] A.9 family identifiers exercised by the reference runtime (including window/2 `ntile` / `percent_rank` / `cume_dist` / `nth_value`)
+- [x] Advanced A.9 profiles declared Experimental; `portable-window/2` Candidate
+- [x] Package versions at `0.13.0` (crates.io / PyPI / bindings)
+
+**Non-goals:** second production compiler in-repo; Standard graduation of Experimental A.9 families.
+
+Migration: [`docs/user/migration-0.13.md`](docs/user/migration-0.13.md).
 
 ---
 

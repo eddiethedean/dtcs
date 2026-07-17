@@ -51,7 +51,7 @@ entries:
     version: "1.0.0"
     status: "experimental"
     definition: |
-      {"kind":"profile","family":"portable-string-advanced","planProfile":"dtcs.transform-plan/2","regexGrammar":"dtcs-regex/1","unicodeVersion":"unicode-16.0"}
+      {"kind":"profile","family":"portable-string-advanced","planProfile":"dtcs.transform-plan/2","regexGrammar":"dtcs-regex/1","unicodeVersion":"unicode-15.1"}
   dtcs:profile/portable-conversion/1:
     name: "Portable Conversion"
     category: "profile"

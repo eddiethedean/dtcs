@@ -3,35 +3,69 @@
   "tests": [
     {
       "id": "parse-valid-customer",
-      "profiles": ["parser", "validator", "analyzer", "planner", "optimizer", "compiler", "runtime", "integrated-platform"],
+      "profiles": [
+        "parser",
+        "validator",
+        "analyzer",
+        "planner",
+        "optimizer",
+        "compiler",
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
-      "assertion": { "kind": "parseValid" }
+      "assertion": {
+        "kind": "parseValid"
+      }
     },
     {
       "id": "parse-invalid-malformed",
-      "profiles": ["parser", "integrated-platform"],
+      "profiles": [
+        "parser",
+        "integrated-platform"
+      ],
       "fixture": "malformed.yaml",
       "format": "yaml",
-      "assertion": { "kind": "parseInvalid" }
+      "assertion": {
+        "kind": "parseInvalid"
+      }
     },
     {
       "id": "validate-valid-customer",
-      "profiles": ["validator", "analyzer", "planner", "optimizer", "compiler", "runtime", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "analyzer",
+        "planner",
+        "optimizer",
+        "compiler",
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
-      "assertion": { "kind": "validateValid" }
+      "assertion": {
+        "kind": "validateValid"
+      }
     },
     {
       "id": "analyze-valid-customer",
-      "profiles": ["analyzer", "integrated-platform"],
+      "profiles": [
+        "analyzer",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
-      "assertion": { "kind": "analyzeValid" }
+      "assertion": {
+        "kind": "analyzeValid"
+      }
     },
     {
       "id": "compat-identical-customer",
-      "profiles": ["analyzer", "integrated-platform"],
+      "profiles": [
+        "analyzer",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
       "assertion": {
@@ -42,7 +76,10 @@
     },
     {
       "id": "compat-backward",
-      "profiles": ["analyzer", "integrated-platform"],
+      "profiles": [
+        "analyzer",
+        "integrated-platform"
+      ],
       "fixture": "compatibility/backward_old.yaml",
       "format": "yaml",
       "assertion": {
@@ -53,7 +90,10 @@
     },
     {
       "id": "evolve-revisions",
-      "profiles": ["analyzer", "integrated-platform"],
+      "profiles": [
+        "analyzer",
+        "integrated-platform"
+      ],
       "fixture": "compatibility/evolution/rev1.yaml",
       "format": "yaml",
       "assertion": {
@@ -63,72 +103,124 @@
     },
     {
       "id": "validate-invalid-missing-lineage",
-      "profiles": ["validator", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "missing_lineage.yaml",
       "format": "yaml",
       "assertion": {
         "kind": "validateInvalid",
-        "codes": ["dtcs:ambiguous-reference", "dtcs:missing-lineage"]
+        "codes": [
+          "dtcs:ambiguous-reference",
+          "dtcs:missing-lineage"
+        ]
       }
     },
     {
       "id": "validate-invalid-type",
-      "profiles": ["validator", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "invalid_type.yaml",
       "format": "yaml",
       "assertion": {
         "kind": "validateInvalid",
-        "codes": ["dtcs:ambiguous-reference", "dtcs:invalid-type", "dtcs:missing-lineage"]
+        "codes": [
+          "dtcs:ambiguous-reference",
+          "dtcs:invalid-type",
+          "dtcs:missing-lineage"
+        ]
       }
     },
     {
       "id": "validate-invalid-policy-uri",
-      "profiles": ["validator", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "invalid_metadata_policy_uri.yaml",
       "format": "yaml",
       "assertion": {
         "kind": "validateInvalid",
-        "codes": ["dtcs:ambiguous-reference", "dtcs:invalid-metadata"]
+        "codes": [
+          "dtcs:ambiguous-reference",
+          "dtcs:invalid-metadata"
+        ]
       }
     },
     {
       "id": "plan-valid-customer",
-      "profiles": ["planner", "optimizer", "compiler", "runtime", "integrated-platform"],
+      "profiles": [
+        "planner",
+        "optimizer",
+        "compiler",
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
-      "assertion": { "kind": "planValid" }
+      "assertion": {
+        "kind": "planValid"
+      }
     },
     {
       "id": "optimize-equivalent-constant-fold",
-      "profiles": ["optimizer", "integrated-platform"],
+      "profiles": [
+        "optimizer",
+        "integrated-platform"
+      ],
       "fixture": "optimize_constant_fold.yaml",
       "format": "yaml",
-      "assertion": { "kind": "optimizeEquivalent" }
+      "assertion": {
+        "kind": "optimizeEquivalent"
+      }
     },
     {
       "id": "optimize-equivalent-action-fusion",
-      "profiles": ["optimizer", "integrated-platform"],
+      "profiles": [
+        "optimizer",
+        "integrated-platform"
+      ],
       "fixture": "optimize_action_fusion.yaml",
       "format": "yaml",
-      "assertion": { "kind": "optimizeEquivalent" }
+      "assertion": {
+        "kind": "optimizeEquivalent"
+      }
     },
     {
       "id": "match-supported-customer",
-      "profiles": ["compiler", "runtime", "integrated-platform"],
+      "profiles": [
+        "compiler",
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
-      "assertion": { "kind": "matchSupported" }
+      "assertion": {
+        "kind": "matchSupported"
+      }
     },
     {
       "id": "compile-valid-customer",
-      "profiles": ["compiler", "runtime", "integrated-platform"],
+      "profiles": [
+        "compiler",
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
-      "assertion": { "kind": "compileValid" }
+      "assertion": {
+        "kind": "compileValid"
+      }
     },
     {
       "id": "runtime-customer-normalize",
-      "profiles": ["runtime", "integrated-platform"],
+      "profiles": [
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "valid_customer.yaml",
       "format": "yaml",
       "assertion": {
@@ -139,7 +231,10 @@
     },
     {
       "id": "runtime-field-write-chain",
-      "profiles": ["runtime", "integrated-platform"],
+      "profiles": [
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "plan_field_write_chain.yaml",
       "format": "yaml",
       "assertion": {
@@ -150,28 +245,50 @@
     },
     {
       "id": "security-registry-trust",
-      "profiles": ["validator", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "registry/evil_dtcs_injection.yaml",
       "format": "yaml",
-      "assertion": { "kind": "securityProbe", "probeId": "registry-trust" }
+      "assertion": {
+        "kind": "securityProbe",
+        "probeId": "registry-trust"
+      }
     },
     {
       "id": "security-duplicate-params",
-      "profiles": ["parser", "validator", "integrated-platform"],
+      "profiles": [
+        "parser",
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "invalid_rule_duplicate_params.json",
       "format": "json",
-      "assertion": { "kind": "securityProbe", "probeId": "contract-integrity" }
+      "assertion": {
+        "kind": "securityProbe",
+        "probeId": "contract-integrity"
+      }
     },
     {
       "id": "security-diagnostics-stability",
-      "profiles": ["validator", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "missing_lineage.yaml",
       "format": "yaml",
-      "assertion": { "kind": "securityProbe", "probeId": "diagnostics-stability" }
+      "assertion": {
+        "kind": "securityProbe",
+        "probeId": "diagnostics-stability"
+      }
     },
     {
       "id": "runtime-deterministic-double-run",
-      "profiles": ["runtime", "integrated-platform"],
+      "profiles": [
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "deterministic_double_run.yaml",
       "format": "yaml",
       "assertion": {
@@ -182,81 +299,148 @@
     },
     {
       "id": "runtime-precondition-fail",
-      "profiles": ["runtime", "integrated-platform"],
+      "profiles": [
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "runtime_precondition_fail.yaml",
       "format": "yaml",
       "assertion": {
         "kind": "runtimeInvalid",
         "input": "runtime/precondition_rule_fail_input.json",
-        "codes": ["dtcs:precondition-violation"]
+        "codes": [
+          "dtcs:precondition-violation"
+        ]
       }
     },
     {
       "id": "runtime-postcondition-fail",
-      "profiles": ["runtime", "integrated-platform"],
+      "profiles": [
+        "runtime",
+        "integrated-platform"
+      ],
       "fixture": "runtime_postcondition_fail.yaml",
       "format": "yaml",
       "assertion": {
         "kind": "runtimeInvalid",
         "input": "runtime/postcondition_fail_input.json",
-        "codes": ["dtcs:postcondition-violation"]
+        "codes": [
+          "dtcs:postcondition-violation"
+        ]
       }
     },
     {
       "id": "security-trusted-extensions",
-      "profiles": ["validator", "integrated-platform"],
+      "profiles": [
+        "validator",
+        "integrated-platform"
+      ],
       "fixture": "registry/vendor_catalog.yaml",
       "format": "yaml",
-      "assertion": { "kind": "securityProbe", "probeId": "trusted-extensions" }
+      "assertion": {
+        "kind": "securityProbe",
+        "probeId": "trusted-extensions"
+      }
     },
     {
       "id": "portable-kernel-project",
-      "profiles": ["dtcs:profile/portable-relational-kernel/1"],
+      "profiles": [
+        "dtcs:profile/portable-relational-kernel/1"
+      ],
       "fixture": "portable/kernel_project.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     },
     {
       "id": "portable-kernel-between-filter",
-      "profiles": ["dtcs:profile/portable-relational-kernel/1"],
+      "profiles": [
+        "dtcs:profile/portable-relational-kernel/1"
+      ],
       "fixture": "portable/kernel_between_filter.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     },
     {
       "id": "portable-relational-join",
-      "profiles": ["dtcs:profile/portable-relational/1"],
+      "profiles": [
+        "dtcs:profile/portable-relational/1"
+      ],
       "fixture": "portable/relational_join.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     },
     {
       "id": "portable-relational-agg-sort",
-      "profiles": ["dtcs:profile/portable-relational/1"],
+      "profiles": [
+        "dtcs:profile/portable-relational/1"
+      ],
       "fixture": "portable/relational_agg_sort.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     },
     {
       "id": "portable-relational-collision-error",
-      "profiles": ["dtcs:profile/portable-relational/1"],
+      "profiles": [
+        "dtcs:profile/portable-relational/1"
+      ],
       "fixture": "portable/plan_budget_error.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     },
     {
       "id": "portable-window-frame-sum",
-      "profiles": ["dtcs:profile/portable-window/1"],
+      "profiles": [
+        "dtcs:profile/portable-window/1"
+      ],
       "fixture": "portable/window_frame_sum.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     },
     {
       "id": "portable-complex-access",
-      "profiles": ["dtcs:profile/portable-complex-types/1"],
+      "profiles": [
+        "dtcs:profile/portable-complex-types/1"
+      ],
       "fixture": "portable/complex_access.json",
       "format": "json",
-      "assertion": { "kind": "portableDifferential" }
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-reshape-sample",
+      "profiles": [
+        "dtcs:profile/portable-relational-extended/1",
+        "dtcs:profile/portable-reshape/1"
+      ],
+      "fixture": "portable/reshape_sample.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
+    },
+    {
+      "id": "portable-window-v2-ntile",
+      "profiles": [
+        "dtcs:profile/portable-window/2"
+      ],
+      "fixture": "portable/window_v2_ntile.json",
+      "format": "json",
+      "assertion": {
+        "kind": "portableDifferential"
+      }
     }
   ]
 }

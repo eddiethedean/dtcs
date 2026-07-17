@@ -198,8 +198,8 @@ fn cached_regex(pattern: &str) -> Result<Regex, String> {
             Err(message) => Err(message.clone()),
         };
     }
-    let compiled =
-        Regex::new(pattern).map_err(|e| format!("invalid regex pattern '{pattern}': {e}"));
+    let compiled = crate::runtime::regex_gate::compile_dtcs_regex(pattern)
+        .map_err(|e| format!("invalid regex pattern '{pattern}': {e}"));
     cache.insert(pattern.to_string(), compiled.clone());
     compiled
 }

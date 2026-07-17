@@ -69,12 +69,17 @@ pub struct PortableCapabilityManifest {
 }
 
 /// Features the reference runtime does **not** certify (false-claim gate).
-pub const REFERENCE_UNSUPPORTED_CLAIMS: &[&str] = &[
+pub const REFERENCE_UNSUPPORTED_CLAIMS: &[&str] = &["unnest", "dstCalendar"];
+
+/// Features available experimentally on the DTCS 3.0 reference surface.
+pub const REFERENCE_EXPERIMENTAL_FEATURES: &[&str] = &[
     "ianaTimezone",
-    "dstCalendar",
     "explode",
-    "unnest",
     "map_entries",
+    "pivot",
+    "statistics",
+    "windowV2",
+    "seededNondeterminism",
 ];
 
 /// Features the reference runtime certifies for portable profiles.
@@ -203,6 +208,9 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
     for feature in REFERENCE_CERTIFIED_FEATURES {
         semantic_modes.insert((*feature).to_string(), "certified".into());
     }
+    for feature in REFERENCE_EXPERIMENTAL_FEATURES {
+        semantic_modes.insert((*feature).to_string(), "experimental".into());
+    }
     for feature in REFERENCE_UNSUPPORTED_CLAIMS {
         semantic_modes.insert((*feature).to_string(), "unsupported".into());
     }
@@ -251,14 +259,17 @@ pub fn validate_capability_accuracy(
             }
         }
     }
+    for feature in REFERENCE_EXPERIMENTAL_FEATURES {
+        if let Some(mode) = manifest.semantic_modes.get(*feature) {
+            if mode == "certified" {
+                errors.push(format!(
+                    "false claim: '{feature}' marked certified but reference surface is experimental only"
+                ));
+            }
+        }
+    }
     for (id, entry) in &manifest.functions {
-        if entry.supported
-            && entry.tier == "certified"
-            && matches!(
-                id.as_str(),
-                "dtcs:explode" | "dtcs:unnest" | "dtcs:map_entries"
-            )
-        {
+        if entry.supported && entry.tier == "certified" && matches!(id.as_str(), "dtcs:unnest") {
             errors.push(format!("false claim: certified support for '{id}'"));
         }
         if !entry.supported && entry.tier == "certified" {
@@ -282,7 +293,27 @@ fn action_support(id: &str) -> (bool, String, Vec<String>) {
             vec![
                 "supports rows and range frames".into(),
                 "first_value/last_value and framed aggregates".into(),
+                "window/2 ntile/percent_rank/cume_dist/nth_value are candidate".into(),
             ],
+        ),
+        "dtcs:repartition" | "dtcs:coalesce_partitions" => (
+            true,
+            "experimental".into(),
+            vec!["logical layout hint only; no row mutation in reference runtime".into()],
+        ),
+        "dtcs:pivot"
+        | "dtcs:explode"
+        | "dtcs:unpivot"
+        | "dtcs:intersect"
+        | "dtcs:except"
+        | "dtcs:sample"
+        | "dtcs:random_split"
+        | "dtcs:with_nested_fields"
+        | "dtcs:rename_nested_fields"
+        | "dtcs:drop_nested_fields" => (
+            true,
+            "experimental".into(),
+            vec!["DTCS 3.0 reference surface; dual-compiler certification pending".into()],
         ),
         _ => (true, "certified".into(), Vec::new()),
     }
@@ -305,9 +336,35 @@ fn function_support(id: &str, experimental: bool) -> (bool, String, Vec<String>)
             | "dtcs:lead"
             | "dtcs:first_value"
             | "dtcs:last_value"
+            | "dtcs:ntile"
+            | "dtcs:percent_rank"
+            | "dtcs:cume_dist"
+            | "dtcs:nth_value"
+            | "dtcs:variance"
+            | "dtcs:stddev"
+            | "dtcs:median"
+            | "dtcs:collect_list"
+            | "dtcs:collect_set"
     ) {
         notes.push("not callable as a scalar expression; use aggregate/window actions".into());
-        return (true, "certified".into(), notes);
+        let tier = if experimental
+            || matches!(
+                id,
+                "dtcs:ntile"
+                    | "dtcs:percent_rank"
+                    | "dtcs:cume_dist"
+                    | "dtcs:nth_value"
+                    | "dtcs:variance"
+                    | "dtcs:stddev"
+                    | "dtcs:median"
+                    | "dtcs:collect_list"
+                    | "dtcs:collect_set"
+            ) {
+            "experimental".into()
+        } else {
+            "certified".into()
+        };
+        return (true, tier, notes);
     }
     let tier = if experimental {
         "experimental".into()
@@ -353,7 +410,7 @@ mod tests {
                 .semantic_modes
                 .get("ianaTimezone")
                 .map(String::as_str),
-            Some("unsupported")
+            Some("experimental")
         );
         assert_eq!(
             manifest

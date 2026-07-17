@@ -20,8 +20,8 @@ fn embedded_manifest_matches_tests_copy() {
 #[test]
 fn declares_class_and_semantic_profiles() {
     let declaration = declare();
-    // 8 implementation-class profiles + 4 portable semantic-family profiles
-    assert_eq!(declaration.profiles.len(), 12);
+    // 8 implementation-class + 4 DTCS 2.0 semantic + 11 DTCS 3.0 family profiles
+    assert_eq!(declaration.profiles.len(), 23);
     assert_eq!(declaration.primary_profile, "integrated-platform");
     assert_eq!(declaration.dtcs_version, dtcs::SPEC_VERSION);
     assert!(declaration
@@ -32,6 +32,18 @@ fn declares_class_and_semantic_profiles() {
         .profiles
         .iter()
         .any(|p| p.id == "dtcs:profile/portable-relational/1"));
+    assert!(declaration
+        .profiles
+        .iter()
+        .any(|p| p.id == "dtcs:profile/portable-relational-kernel/2"));
+    assert!(declaration
+        .profiles
+        .iter()
+        .any(|p| p.id == "dtcs:profile/portable-statistics/1"));
+    assert!(declaration
+        .profiles
+        .iter()
+        .any(|p| p.id == "dtcs:profile/portable-window/2"));
 }
 
 #[test]

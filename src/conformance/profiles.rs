@@ -77,6 +77,52 @@ pub fn all_profiles() -> Vec<ConformanceProfile> {
         ImplementationClass::Compiler,
         &["complexTypes"],
     ));
+    // DTCS 3.0 family profiles (Experimental / Candidate — reference surface).
+    for (id, caps) in [
+        (
+            "dtcs:profile/portable-relational-kernel/2",
+            &["portablePlanSerialization", "structuredExpressions"][..],
+        ),
+        (
+            "dtcs:profile/portable-relational/2",
+            &["portablePlanSerialization", "richJoins"][..],
+        ),
+        (
+            "dtcs:profile/portable-window/2",
+            &["windowFunctions", "windowV2"][..],
+        ),
+        (
+            "dtcs:profile/portable-string-advanced/1",
+            &["advancedStrings", "dtcsRegex"][..],
+        ),
+        (
+            "dtcs:profile/portable-conversion/1",
+            &["portableConversion"][..],
+        ),
+        (
+            "dtcs:profile/portable-statistics/1",
+            &["portableStatistics"][..],
+        ),
+        (
+            "dtcs:profile/portable-complex-values/1",
+            &["complexValues", "lambdaHof"][..],
+        ),
+        ("dtcs:profile/portable-reshape/1", &["reshape"][..]),
+        (
+            "dtcs:profile/portable-relational-extended/1",
+            &["setOperations", "sampling"][..],
+        ),
+        (
+            "dtcs:profile/portable-temporal-iana/1",
+            &["ianaTimezone"][..],
+        ),
+        (
+            "dtcs:profile/portable-nondeterministic/1",
+            &["seededNondeterminism"][..],
+        ),
+    ] {
+        profiles.push(semantic_profile(id, ImplementationClass::Compiler, caps));
+    }
     profiles
 }
 

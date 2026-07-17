@@ -117,11 +117,16 @@ pub fn is_dataset_action(action_id: &str) -> bool {
             | "dtcs:window"
             | "dtcs:explode"
             | "dtcs:unpivot"
+            | "dtcs:pivot"
             | "dtcs:intersect"
             | "dtcs:except"
             | "dtcs:sample"
+            | "dtcs:random_split"
             | "dtcs:repartition"
             | "dtcs:coalesce_partitions"
+            | "dtcs:with_nested_fields"
+            | "dtcs:rename_nested_fields"
+            | "dtcs:drop_nested_fields"
     )
 }
 
@@ -165,8 +170,22 @@ pub fn apply_dataset_action(
         "dtcs:unpivot" => apply_unpivot(target, parameters, workspaces),
         "dtcs:intersect" => apply_set_operation(target, parameters, workspaces, true),
         "dtcs:except" => apply_set_operation(target, parameters, workspaces, false),
-        "dtcs:repartition" | "dtcs:coalesce_partitions" => Ok(()),
+        "dtcs:repartition" => {
+            // Logical partition hint only — no row mutation (Ch 27 §9).
+            let _ = (target, parameters, workspaces);
+            Ok(())
+        }
+        "dtcs:coalesce_partitions" => {
+            // Physical layout hint only — no row mutation (Ch 27 §9).
+            let _ = (target, parameters, workspaces);
+            Ok(())
+        }
         "dtcs:sample" => apply_sample(target, parameters, workspaces),
+        "dtcs:pivot" => apply_pivot(target, parameters, workspaces),
+        "dtcs:random_split" => apply_random_split(target, parameters, workspaces),
+        "dtcs:with_nested_fields" => apply_with_nested_fields(target, parameters, workspaces),
+        "dtcs:rename_nested_fields" => apply_rename_nested_fields(target, parameters, workspaces),
+        "dtcs:drop_nested_fields" => apply_drop_nested_fields(target, parameters, workspaces),
         other => Err(format!("unsupported dataset semantic action '{other}'")),
     }
 }
@@ -967,6 +986,60 @@ fn reduce_values(values: &[RuntimeValue], op: &str) -> Result<RuntimeValue, Stri
         ),
         "first" => values.first().cloned().unwrap_or(RuntimeValue::Null),
         "last" => values.last().cloned().unwrap_or(RuntimeValue::Null),
+        "variance" | "var_samp" => {
+            let nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.len() < 2 {
+                RuntimeValue::Null
+            } else {
+                let mean = nums.iter().sum::<f64>() / nums.len() as f64;
+                let var =
+                    nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (nums.len() - 1) as f64;
+                RuntimeValue::Decimal(var)
+            }
+        }
+        "stddev" | "stddev_samp" => {
+            let nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.len() < 2 {
+                RuntimeValue::Null
+            } else {
+                let mean = nums.iter().sum::<f64>() / nums.len() as f64;
+                let var =
+                    nums.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (nums.len() - 1) as f64;
+                RuntimeValue::Decimal(var.sqrt())
+            }
+        }
+        "median" => {
+            let mut nums: Vec<f64> = values.iter().filter_map(RuntimeValue::as_decimal).collect();
+            if nums.is_empty() {
+                RuntimeValue::Null
+            } else {
+                nums.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+                let mid = nums.len() / 2;
+                RuntimeValue::Decimal(if nums.len() % 2 == 0 {
+                    (nums[mid - 1] + nums[mid]) / 2.0
+                } else {
+                    nums[mid]
+                })
+            }
+        }
+        "collect_list" => {
+            if values.len() > 1_000_000 {
+                return Err("collect_list exceeds collectionElements budget".into());
+            }
+            RuntimeValue::List(values.to_vec())
+        }
+        "collect_set" => {
+            let mut out = Vec::new();
+            for value in values {
+                if !out.iter().any(|existing| existing == value) {
+                    out.push(value.clone());
+                }
+                if out.len() > 1_000_000 {
+                    return Err("collect_set exceeds collectionElements budget".into());
+                }
+            }
+            RuntimeValue::List(out)
+        }
         other => {
             return Err(format!("unsupported aggregate op '{other}'"));
         }
@@ -1118,24 +1191,85 @@ fn apply_window(
                                 .unwrap_or(RuntimeValue::Null),
                         }
                     }
-                    "first_value" | "last_value" => {
+                    "first_value" | "last_value" | "nth_value" => {
                         let expr = obj
                             .get("expr")
                             .or_else(|| obj.get("field"))
                             .and_then(Value::as_str)
                             .ok_or_else(|| format!("{fn_name} requires expr or field"))?;
+                        let ignore_nulls = obj
+                            .get("ignoreNulls")
+                            .and_then(Value::as_bool)
+                            .unwrap_or(false);
                         if frame_start > frame_end || frame_start >= ordered.len() {
                             RuntimeValue::Null
                         } else {
-                            let pick = if fn_name == "first_value" {
-                                frame_start
-                            } else {
-                                frame_end.min(ordered.len() - 1)
-                            };
-                            eval_expression_on_row(expr, &dataset[ordered[pick]])?
+                            let end = frame_end.min(ordered.len() - 1);
+                            let mut candidates = Vec::new();
+                            for sp in frame_start..=end {
+                                let value = eval_expression_on_row(expr, &dataset[ordered[sp]])?;
+                                if ignore_nulls
+                                    && matches!(
+                                        value,
+                                        RuntimeValue::Null
+                                            | RuntimeValue::Missing(_)
+                                            | RuntimeValue::Invalid(_)
+                                    )
+                                {
+                                    continue;
+                                }
+                                candidates.push(value);
+                            }
+                            match fn_name {
+                                "first_value" => {
+                                    candidates.into_iter().next().unwrap_or(RuntimeValue::Null)
+                                }
+                                "last_value" => {
+                                    candidates.into_iter().last().unwrap_or(RuntimeValue::Null)
+                                }
+                                "nth_value" => {
+                                    let n = obj.get("n").and_then(Value::as_u64).unwrap_or(1).max(1)
+                                        as usize;
+                                    candidates
+                                        .into_iter()
+                                        .nth(n - 1)
+                                        .unwrap_or(RuntimeValue::Null)
+                                }
+                                _ => unreachable!(),
+                            }
                         }
                     }
-                    "sum" | "count" | "average" | "avg" | "min" | "max" => {
+                    "ntile" => {
+                        let buckets = obj
+                            .get("n")
+                            .or_else(|| obj.get("buckets"))
+                            .and_then(Value::as_u64)
+                            .unwrap_or(1)
+                            .max(1) as usize;
+                        let n = ordered.len().max(1);
+                        let tile = ((pos * buckets) / n) + 1;
+                        RuntimeValue::Integer(tile.min(buckets) as i64)
+                    }
+                    "percent_rank" => {
+                        let n = ordered.len();
+                        if n <= 1 {
+                            RuntimeValue::Decimal(0.0)
+                        } else {
+                            RuntimeValue::Decimal((rank as f64 - 1.0) / (n as f64 - 1.0))
+                        }
+                    }
+                    "cume_dist" => {
+                        let n = ordered.len().max(1) as f64;
+                        let mut last_eq = pos;
+                        while last_eq + 1 < ordered.len()
+                            && order_values[ordered[last_eq + 1]] == order_values[ordered[pos]]
+                        {
+                            last_eq += 1;
+                        }
+                        RuntimeValue::Decimal((last_eq as f64 + 1.0) / n)
+                    }
+                    "sum" | "count" | "average" | "avg" | "min" | "max" | "variance" | "stddev"
+                    | "median" | "first" | "last" | "collect_list" | "collect_set" => {
                         let expr = obj
                             .get("expr")
                             .or_else(|| obj.get("field"))
@@ -1696,7 +1830,10 @@ fn apply_sample(
     let mut ranked: Vec<(u64, Row)> = dataset
         .into_iter()
         .enumerate()
-        .map(|(index, row)| (stable_sample_hash(seed, index as u64, &row), row))
+        .map(|(index, row)| {
+            let bytes = canonical_row(&row).into_bytes();
+            (super::prng::sample_rank(seed, index as u64, &bytes), row)
+        })
         .collect();
     ranked.sort_by_key(|(hash, _)| *hash);
     let take = count.unwrap_or_else(|| {
@@ -1709,16 +1846,335 @@ fn apply_sample(
     Ok(())
 }
 
-fn canonical_row(row: &Row) -> String {
-    serde_json::to_string(row).unwrap_or_default()
+fn apply_pivot(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let key_fields = param_string_list(parameters, "keys").unwrap_or_default();
+    let pivot_field = param_string(parameters, "pivot")?;
+    let value_field = param_string(parameters, "value")?;
+    let categories = param_string_list(parameters, "categories")?;
+    let max_columns = parameters
+        .get("maxColumns")
+        .and_then(Value::as_u64)
+        .unwrap_or(10_000) as usize;
+    if categories.len() > max_columns {
+        return Err(format!(
+            "pivot categories ({}) exceed maxColumns ({max_columns})",
+            categories.len()
+        ));
+    }
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut groups: BTreeMap<String, Row> = BTreeMap::new();
+    for row in dataset {
+        let group_key = if key_fields.is_empty() {
+            String::new()
+        } else {
+            key_fields
+                .iter()
+                .map(|f| format!("{:?}", row.get(f).unwrap_or(&RuntimeValue::Null)))
+                .collect::<Vec<_>>()
+                .join("\0")
+        };
+        let entry = groups.entry(group_key).or_insert_with(|| {
+            let mut base = Row::new();
+            for f in &key_fields {
+                base.insert(f.clone(), row.get(f).cloned().unwrap_or(RuntimeValue::Null));
+            }
+            for cat in &categories {
+                base.insert(cat.clone(), RuntimeValue::Null);
+            }
+            base
+        });
+        let cat = match row.get(&pivot_field) {
+            Some(RuntimeValue::String(s)) => s.clone(),
+            Some(other) => format!("{other:?}"),
+            None => continue,
+        };
+        if categories.iter().any(|c| c == &cat) {
+            if let Some(v) = row.get(&value_field) {
+                entry.insert(cat, v.clone());
+            }
+        }
+    }
+    workspaces.insert(target.into(), groups.into_values().collect());
+    Ok(())
 }
 
-fn stable_sample_hash(seed: u64, index: u64, row: &Row) -> u64 {
-    let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    seed.hash(&mut hasher);
-    index.hash(&mut hasher);
-    canonical_row(row).hash(&mut hasher);
-    hasher.finish()
+fn apply_random_split(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let weights = parameters
+        .get("weights")
+        .and_then(Value::as_array)
+        .ok_or_else(|| "random_split requires weights array".to_string())?;
+    let outputs = param_string_list(parameters, "outputs")?;
+    if weights.len() != outputs.len() {
+        return Err("random_split weights and outputs must have equal length".into());
+    }
+    let weight_vals: Result<Vec<f64>, _> = weights
+        .iter()
+        .map(|w| {
+            w.as_f64()
+                .ok_or_else(|| "weights must be numbers".to_string())
+        })
+        .collect();
+    let weight_vals = weight_vals?;
+    let total: f64 = weight_vals.iter().sum();
+    if total <= 0.0 {
+        return Err("random_split weights must sum to > 0".into());
+    }
+    let seed = parameters
+        .get("seed")
+        .and_then(Value::as_u64)
+        .unwrap_or(0xA11C_E5EDu64);
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut buckets: Vec<Dataset> = outputs.iter().map(|_| Vec::new()).collect();
+    for (index, row) in dataset.into_iter().enumerate() {
+        let bytes = canonical_row(&row).into_bytes();
+        let rank = super::prng::sample_rank(seed, index as u64, &bytes);
+        let unit = (rank as f64) / (u64::MAX as f64);
+        let mut acc = 0.0;
+        let mut chosen = weights.len() - 1;
+        for (i, w) in weight_vals.iter().enumerate() {
+            acc += *w / total;
+            if unit < acc {
+                chosen = i;
+                break;
+            }
+        }
+        buckets[chosen].push(row);
+    }
+    for (name, bucket) in outputs.into_iter().zip(buckets) {
+        workspaces.insert(name, bucket);
+    }
+    Ok(())
+}
+
+fn apply_with_nested_fields(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let assignments = parameters
+        .get("assignments")
+        .and_then(Value::as_array)
+        .ok_or_else(|| "with_nested_fields requires assignments".to_string())?;
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut out = Vec::new();
+    for mut row in dataset {
+        for item in assignments {
+            let obj = item
+                .as_object()
+                .ok_or_else(|| "assignment must be an object".to_string())?;
+            let path = nested_path_from_value(obj.get("path"))?;
+            let value = if let Some(lit) = obj.get("value") {
+                json_value_to_runtime(lit)
+            } else if let Some(expr) = obj.get("expr").and_then(Value::as_str) {
+                eval_expression_on_row(expr, &row)?
+            } else {
+                return Err("assignment requires value or expr".into());
+            };
+            set_nested_path(&mut row, &path, value)?;
+        }
+        out.push(row);
+    }
+    workspaces.insert(target.into(), out);
+    Ok(())
+}
+
+fn apply_rename_nested_fields(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let mapping = parameters
+        .get("mapping")
+        .and_then(Value::as_array)
+        .ok_or_else(|| "rename_nested_fields requires mapping".to_string())?;
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut out = Vec::new();
+    for mut row in dataset {
+        for item in mapping {
+            let obj = item
+                .as_object()
+                .ok_or_else(|| "mapping entry must be an object".to_string())?;
+            let from = nested_path_from_value(obj.get("from"))?;
+            let to = nested_path_from_value(obj.get("to"))?;
+            if let Some(value) = take_nested_path(&mut row, &from)? {
+                set_nested_path(&mut row, &to, value)?;
+            }
+        }
+        out.push(row);
+    }
+    workspaces.insert(target.into(), out);
+    Ok(())
+}
+
+fn apply_drop_nested_fields(
+    target: &str,
+    parameters: &IndexMap<String, Value>,
+    workspaces: &mut BTreeMap<String, Dataset>,
+) -> Result<(), String> {
+    let paths = parameters
+        .get("paths")
+        .and_then(Value::as_array)
+        .ok_or_else(|| "drop_nested_fields requires paths".to_string())?;
+    let dataset = workspaces
+        .get(target)
+        .cloned()
+        .ok_or_else(|| format!("unknown interface '{target}'"))?;
+    let mut out = Vec::new();
+    for mut row in dataset {
+        for path_val in paths {
+            let path = nested_path_from_value(Some(path_val))?;
+            let _ = take_nested_path(&mut row, &path)?;
+        }
+        out.push(row);
+    }
+    workspaces.insert(target.into(), out);
+    Ok(())
+}
+
+fn nested_path_from_value(value: Option<&Value>) -> Result<Vec<String>, String> {
+    match value {
+        Some(Value::Array(items)) => {
+            let mut path = Vec::with_capacity(items.len());
+            for item in items {
+                match item {
+                    Value::String(s) => path.push(s.clone()),
+                    Value::Object(obj) => {
+                        let kind = obj.get("kind").and_then(Value::as_str).unwrap_or("");
+                        match kind {
+                            "field" => {
+                                let name =
+                                    obj.get("name").and_then(Value::as_str).ok_or_else(|| {
+                                        "field path segment requires name".to_string()
+                                    })?;
+                                path.push(name.to_string());
+                            }
+                            "index" => {
+                                let index =
+                                    obj.get("index").and_then(Value::as_u64).ok_or_else(|| {
+                                        "index path segment requires non-negative index".to_string()
+                                    })?;
+                                path.push(index.to_string());
+                            }
+                            other => {
+                                return Err(format!(
+                                    "unsupported nested path segment kind '{other}'"
+                                ))
+                            }
+                        }
+                    }
+                    _ => return Err("path segments must be strings or structural objects".into()),
+                }
+            }
+            Ok(path)
+        }
+        Some(Value::String(_)) => {
+            Err("dotted string nested paths are invalid; use structural path segments".into())
+        }
+        _ => Err("nested path must be an array of structural segments".into()),
+    }
+}
+
+fn set_nested_path(row: &mut Row, path: &[String], value: RuntimeValue) -> Result<(), String> {
+    if path.is_empty() {
+        return Err("empty nested path".into());
+    }
+    if path.len() == 1 {
+        row.insert(path[0].clone(), value);
+        return Ok(());
+    }
+    let head = &path[0];
+    let child = row
+        .entry(head.clone())
+        .or_insert_with(|| RuntimeValue::Map(BTreeMap::new()));
+    match child {
+        RuntimeValue::Map(map) => {
+            let mut nested = map.clone();
+            set_nested_map(&mut nested, &path[1..], value)?;
+            *child = RuntimeValue::Map(nested);
+            Ok(())
+        }
+        _ => Err(format!("path segment '{head}' is not a map")),
+    }
+}
+
+fn set_nested_map(
+    map: &mut BTreeMap<String, RuntimeValue>,
+    path: &[String],
+    value: RuntimeValue,
+) -> Result<(), String> {
+    if path.len() == 1 {
+        map.insert(path[0].clone(), value);
+        return Ok(());
+    }
+    let head = &path[0];
+    let child = map
+        .entry(head.clone())
+        .or_insert_with(|| RuntimeValue::Map(BTreeMap::new()));
+    match child {
+        RuntimeValue::Map(inner) => {
+            let mut nested = inner.clone();
+            set_nested_map(&mut nested, &path[1..], value)?;
+            *child = RuntimeValue::Map(nested);
+            Ok(())
+        }
+        _ => Err(format!("path segment '{head}' is not a map")),
+    }
+}
+
+fn take_nested_path(row: &mut Row, path: &[String]) -> Result<Option<RuntimeValue>, String> {
+    if path.is_empty() {
+        return Err("empty nested path".into());
+    }
+    if path.len() == 1 {
+        return Ok(row.remove(&path[0]));
+    }
+    let Some(RuntimeValue::Map(map)) = row.get_mut(&path[0]) else {
+        return Ok(None);
+    };
+    let mut nested = map.clone();
+    let taken = take_nested_map(&mut nested, &path[1..])?;
+    row.insert(path[0].clone(), RuntimeValue::Map(nested));
+    Ok(taken)
+}
+
+fn take_nested_map(
+    map: &mut BTreeMap<String, RuntimeValue>,
+    path: &[String],
+) -> Result<Option<RuntimeValue>, String> {
+    if path.len() == 1 {
+        return Ok(map.remove(&path[0]));
+    }
+    let Some(RuntimeValue::Map(inner)) = map.get_mut(&path[0]) else {
+        return Ok(None);
+    };
+    let mut nested = inner.clone();
+    let taken = take_nested_map(&mut nested, &path[1..])?;
+    map.insert(path[0].clone(), RuntimeValue::Map(nested));
+    Ok(taken)
+}
+
+fn canonical_row(row: &Row) -> String {
+    serde_json::to_string(row).unwrap_or_default()
 }
 
 fn param_string(parameters: &IndexMap<String, Value>, key: &str) -> Result<String, String> {
