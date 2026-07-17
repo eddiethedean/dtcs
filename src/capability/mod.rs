@@ -13,7 +13,10 @@ pub use matching::{match_plan, match_plan_with_registry};
 pub use model::{
     CapabilityCategories, CapabilityGap, CapabilityMatchReport, EngineCapabilityDeclaration,
 };
-pub use portable::{reference_portable_manifest, EntryCapability, PortableCapabilityManifest};
+pub use portable::{
+    reference_portable_manifest, validate_capability_accuracy, EntryCapability,
+    PortableCapabilityManifest, REFERENCE_CERTIFIED_FEATURES, REFERENCE_UNSUPPORTED_CLAIMS,
+};
 pub use requirements::PlanRequirements;
 pub use validate::validate;
 

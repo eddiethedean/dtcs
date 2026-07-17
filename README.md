@@ -8,7 +8,7 @@
 
 DTCS is a **draft** standard and toolkit for writing **vendor-neutral data transformation contracts** in YAML/JSON — the *semantics* of transforms, not a Spark, Polars, or SQL engine.
 
-**Status:** Spec `2.0.0` (draft) · Tools `0.15.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
+**Status:** Spec `2.0.0` (draft) · Tools `0.12.0` (alpha). Good for validation, compatibility analysis, portable relational profiles, and conformance research — **not** a production ETL runtime.
 
 [Documentation](https://dtcs.readthedocs.io/) · [Getting started](docs/user/getting-started.md) · [Adoption](docs/adoption/overview.md) · [Examples](examples/) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
@@ -19,7 +19,7 @@ DTCS is a **draft** standard and toolkit for writing **vendor-neutral data trans
 ```bash
 pip install dtcs
 dtcs version
-# → dtcs 0.15.0
+# → dtcs 0.12.0
 # → spec 2.0.0
 
 curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/minimal.dtcs.yaml \
@@ -41,7 +41,7 @@ Or paste the same file from [`examples/minimal.dtcs.yaml`](examples/minimal.dtcs
 | | |
 |---|---|
 | **Spec status** | Draft (`2.0.0`) |
-| **Reference tools** | `0.15.0` (alpha) — validator through reference runtime, portable relational profiles, and conformance |
+| **Reference tools** | `0.12.0` (alpha) — validator through reference runtime, portable relational profiles, and conformance |
 | **Document `dtcsVersion`** | `"2.0.0"` preferred; `"1.0.0"` / `"1.0.0-draft"` still accepted |
 
 Coverage tables labeled “Covered” or “Complete” mean the **reference implementation exercises that draft SPEC area**, not that DTCS 2.0 is finalized or production-certified.

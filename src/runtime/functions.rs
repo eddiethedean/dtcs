@@ -93,6 +93,30 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
             }
             Ok(RuntimeValue::Null)
         }
+        "dtcs:between" | "between" => {
+            if args.len() != 3 {
+                return Err("dtcs:between requires value, lower, and upper".into());
+            }
+            eval_between(&args[0], &args[1], &args[2])
+        }
+        "dtcs:field" | "field" => {
+            if args.len() != 2 {
+                return Err("dtcs:field requires object/map and field name".into());
+            }
+            eval_field_access(&args[0], &args[1])
+        }
+        "dtcs:index" | "index" => {
+            if args.len() != 2 {
+                return Err("dtcs:index requires collection and index".into());
+            }
+            eval_index_access(&args[0], &args[1], false)
+        }
+        "dtcs:element_at" | "element_at" | "elementAt" => {
+            if args.len() != 2 {
+                return Err("dtcs:element_at requires collection and index/key".into());
+            }
+            eval_index_access(&args[0], &args[1], true)
+        }
         "dtcs:length" => {
             let value = args.first().ok_or("dtcs:length requires one argument")?;
             let len = match value {
@@ -394,21 +418,22 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
         }
         "dtcs:date_add" => {
             if args.len() < 2 {
-                return Err("dtcs:date_add requires date and integer days".into());
+                return Err("dtcs:date_add requires date and integer amount".into());
             }
             let base = args[0]
                 .as_str()
                 .ok_or("dtcs:date_add first argument must be date/datetime string")?;
-            let days = args[1]
+            let amount = args[1]
                 .as_integer()
-                .ok_or("dtcs:date_add second argument must be integer days")?;
+                .ok_or("dtcs:date_add second argument must be integer")?;
             let unit = args.get(2).and_then(RuntimeValue::as_str).unwrap_or("day");
-            if unit != "day" && unit != "days" {
-                return Err(format!("dtcs:date_add unsupported unit '{unit}' (reference supports day)"));
-            }
-            let shifted = shift_iso_date(base, days)?;
-            Ok(if matches!(args[0], RuntimeValue::DateTime(_)) {
-                RuntimeValue::DateTime(format!("{shifted}T00:00:00Z"))
+            let shifted = shift_iso_date_unit(base, amount, unit)?;
+            Ok(if matches!(args[0], RuntimeValue::DateTime(_)) || base.contains('T') {
+                if shifted.contains('T') {
+                    RuntimeValue::DateTime(shifted)
+                } else {
+                    RuntimeValue::DateTime(format!("{shifted}T00:00:00Z"))
+                }
             } else {
                 RuntimeValue::Date(shifted)
             })
@@ -424,14 +449,54 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .as_str()
                 .ok_or("dtcs:date_diff requires date strings")?;
             let unit = args.get(2).and_then(RuntimeValue::as_str).unwrap_or("day");
-            if unit != "day" && unit != "days" {
-                return Err(format!("dtcs:date_diff unsupported unit '{unit}' (reference supports day)"));
-            }
-            Ok(RuntimeValue::Integer(diff_iso_dates(left, right)?))
+            Ok(RuntimeValue::Integer(diff_iso_dates_unit(left, right, unit)?))
         }
-        "dtcs:row_number" | "dtcs:rank" | "dtcs:dense_rank" | "dtcs:lag" | "dtcs:lead" => Err(
-            format!("{callee} must be used with dtcs:window (not as a scalar call)"),
-        ),
+        "dtcs:date_trunc" => {
+            if args.len() != 2 {
+                return Err("dtcs:date_trunc requires value and unit".into());
+            }
+            let value = args[0]
+                .as_str()
+                .ok_or("dtcs:date_trunc requires date/datetime")?;
+            let unit = args[1]
+                .as_str()
+                .ok_or("dtcs:date_trunc unit must be string")?;
+            Ok(RuntimeValue::DateTime(trunc_iso_datetime(value, unit)?))
+        }
+        "dtcs:extract" | "dtcs:date_part" => {
+            if args.len() != 2 {
+                return Err("dtcs:extract requires unit and date/datetime".into());
+            }
+            // Accept extract(unit, value) or extract(value, unit).
+            let (unit, value) = if args[0].as_str().is_some_and(is_date_unit) {
+                (
+                    args[0].as_str().unwrap(),
+                    args[1].as_str().ok_or("dtcs:extract value must be date string")?,
+                )
+            } else {
+                (
+                    args[1].as_str().ok_or("dtcs:extract unit must be string")?,
+                    args[0].as_str().ok_or("dtcs:extract value must be date string")?,
+                )
+            };
+            Ok(RuntimeValue::Integer(extract_date_part(value, unit)?))
+        }
+        "dtcs:at_timezone" => {
+            if args.len() != 2 {
+                return Err("dtcs:at_timezone requires datetime and fixed offset".into());
+            }
+            let value = args[0]
+                .as_str()
+                .ok_or("dtcs:at_timezone requires datetime string")?;
+            let offset = args[1]
+                .as_str()
+                .ok_or("dtcs:at_timezone offset must be string like +00:00")?;
+            Ok(RuntimeValue::DateTime(apply_fixed_offset(value, offset)?))
+        }
+        "dtcs:row_number" | "dtcs:rank" | "dtcs:dense_rank" | "dtcs:lag" | "dtcs:lead"
+        | "dtcs:first_value" | "dtcs:last_value" => Err(format!(
+            "{callee} must be used with dtcs:window (not as a scalar call)"
+        )),
         other => Err(format!("unsupported function '{other}'")),
     }
 }
@@ -500,4 +565,311 @@ fn diff_iso_dates(left: &str, right: &str) -> Result<i64, String> {
     let (ly, lm, ld) = parse_ymd(left)?;
     let (ry, rm, rd) = parse_ymd(right)?;
     Ok(days_from_civil(ly, lm, ld) - days_from_civil(ry, rm, rd))
+}
+
+fn shift_iso_date_unit(value: &str, amount: i64, unit: &str) -> Result<String, String> {
+    match unit {
+        "day" | "days" => shift_iso_date(value, amount),
+        "month" | "months" => {
+            let (y, m, d) = parse_ymd(value)?;
+            let total = y as i64 * 12 + (m as i64 - 1) + amount;
+            let ny = total.div_euclid(12) as i32;
+            let nm = (total.rem_euclid(12) as u32) + 1;
+            let max_day = days_in_month(ny, nm);
+            let nd = d.min(max_day);
+            Ok(format!("{ny:04}-{nm:02}-{nd:02}"))
+        }
+        "year" | "years" => {
+            let (y, m, d) = parse_ymd(value)?;
+            let ny = y + amount as i32;
+            let max_day = days_in_month(ny, m);
+            let nd = d.min(max_day);
+            Ok(format!("{ny:04}-{m:02}-{nd:02}"))
+        }
+        "hour" | "hours" | "minute" | "minutes" => {
+            let (date, hour, minute, second, _) = parse_datetime_parts(value)?;
+            let (y, m, d) = parse_ymd(&date)?;
+            let mut total_minutes =
+                days_from_civil(y, m, d) * 24 * 60 + hour as i64 * 60 + minute as i64;
+            match unit {
+                "hour" | "hours" => total_minutes += amount * 60,
+                _ => total_minutes += amount,
+            }
+            let day = total_minutes.div_euclid(24 * 60);
+            let rem = total_minutes.rem_euclid(24 * 60);
+            let nh = (rem / 60) as u32;
+            let nm = (rem % 60) as u32;
+            let (ny, nmo, nd) = civil_from_days(day);
+            Ok(format!(
+                "{ny:04}-{nmo:02}-{nd:02}T{nh:02}:{nm:02}:{second:02}Z"
+            ))
+        }
+        other => Err(format!(
+            "dtcs:date_add unsupported unit '{other}' (supports day/month/year/hour/minute)"
+        )),
+    }
+}
+
+fn diff_iso_dates_unit(left: &str, right: &str, unit: &str) -> Result<i64, String> {
+    match unit {
+        "day" | "days" => diff_iso_dates(left, right),
+        "month" | "months" => {
+            let (ly, lm, _) = parse_ymd(left)?;
+            let (ry, rm, _) = parse_ymd(right)?;
+            Ok((ly as i64 * 12 + lm as i64) - (ry as i64 * 12 + rm as i64))
+        }
+        "year" | "years" => {
+            let (ly, _, _) = parse_ymd(left)?;
+            let (ry, _, _) = parse_ymd(right)?;
+            Ok((ly - ry) as i64)
+        }
+        "hour" | "hours" => Ok(diff_iso_dates(left, right)? * 24),
+        "minute" | "minutes" => Ok(diff_iso_dates(left, right)? * 24 * 60),
+        other => Err(format!(
+            "dtcs:date_diff unsupported unit '{other}' (supports day/month/year/hour/minute)"
+        )),
+    }
+}
+
+fn days_in_month(y: i32, m: u32) -> u32 {
+    match m {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap(y) => 29,
+        2 => 28,
+        _ => 30,
+    }
+}
+
+fn is_leap(y: i32) -> bool {
+    (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
+}
+
+fn is_date_unit(unit: &str) -> bool {
+    matches!(
+        unit,
+        "year"
+            | "years"
+            | "month"
+            | "months"
+            | "day"
+            | "days"
+            | "hour"
+            | "hours"
+            | "minute"
+            | "minutes"
+            | "second"
+            | "seconds"
+    )
+}
+
+fn parse_datetime_parts(value: &str) -> Result<(String, u32, u32, u32, i32), String> {
+    let (date, rest) = match value.split_once('T') {
+        Some((d, r)) => (d.to_string(), r),
+        None => return Ok((value.to_string(), 0, 0, 0, 0)),
+    };
+    let rest = rest.trim_end_matches('Z');
+    let (time, offset_minutes) = if let Some((t, off)) = rest.split_once('+') {
+        (t, parse_offset_minutes(&format!("+{off}"))?)
+    } else if let Some((t, off)) = rest.split_once('-') {
+        // Ambiguous with date; only treat as offset when time already has ':'
+        if t.contains(':') {
+            (t, parse_offset_minutes(&format!("-{off}"))?)
+        } else {
+            (rest, 0)
+        }
+    } else {
+        (rest, 0)
+    };
+    let parts: Vec<_> = time.split(':').collect();
+    if parts.len() < 2 {
+        return Err(format!("invalid datetime '{value}'"));
+    }
+    let hour: u32 = parts[0]
+        .parse()
+        .map_err(|_| format!("invalid hour in '{value}'"))?;
+    let minute: u32 = parts[1]
+        .parse()
+        .map_err(|_| format!("invalid minute in '{value}'"))?;
+    let second: u32 = parts
+        .get(2)
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(0);
+    Ok((date, hour, minute, second, offset_minutes))
+}
+
+fn parse_offset_minutes(offset: &str) -> Result<i32, String> {
+    let trimmed = offset.trim();
+    if trimmed == "Z" || trimmed == "+00:00" || trimmed == "-00:00" || trimmed.is_empty() {
+        return Ok(0);
+    }
+    let sign = if trimmed.starts_with('-') { -1 } else { 1 };
+    let body = trimmed.trim_start_matches(['+', '-']);
+    let parts: Vec<_> = body.split(':').collect();
+    if parts.len() != 2 {
+        return Err(format!(
+            "unsupported timezone '{offset}' (reference supports fixed offsets like +00:00)"
+        ));
+    }
+    let hours: i32 = parts[0]
+        .parse()
+        .map_err(|_| format!("invalid timezone offset '{offset}'"))?;
+    let minutes: i32 = parts[1]
+        .parse()
+        .map_err(|_| format!("invalid timezone offset '{offset}'"))?;
+    Ok(sign * (hours * 60 + minutes))
+}
+
+fn trunc_iso_datetime(value: &str, unit: &str) -> Result<String, String> {
+    let (date, hour, minute, second, _) = parse_datetime_parts(value)?;
+    let (y, m, d) = parse_ymd(&date)?;
+    Ok(match unit {
+        "year" | "years" => format!("{y:04}-01-01T00:00:00Z"),
+        "month" | "months" => format!("{y:04}-{m:02}-01T00:00:00Z"),
+        "day" | "days" => format!("{y:04}-{m:02}-{d:02}T00:00:00Z"),
+        "hour" | "hours" => format!("{y:04}-{m:02}-{d:02}T{hour:02}:00:00Z"),
+        "minute" | "minutes" => format!("{y:04}-{m:02}-{d:02}T{hour:02}:{minute:02}:00Z"),
+        "second" | "seconds" => {
+            format!("{y:04}-{m:02}-{d:02}T{hour:02}:{minute:02}:{second:02}Z")
+        }
+        other => Err(format!("dtcs:date_trunc unsupported unit '{other}'"))?,
+    })
+}
+
+fn extract_date_part(value: &str, unit: &str) -> Result<i64, String> {
+    let (date, hour, minute, second, _) = parse_datetime_parts(value)?;
+    let (y, m, d) = parse_ymd(&date)?;
+    Ok(match unit {
+        "year" | "years" => y as i64,
+        "month" | "months" => m as i64,
+        "day" | "days" => d as i64,
+        "hour" | "hours" => hour as i64,
+        "minute" | "minutes" => minute as i64,
+        "second" | "seconds" => second as i64,
+        other => return Err(format!("dtcs:extract unsupported unit '{other}'")),
+    })
+}
+
+fn apply_fixed_offset(value: &str, offset: &str) -> Result<String, String> {
+    let offset_minutes = parse_offset_minutes(offset)?;
+    let (date, hour, minute, second, current_offset) = parse_datetime_parts(value)?;
+    let (y, m, d) = parse_ymd(&date)?;
+    let mut total_minutes =
+        days_from_civil(y, m, d) * 24 * 60 + hour as i64 * 60 + minute as i64 - current_offset as i64;
+    total_minutes += offset_minutes as i64;
+    let day = total_minutes.div_euclid(24 * 60);
+    let rem = total_minutes.rem_euclid(24 * 60);
+    let nh = (rem / 60) as u32;
+    let nm = (rem % 60) as u32;
+    let (ny, nmo, nd) = civil_from_days(day);
+    let sign = if offset_minutes >= 0 { '+' } else { '-' };
+    let abs = offset_minutes.abs();
+    Ok(format!(
+        "{ny:04}-{nmo:02}-{nd:02}T{nh:02}:{nm:02}:{second:02}{sign}{:02}:{:02}",
+        abs / 60,
+        abs % 60
+    ))
+}
+
+fn eval_between(
+    value: &RuntimeValue,
+    lo: &RuntimeValue,
+    hi: &RuntimeValue,
+) -> Result<RuntimeValue, String> {
+    if value.is_null()
+        || value.is_missing()
+        || lo.is_null()
+        || lo.is_missing()
+        || hi.is_null()
+        || hi.is_missing()
+    {
+        return Ok(RuntimeValue::Null);
+    }
+    if value.is_invalid() || lo.is_invalid() || hi.is_invalid() {
+        return Ok(RuntimeValue::Null);
+    }
+    let ge_lo = compare_ordered_values(value, lo)?;
+    let le_hi = compare_ordered_values(hi, value)?;
+    Ok(RuntimeValue::Boolean(
+        ge_lo != std::cmp::Ordering::Less && le_hi != std::cmp::Ordering::Less,
+    ))
+}
+
+fn compare_ordered_values(
+    left: &RuntimeValue,
+    right: &RuntimeValue,
+) -> Result<std::cmp::Ordering, String> {
+    match (left, right) {
+        (RuntimeValue::Integer(a), RuntimeValue::Integer(b)) => Ok(a.cmp(b)),
+        (RuntimeValue::Decimal(a), RuntimeValue::Decimal(b)) => a
+            .partial_cmp(b)
+            .ok_or_else(|| "decimal comparison failed".to_string()),
+        (RuntimeValue::Integer(a), RuntimeValue::Decimal(b)) => (*a as f64)
+            .partial_cmp(b)
+            .ok_or_else(|| "decimal comparison failed".to_string()),
+        (RuntimeValue::Decimal(a), RuntimeValue::Integer(b)) => a
+            .partial_cmp(&(*b as f64))
+            .ok_or_else(|| "decimal comparison failed".to_string()),
+        (RuntimeValue::String(a), RuntimeValue::String(b)) => Ok(a.cmp(b)),
+        (RuntimeValue::Date(a), RuntimeValue::Date(b))
+        | (RuntimeValue::DateTime(a), RuntimeValue::DateTime(b))
+        | (RuntimeValue::Date(a), RuntimeValue::DateTime(b))
+        | (RuntimeValue::DateTime(a), RuntimeValue::Date(b)) => Ok(a.cmp(b)),
+        _ => Err("between comparison type mismatch".into()),
+    }
+}
+
+fn eval_field_access(
+    container: &RuntimeValue,
+    field: &RuntimeValue,
+) -> Result<RuntimeValue, String> {
+    let name = field
+        .as_str()
+        .ok_or("dtcs:field name must be a string")?;
+    match container {
+        RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
+        RuntimeValue::Map(map) => Ok(map
+            .get(name)
+            .cloned()
+            .unwrap_or_else(RuntimeValue::missing)),
+        other => Err(format!("dtcs:field requires map/object, got {other:?}")),
+    }
+}
+
+fn eval_index_access(
+    container: &RuntimeValue,
+    index: &RuntimeValue,
+    null_on_oob: bool,
+) -> Result<RuntimeValue, String> {
+    match container {
+        RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(RuntimeValue::Null),
+        RuntimeValue::List(items) => {
+            let idx = index
+                .as_integer()
+                .ok_or("list index must be an integer")?;
+            if idx < 0 {
+                return if null_on_oob {
+                    Ok(RuntimeValue::Null)
+                } else {
+                    Err("list index must be non-negative".into())
+                };
+            }
+            match items.get(idx as usize) {
+                Some(v) => Ok(v.clone()),
+                None if null_on_oob => Ok(RuntimeValue::Null),
+                None => Err(format!("list index {idx} out of bounds")),
+            }
+        }
+        RuntimeValue::Map(map) => {
+            let key = index.as_str().ok_or("map index/key must be a string")?;
+            match map.get(key) {
+                Some(v) => Ok(v.clone()),
+                None if null_on_oob => Ok(RuntimeValue::Null),
+                None => Ok(RuntimeValue::missing()),
+            }
+        }
+        other => Err(format!(
+            "index/element_at requires list or map, got {other:?}"
+        )),
+    }
 }

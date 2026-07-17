@@ -259,62 +259,97 @@ entries:
     name: "Current Date"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
-      {"kind":"function","family":"datetime","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"date","returnNullable":false,"deterministic":false,"nullBehavior":"defined","runStable":false}
+      {"kind":"function","family":"datetime","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"date","returnNullable":false,"deterministic":false,"nullBehavior":"defined","runStable":true,"referenceClock":"2026-01-01"}
   dtcs:current_timestamp:
     name: "Current Timestamp"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
-      {"kind":"function","family":"datetime","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"datetime","returnNullable":false,"deterministic":false,"nullBehavior":"defined","runStable":false,"timezone":"explicit"}
+      {"kind":"function","family":"datetime","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"datetime","returnNullable":false,"deterministic":false,"nullBehavior":"defined","runStable":true,"timezone":"fixedOffset","referenceClock":"2026-01-01T00:00:00Z"}
   dtcs:date_add:
     name: "Date Add"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
-      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":3,"argTypes":["date","datetime","integer","string"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":3,"argTypes":["date","datetime","integer","string"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","units":["day","month","year","hour","minute"]}
   dtcs:date_diff:
     name: "Date Diff"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
-      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":3,"argTypes":["date","datetime","string"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":3,"argTypes":["date","datetime","string"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","units":["day","month","year","hour","minute"]}
+  dtcs:date_trunc:
+    name: "Date Trunc"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":2,"argTypes":["date","datetime","string"],"returnType":"datetime","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:extract:
+    name: "Extract"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":2,"argTypes":["string","date","datetime"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:at_timezone:
+    name: "At Timezone"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":2,"argTypes":["datetime","string"],"returnType":"datetime","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","timezone":"fixedOffset"}
   dtcs:row_number:
     name: "Row Number"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
       {"kind":"function","family":"window","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
   dtcs:rank:
     name: "Rank"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
       {"kind":"function","family":"window","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
   dtcs:dense_rank:
     name: "Dense Rank"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
       {"kind":"function","family":"window","minArgs":0,"maxArgs":0,"argTypes":[],"returnType":"integer","returnNullable":false,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
   dtcs:lag:
     name: "Lag"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
       {"kind":"function","family":"window","minArgs":1,"maxArgs":3,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
   dtcs:lead:
     name: "Lead"
     category: "function"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
       {"kind":"function","family":"window","minArgs":1,"maxArgs":3,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:first_value:
+    name: "First Value"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"window","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}
+  dtcs:last_value:
+    name: "Last Value"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"window","minArgs":1,"maxArgs":1,"argTypes":["string","integer","decimal","boolean","date","time","datetime","duration","binary"],"returnType":"sameAsArgs","returnNullable":true,"deterministic":false,"nullBehavior":"defined","profile":"dtcs:profile/portable-window/1"}

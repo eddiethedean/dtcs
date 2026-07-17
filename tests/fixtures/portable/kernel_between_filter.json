@@ -1,0 +1,22 @@
+{
+  "id": "kernel-between-filter",
+  "actions": [
+    {
+      "action": "dtcs:filter",
+      "target": "t",
+      "parameters": { "predicate": "v between 2 and 4" }
+    }
+  ],
+  "input": {
+    "t": [
+      { "v": 1 },
+      { "v": 3 },
+      { "v": 5 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "v": 3 }
+    ]
+  }
+}

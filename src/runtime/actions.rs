@@ -352,18 +352,20 @@ fn apply_sort(
         .get_mut(target)
         .ok_or_else(|| format!("unknown interface '{target}'"))?;
     if let Some(keys) = parameters.get("keys").and_then(Value::as_array) {
-        let key_specs: Vec<(String, bool, Nulls)> = keys
+        let key_specs: Vec<(SortKey, bool, Nulls)> = keys
             .iter()
             .map(|item| {
                 let obj = item
                     .as_object()
                     .ok_or_else(|| "sort keys entries must be objects".to_string())?;
-                let field = obj
-                    .get("expr")
-                    .or_else(|| obj.get("field"))
-                    .and_then(Value::as_str)
-                    .ok_or_else(|| "sort key requires expr or field".to_string())?
-                    .to_string();
+                let key = if let Some(field) = obj.get("field").and_then(Value::as_str) {
+                    SortKey::Field(field.to_string())
+                } else if let Some(expr) = obj.get("expr").and_then(Value::as_str) {
+                    // Prefer field lookup when expr is a bare identifier matching a column.
+                    SortKey::Expr(expr.to_string())
+                } else {
+                    return Err("sort key requires expr or field".to_string());
+                };
                 let descending = obj
                     .get("descending")
                     .and_then(Value::as_bool)
@@ -373,20 +375,28 @@ fn apply_sort(
                     Some("last") | None => Nulls::Last,
                     Some(other) => return Err(format!("unknown nulls placement '{other}'")),
                 };
-                Ok((field, descending, nulls))
+                Ok((key, descending, nulls))
             })
             .collect::<Result<Vec<_>, String>>()?;
-        dataset.sort_by(|a, b| {
-            for (field, descending, nulls) in &key_specs {
-                let av = a.get(field).cloned().unwrap_or(RuntimeValue::Null);
-                let bv = b.get(field).cloned().unwrap_or(RuntimeValue::Null);
-                let ord = compare_values_with_nulls(&av, &bv, *nulls);
+        // Precompute sort keys so expression evaluation errors surface clearly.
+        let mut keyed: Vec<(Vec<RuntimeValue>, Row)> = Vec::with_capacity(dataset.len());
+        for row in dataset.iter() {
+            let mut values = Vec::with_capacity(key_specs.len());
+            for (key, _, _) in &key_specs {
+                values.push(resolve_sort_key(key, row)?);
+            }
+            keyed.push((values, row.clone()));
+        }
+        keyed.sort_by(|(a_keys, _), (b_keys, _)| {
+            for (i, (_, descending, nulls)) in key_specs.iter().enumerate() {
+                let ord = compare_values_with_nulls(&a_keys[i], &b_keys[i], *nulls);
                 if ord != std::cmp::Ordering::Equal {
                     return if *descending { ord.reverse() } else { ord };
                 }
             }
             std::cmp::Ordering::Equal
         });
+        *dataset = keyed.into_iter().map(|(_, row)| row).collect();
         return Ok(());
     }
     let field = param_string(parameters, "field")?;
@@ -407,6 +417,24 @@ fn apply_sort(
     Ok(())
 }
 
+fn resolve_sort_key(key: &SortKey, row: &Row) -> Result<RuntimeValue, String> {
+    match key {
+        SortKey::Field(field) => Ok(row.get(field).cloned().unwrap_or(RuntimeValue::Null)),
+        SortKey::Expr(expr) => {
+            // Bare field name: prefer column lookup when present.
+            if expr
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == ':' || c == '.')
+            {
+                if let Some(v) = row.get(expr) {
+                    return Ok(v.clone());
+                }
+            }
+            eval_expression_on_row(expr, row)
+        }
+    }
+}
+
 fn apply_union(
     target: &str,
     parameters: &IndexMap<String, Value>,
@@ -421,6 +449,10 @@ fn apply_union(
         .get("missingColumnPolicy")
         .and_then(Value::as_str)
         .unwrap_or("nullFill");
+    let duplicate_policy = parameters
+        .get("duplicatePolicy")
+        .and_then(Value::as_str)
+        .unwrap_or("keep");
     let other_ds = workspaces
         .get(&other)
         .cloned()
@@ -461,7 +493,22 @@ fn apply_union(
     } else {
         dataset.extend(other_ds);
     }
-    Ok(())
+    match duplicate_policy {
+        "keep" => Ok(()),
+        "distinct" => {
+            let mut seen = HashSet::new();
+            let mut out = Vec::new();
+            for row in std::mem::take(dataset) {
+                let key = row_fingerprint(&row, None);
+                if seen.insert(key) {
+                    out.push(row);
+                }
+            }
+            *dataset = out;
+            Ok(())
+        }
+        other => Err(format!("unknown union duplicatePolicy '{other}'")),
+    }
 }
 
 fn apply_join(
@@ -487,6 +534,14 @@ fn apply_join(
         .get("nullSafe")
         .and_then(Value::as_bool)
         .unwrap_or(false);
+    let collision_policy = parameters
+        .get("collisionPolicy")
+        .and_then(Value::as_str)
+        .unwrap_or("preferLeft");
+    let predicate = parameters
+        .get("predicate")
+        .or_else(|| parameters.get("on"))
+        .and_then(Value::as_str);
     let right_ds = workspaces
         .get(&right)
         .cloned()
@@ -496,18 +551,24 @@ fn apply_join(
         .cloned()
         .ok_or_else(|| format!("unknown interface '{target}'"))?;
 
-    if join_type == "cross" {
+    let uses_keys = left_key.is_some();
+    if join_type == "cross" || (!uses_keys && predicate.is_some()) {
         let mut out = Vec::new();
         for left_row in &left_ds {
             for right_row in &right_ds {
-                out.push(merge_rows(left_row, right_row));
+                let merged = merge_rows(left_row, right_row, collision_policy)?;
+                if predicate_matches(predicate, &merged)? {
+                    out.push(merged);
+                }
             }
         }
         workspaces.insert(target.to_string(), out);
         return Ok(());
     }
 
-    let left_key = left_key.ok_or_else(|| "join requires leftKey or type=cross".to_string())?;
+    let left_key = left_key.ok_or_else(|| {
+        "join requires leftKey, type=cross, or an on/predicate expression".to_string()
+    })?;
     let right_key = right_key.unwrap_or_else(|| left_key.clone());
     let mut out = Vec::new();
     let mut matched_right = HashSet::new();
@@ -523,15 +584,20 @@ fn apply_join(
                 .get(&right_key)
                 .cloned()
                 .unwrap_or(RuntimeValue::Null);
-            if keys_equal(&lk, &rk, null_safe) {
-                matched = true;
-                matched_right.insert(ri);
-                if matches!(join_type, "inner" | "left" | "full" | "right") {
-                    out.push(merge_rows(left_row, right_row));
-                } else if join_type == "semi" {
-                    out.push(left_row.clone());
-                    break;
-                }
+            if !keys_equal(&lk, &rk, null_safe) {
+                continue;
+            }
+            let merged = merge_rows(left_row, right_row, collision_policy)?;
+            if !predicate_matches(predicate, &merged)? {
+                continue;
+            }
+            matched = true;
+            matched_right.insert(ri);
+            if matches!(join_type, "inner" | "left" | "full" | "right") {
+                out.push(merged);
+            } else if join_type == "semi" {
+                out.push(left_row.clone());
+                break;
             }
         }
         if !matched {
@@ -551,6 +617,17 @@ fn apply_join(
     }
     workspaces.insert(target.to_string(), out);
     Ok(())
+}
+
+fn predicate_matches(predicate: Option<&str>, row: &Row) -> Result<bool, String> {
+    let Some(pred) = predicate else {
+        return Ok(true);
+    };
+    match eval_expression_on_row(pred, row)? {
+        RuntimeValue::Boolean(b) => Ok(b),
+        RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(false),
+        other => Err(format!("join predicate must be boolean, got {other:?}")),
+    }
 }
 
 fn apply_aggregate(
@@ -597,19 +674,7 @@ fn apply_multi_aggregate(
         .get("aggregates")
         .and_then(Value::as_array)
         .ok_or_else(|| "aggregates must be an array".to_string())?;
-    let group_by_specs = match parameters.get("groupBy") {
-        Some(Value::Array(items)) => items
-            .iter()
-            .map(|item| {
-                item.as_str()
-                    .map(str::to_string)
-                    .ok_or_else(|| "groupBy array entries must be field names".to_string())
-            })
-            .collect::<Result<Vec<_>, _>>()?,
-        Some(Value::String(s)) => vec![s.clone()],
-        None => Vec::new(),
-        Some(_) => return Err("groupBy must be a string or array of strings".into()),
-    };
+    let group_by_specs = parse_group_by_specs(parameters.get("groupBy"))?;
     let filter_expr = parameters.get("filter").and_then(Value::as_str);
     let dataset = workspaces
         .get(target)
@@ -640,16 +705,22 @@ fn apply_multi_aggregate(
         }
         let keys: Vec<GroupKey> = group_by_specs
             .iter()
-            .map(|field| group_key_from_value(row.get(field)))
-            .collect();
+            .map(|spec| {
+                let value = match spec {
+                    GroupBySpec::Field(name) => row.get(name).cloned(),
+                    GroupBySpec::Expr { expr, .. } => Some(eval_expression_on_row(expr, &row)?),
+                };
+                Ok(group_key_from_value(value.as_ref()))
+            })
+            .collect::<Result<Vec<_>, String>>()?;
         groups.entry(keys).or_default().push(row);
     }
 
     let mut out = Vec::new();
     for (keys, rows) in groups {
         let mut out_row = BTreeMap::new();
-        for (field, key) in group_by_specs.iter().zip(keys.into_iter()) {
-            out_row.insert(field.clone(), group_key_to_value(key));
+        for (spec, key) in group_by_specs.iter().zip(keys) {
+            out_row.insert(spec.output_name().to_string(), group_key_to_value(key));
         }
         for agg in aggregates {
             let obj = agg
@@ -706,6 +777,38 @@ fn apply_multi_aggregate(
     }
     workspaces.insert(target.to_string(), out);
     Ok(())
+}
+
+fn parse_group_by_specs(value: Option<&Value>) -> Result<Vec<GroupBySpec>, String> {
+    match value {
+        None => Ok(Vec::new()),
+        Some(Value::String(s)) => Ok(vec![GroupBySpec::Field(s.clone())]),
+        Some(Value::Array(items)) => items
+            .iter()
+            .map(|item| match item {
+                Value::String(s) => Ok(GroupBySpec::Field(s.clone())),
+                Value::Object(obj) => {
+                    if let Some(field) = obj.get("field").and_then(Value::as_str) {
+                        Ok(GroupBySpec::Field(field.to_string()))
+                    } else if let Some(expr) = obj.get("expr").and_then(Value::as_str) {
+                        let as_name = obj
+                            .get("as")
+                            .and_then(Value::as_str)
+                            .unwrap_or(expr)
+                            .to_string();
+                        Ok(GroupBySpec::Expr {
+                            expr: expr.to_string(),
+                            as_name,
+                        })
+                    } else {
+                        Err("groupBy object requires field or expr".into())
+                    }
+                }
+                _ => Err("groupBy array entries must be strings or objects".into()),
+            })
+            .collect(),
+        Some(_) => Err("groupBy must be a string or array".into()),
+    }
 }
 
 fn group_key_from_value(value: Option<&RuntimeValue>) -> GroupKey {
@@ -808,6 +911,7 @@ fn apply_window(
                 .collect()
         })
         .unwrap_or_default();
+    let frame = parse_window_frame(parameters.get("frame"))?;
 
     let dataset = workspaces
         .get(target)
@@ -858,6 +962,8 @@ fn apply_window(
                 rank = (pos as i64) + 1;
                 prev_rank_key = Some(rank_key);
             }
+            let (frame_start, frame_end) =
+                resolve_frame_bounds(&frame, pos, ordered.len(), &ordered, &dataset, &order_by)?;
             for func in functions {
                 let obj = func
                     .as_object()
@@ -900,19 +1006,40 @@ fn apply_window(
                             }
                             None => obj
                                 .get("default")
-                                .map(|v| match v {
-                                    Value::Null => RuntimeValue::Null,
-                                    Value::String(s) => RuntimeValue::String(s.clone()),
-                                    Value::Number(n) => n
-                                        .as_i64()
-                                        .map(RuntimeValue::Integer)
-                                        .or_else(|| n.as_f64().map(RuntimeValue::Decimal))
-                                        .unwrap_or(RuntimeValue::Null),
-                                    Value::Bool(b) => RuntimeValue::Boolean(*b),
-                                    _ => RuntimeValue::Null,
-                                })
+                                .map(json_value_to_runtime)
                                 .unwrap_or(RuntimeValue::Null),
                         }
+                    }
+                    "first_value" | "last_value" => {
+                        let expr = obj
+                            .get("expr")
+                            .or_else(|| obj.get("field"))
+                            .and_then(Value::as_str)
+                            .ok_or_else(|| format!("{fn_name} requires expr or field"))?;
+                        if frame_start > frame_end || frame_start >= ordered.len() {
+                            RuntimeValue::Null
+                        } else {
+                            let pick = if fn_name == "first_value" {
+                                frame_start
+                            } else {
+                                frame_end.min(ordered.len() - 1)
+                            };
+                            eval_expression_on_row(expr, &dataset[ordered[pick]])?
+                        }
+                    }
+                    "sum" | "count" | "average" | "avg" | "min" | "max" => {
+                        let expr = obj
+                            .get("expr")
+                            .or_else(|| obj.get("field"))
+                            .and_then(Value::as_str)
+                            .ok_or_else(|| format!("window {fn_name} requires expr or field"))?;
+                        let mut values = Vec::new();
+                        if frame_start <= frame_end {
+                            for sp in frame_start..=frame_end.min(ordered.len().saturating_sub(1)) {
+                                values.push(eval_expression_on_row(expr, &dataset[ordered[sp]])?);
+                            }
+                        }
+                        reduce_values(&values, fn_name)?
                     }
                     other => {
                         return Err(format!("unsupported window function '{other}'"));
@@ -924,6 +1051,193 @@ fn apply_window(
     }
     workspaces.insert(target.to_string(), out);
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct WindowFrame {
+    unit: FrameUnit,
+    start: FrameBound,
+    end: FrameBound,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FrameUnit {
+    Rows,
+    Range,
+}
+
+#[derive(Debug, Clone)]
+enum FrameBound {
+    UnboundedPreceding,
+    NPreceding(usize),
+    CurrentRow,
+    NFollowing(usize),
+    UnboundedFollowing,
+}
+
+fn parse_window_frame(value: Option<&Value>) -> Result<WindowFrame, String> {
+    let Some(value) = value else {
+        return Ok(WindowFrame {
+            unit: FrameUnit::Rows,
+            start: FrameBound::UnboundedPreceding,
+            end: FrameBound::CurrentRow,
+        });
+    };
+    let obj = value
+        .as_object()
+        .ok_or_else(|| "window frame must be an object".to_string())?;
+    let unit = match obj.get("type").or_else(|| obj.get("unit")).and_then(Value::as_str) {
+        Some("rows") | None => FrameUnit::Rows,
+        Some("range") => FrameUnit::Range,
+        Some(other) => return Err(format!("unknown window frame type '{other}'")),
+    };
+    let start = parse_frame_bound(obj.get("start").or_else(|| obj.get("lower")))?;
+    let end = parse_frame_bound(obj.get("end").or_else(|| obj.get("upper")))?;
+    Ok(WindowFrame { unit, start, end })
+}
+
+fn parse_frame_bound(value: Option<&Value>) -> Result<FrameBound, String> {
+    match value {
+        None => Ok(FrameBound::CurrentRow),
+        Some(Value::String(s)) => match s.as_str() {
+            "unboundedPreceding" | "unbounded_preceding" => Ok(FrameBound::UnboundedPreceding),
+            "unboundedFollowing" | "unbounded_following" => Ok(FrameBound::UnboundedFollowing),
+            "currentRow" | "current_row" => Ok(FrameBound::CurrentRow),
+            other => Err(format!("unknown frame bound '{other}'")),
+        },
+        Some(Value::Object(obj)) => {
+            if let Some(n) = obj.get("preceding").and_then(Value::as_u64) {
+                Ok(FrameBound::NPreceding(n as usize))
+            } else if let Some(n) = obj.get("following").and_then(Value::as_u64) {
+                Ok(FrameBound::NFollowing(n as usize))
+            } else if obj.get("currentRow").and_then(Value::as_bool) == Some(true) {
+                Ok(FrameBound::CurrentRow)
+            } else {
+                Err("frame bound object requires preceding, following, or currentRow".into())
+            }
+        }
+        Some(other) => Err(format!("invalid frame bound {other}")),
+    }
+}
+
+fn resolve_frame_bounds(
+    frame: &WindowFrame,
+    pos: usize,
+    len: usize,
+    ordered: &[usize],
+    dataset: &[Row],
+    order_by: &[(String, bool)],
+) -> Result<(usize, usize), String> {
+    if len == 0 {
+        return Ok((0, 0));
+    }
+    match frame.unit {
+        FrameUnit::Rows => {
+            let start = match &frame.start {
+                FrameBound::UnboundedPreceding => 0,
+                FrameBound::NPreceding(n) => pos.saturating_sub(*n),
+                FrameBound::CurrentRow => pos,
+                FrameBound::NFollowing(n) => (pos + n).min(len.saturating_sub(1)),
+                FrameBound::UnboundedFollowing => len.saturating_sub(1),
+            };
+            let end = match &frame.end {
+                FrameBound::UnboundedPreceding => 0,
+                FrameBound::NPreceding(n) => pos.saturating_sub(*n),
+                FrameBound::CurrentRow => pos,
+                FrameBound::NFollowing(n) => (pos + n).min(len.saturating_sub(1)),
+                FrameBound::UnboundedFollowing => len.saturating_sub(1),
+            };
+            Ok((start.min(end), start.max(end)))
+        }
+        FrameUnit::Range => {
+            // Range frames require a single ORDER BY key; peers with equal order key are included.
+            if order_by.len() != 1 {
+                return Err(
+                    "range frames require exactly one orderBy key in the reference runtime".into(),
+                );
+            }
+            let (field, _) = &order_by[0];
+            let current = dataset[ordered[pos]]
+                .get(field)
+                .cloned()
+                .unwrap_or(RuntimeValue::Null);
+            let start_offset = match &frame.start {
+                FrameBound::UnboundedPreceding => None,
+                FrameBound::CurrentRow => Some(0i64),
+                FrameBound::NPreceding(n) => Some(-(*n as i64)),
+                FrameBound::NFollowing(n) => Some(*n as i64),
+                FrameBound::UnboundedFollowing => {
+                    return Err("range start cannot be unboundedFollowing".into())
+                }
+            };
+            let end_offset = match &frame.end {
+                FrameBound::UnboundedFollowing => None,
+                FrameBound::CurrentRow => Some(0i64),
+                FrameBound::NPreceding(n) => Some(-(*n as i64)),
+                FrameBound::NFollowing(n) => Some(*n as i64),
+                FrameBound::UnboundedPreceding => {
+                    return Err("range end cannot be unboundedPreceding".into())
+                }
+            };
+            let mut start = 0usize;
+            let mut end = len.saturating_sub(1);
+            if let Some(off) = start_offset {
+                let bound = range_shift(&current, off)?;
+                start = ordered
+                    .iter()
+                    .position(|&idx| {
+                        let v = dataset[idx]
+                            .get(field)
+                            .cloned()
+                            .unwrap_or(RuntimeValue::Null);
+                        compare_values(&v, &bound) != std::cmp::Ordering::Less
+                    })
+                    .unwrap_or(len);
+            }
+            if let Some(off) = end_offset {
+                let bound = range_shift(&current, off)?;
+                end = ordered
+                    .iter()
+                    .rposition(|&idx| {
+                        let v = dataset[idx]
+                            .get(field)
+                            .cloned()
+                            .unwrap_or(RuntimeValue::Null);
+                        compare_values(&v, &bound) != std::cmp::Ordering::Greater
+                    })
+                    .unwrap_or(0);
+            }
+            if start >= len {
+                return Ok((len, 0));
+            }
+            Ok((start, end.max(start)))
+        }
+    }
+}
+
+fn range_shift(value: &RuntimeValue, offset: i64) -> Result<RuntimeValue, String> {
+    match value {
+        RuntimeValue::Integer(i) => Ok(RuntimeValue::Integer(i + offset)),
+        RuntimeValue::Decimal(d) => Ok(RuntimeValue::Decimal(d + offset as f64)),
+        RuntimeValue::Null | RuntimeValue::Missing(_) => Ok(value.clone()),
+        other => Err(format!(
+            "range frames require numeric order key, got {other:?}"
+        )),
+    }
+}
+
+fn json_value_to_runtime(v: &Value) -> RuntimeValue {
+    match v {
+        Value::Null => RuntimeValue::Null,
+        Value::String(s) => RuntimeValue::String(s.clone()),
+        Value::Number(n) => n
+            .as_i64()
+            .map(RuntimeValue::Integer)
+            .or_else(|| n.as_f64().map(RuntimeValue::Decimal))
+            .unwrap_or(RuntimeValue::Null),
+        Value::Bool(b) => RuntimeValue::Boolean(*b),
+        _ => RuntimeValue::Null,
+    }
 }
 
 fn apply_distinct(
@@ -1012,18 +1326,83 @@ enum GroupKey {
     Present(String),
 }
 
+#[derive(Debug, Clone)]
+enum SortKey {
+    Field(String),
+    Expr(String),
+}
+
+#[derive(Debug, Clone)]
+enum GroupBySpec {
+    Field(String),
+    Expr { expr: String, as_name: String },
+}
+
+impl GroupBySpec {
+    fn output_name(&self) -> &str {
+        match self {
+            Self::Field(name) => name,
+            Self::Expr { as_name, .. } => as_name,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 enum Nulls {
     First,
     Last,
 }
 
-fn merge_rows(left: &Row, right: &Row) -> Row {
-    let mut merged = left.clone();
-    for (k, v) in right {
-        merged.entry(k.clone()).or_insert_with(|| v.clone());
+fn merge_rows(left: &Row, right: &Row, collision_policy: &str) -> Result<Row, String> {
+    match collision_policy {
+        "preferLeft" => {
+            let mut merged = left.clone();
+            for (k, v) in right {
+                merged.entry(k.clone()).or_insert_with(|| v.clone());
+            }
+            Ok(merged)
+        }
+        "preferRight" => {
+            let mut merged = right.clone();
+            for (k, v) in left {
+                merged.entry(k.clone()).or_insert_with(|| v.clone());
+            }
+            Ok(merged)
+        }
+        "error" => {
+            let mut merged = left.clone();
+            for (k, v) in right {
+                if merged.contains_key(k) {
+                    return Err(format!(
+                        "join column collision on '{k}' (collisionPolicy=error)"
+                    ));
+                }
+                merged.insert(k.clone(), v.clone());
+            }
+            Ok(merged)
+        }
+        "suffix" => {
+            let mut merged = BTreeMap::new();
+            for (k, v) in left {
+                let name = if right.contains_key(k) {
+                    format!("{k}_left")
+                } else {
+                    k.clone()
+                };
+                merged.insert(name, v.clone());
+            }
+            for (k, v) in right {
+                let name = if left.contains_key(k) {
+                    format!("{k}_right")
+                } else {
+                    k.clone()
+                };
+                merged.insert(name, v.clone());
+            }
+            Ok(merged)
+        }
+        other => Err(format!("unknown join collisionPolicy '{other}'")),
     }
-    merged
 }
 
 /// Ordinary equality does not match null/missing/invalid keys unless `null_safe`.

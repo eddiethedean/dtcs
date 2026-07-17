@@ -208,6 +208,55 @@
       "fixture": "registry/vendor_catalog.yaml",
       "format": "yaml",
       "assertion": { "kind": "securityProbe", "probeId": "trusted-extensions" }
+    },
+    {
+      "id": "portable-kernel-project",
+      "profiles": ["dtcs:profile/portable-relational-kernel/1"],
+      "fixture": "portable/kernel_project.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
+    },
+    {
+      "id": "portable-kernel-between-filter",
+      "profiles": ["dtcs:profile/portable-relational-kernel/1"],
+      "fixture": "portable/kernel_between_filter.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
+    },
+    {
+      "id": "portable-relational-join",
+      "profiles": ["dtcs:profile/portable-relational/1"],
+      "fixture": "portable/relational_join.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
+    },
+    {
+      "id": "portable-relational-agg-sort",
+      "profiles": ["dtcs:profile/portable-relational/1"],
+      "fixture": "portable/relational_agg_sort.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
+    },
+    {
+      "id": "portable-relational-collision-error",
+      "profiles": ["dtcs:profile/portable-relational/1"],
+      "fixture": "portable/plan_budget_error.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
+    },
+    {
+      "id": "portable-window-frame-sum",
+      "profiles": ["dtcs:profile/portable-window/1"],
+      "fixture": "portable/window_frame_sum.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
+    },
+    {
+      "id": "portable-complex-access",
+      "profiles": ["dtcs:profile/portable-complex-types/1"],
+      "fixture": "portable/complex_access.json",
+      "format": "json",
+      "assertion": { "kind": "portableDifferential" }
     }
   ]
 }

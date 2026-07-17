@@ -265,7 +265,9 @@ fn evaluate_binary(
         BinaryOp::Lt | BinaryOp::Lte | BinaryOp::Gt | BinaryOp::Gte => {
             compare_ordered(op, left, right).map(RuntimeValue::Boolean)
         }
-        BinaryOp::Between => Err("between requires ternary desugar; use >= and <=".into()),
+        BinaryOp::Between => Err(
+            "between is ternary; use `value between lo and hi` (parsed as dtcs:between)".into(),
+        ),
         BinaryOp::In => match right {
             RuntimeValue::List(items) => Ok(RuntimeValue::Boolean(
                 items.iter().any(|item| values_equal(left, item)),

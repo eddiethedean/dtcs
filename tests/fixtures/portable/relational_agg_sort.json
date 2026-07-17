@@ -1,0 +1,35 @@
+{
+  "id": "relational-agg-sort",
+  "actions": [
+    {
+      "action": "dtcs:aggregate",
+      "target": "t",
+      "parameters": {
+        "groupBy": ["g"],
+        "aggregates": [
+          { "as": "total", "op": "sum", "field": "v" }
+        ]
+      }
+    },
+    {
+      "action": "dtcs:sort",
+      "target": "t",
+      "parameters": {
+        "keys": [{ "field": "total", "descending": true }]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      { "g": "a", "v": 1 },
+      { "g": "a", "v": 2 },
+      { "g": "b", "v": 10 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "g": "b", "total": 10.0 },
+      { "g": "a", "total": 3.0 }
+    ]
+  }
+}

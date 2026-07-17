@@ -29,6 +29,13 @@ pub struct EntryCapability {
     /// Notes / unsupported optional features.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub notes: Vec<String>,
+    /// Certification tier: `certified`, `experimental`, or `unsupported`.
+    #[serde(default = "default_tier", skip_serializing_if = "String::is_empty")]
+    pub tier: String,
+}
+
+fn default_tier() -> String {
+    "certified".into()
 }
 
 /// Machine-readable portable capability manifest.
@@ -61,6 +68,32 @@ pub struct PortableCapabilityManifest {
     pub legacy: EngineCapabilityDeclaration,
 }
 
+/// Features the reference runtime does **not** certify (false-claim gate).
+pub const REFERENCE_UNSUPPORTED_CLAIMS: &[&str] = &[
+    "ianaTimezone",
+    "dstCalendar",
+    "explode",
+    "unnest",
+    "map_entries",
+];
+
+/// Features the reference runtime certifies for portable profiles.
+pub const REFERENCE_CERTIFIED_FEATURES: &[&str] = &[
+    "windowFramesRows",
+    "windowFramesRange",
+    "firstValue",
+    "lastValue",
+    "fixedOffsetTimezone",
+    "dateTruncExtract",
+    "complexAccessOps",
+    "betweenTernary",
+    "joinCollisionPolicy",
+    "joinPredicate",
+    "sortExpr",
+    "unionDuplicatePolicy",
+    "groupByExpr",
+];
+
 /// Build the reference portable capability manifest for a profile.
 #[must_use]
 pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest {
@@ -74,19 +107,26 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
     for entry in registry.entries.values() {
         match entry.category {
             crate::model::RegistryCategory::SemanticAction => {
+                let (supported, tier, notes) = action_support(&entry.id);
                 actions.insert(
                     entry.id.clone(),
                     EntryCapability {
-                        supported: true,
+                        supported,
                         version: Some(entry.version.clone()),
                         semantic_modes: Vec::new(),
                         limits: IndexMap::new(),
-                        notes: Vec::new(),
+                        notes,
+                        tier,
                     },
                 );
             }
             crate::model::RegistryCategory::Function => {
                 let experimental = entry.status == crate::model::RegistryEntryStatus::Experimental;
+                let tier = if experimental {
+                    "experimental".into()
+                } else {
+                    "certified".into()
+                };
                 functions.insert(
                     entry.id.clone(),
                     EntryCapability {
@@ -97,12 +137,9 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
                         } else {
                             Vec::new()
                         },
-                        limits: IndexMap::new(),
-                        notes: if experimental {
-                            vec!["experimental registry status".into()]
-                        } else {
-                            Vec::new()
-                        },
+                        limits: function_limits(&entry.id),
+                        notes: function_notes(&entry.id, experimental),
+                        tier,
                     },
                 );
             }
@@ -115,6 +152,7 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
                         semantic_modes: Vec::new(),
                         limits: IndexMap::new(),
                         notes: Vec::new(),
+                        tier: "certified".into(),
                     },
                 );
             }
@@ -128,6 +166,7 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
             semantic_modes: Vec::new(),
             limits: IndexMap::new(),
             notes: Vec::new(),
+            tier: "certified".into(),
         });
     }
     for ty in &legacy.categories.logical_types {
@@ -139,6 +178,7 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
                 semantic_modes: Vec::new(),
                 limits: IndexMap::new(),
                 notes: Vec::new(),
+                tier: "certified".into(),
             },
         );
     }
@@ -147,6 +187,8 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
     semantic_modes.insert("filterInvalid".into(), "fail".into());
     semantic_modes.insert("joinNullKeys".into(), "neverMatch".into());
     semantic_modes.insert("missingGroupingKeys".into(), "distinctFromNull".into());
+    semantic_modes.insert("timezone".into(), "fixedOffset".into());
+    semantic_modes.insert("windowFrames".into(), "rowsAndRange".into());
     for feature in REFERENCE_LANGUAGE_FEATURES {
         semantic_modes.insert((*feature).to_string(), "supported".into());
     }
@@ -155,6 +197,12 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
     }
     for feature in REFERENCE_RUNTIME_FEATURES {
         semantic_modes.insert((*feature).to_string(), "supported".into());
+    }
+    for feature in REFERENCE_CERTIFIED_FEATURES {
+        semantic_modes.insert((*feature).to_string(), "certified".into());
+    }
+    for feature in REFERENCE_UNSUPPORTED_CLAIMS {
+        semantic_modes.insert((*feature).to_string(), "unsupported".into());
     }
 
     let mut limits = IndexMap::new();
@@ -184,5 +232,111 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
         semantic_modes,
         limits,
         legacy,
+    }
+}
+
+/// Validate that a manifest does not falsely claim unsupported features.
+pub fn validate_capability_accuracy(
+    manifest: &PortableCapabilityManifest,
+) -> Result<(), Vec<String>> {
+    let mut errors = Vec::new();
+    for feature in REFERENCE_UNSUPPORTED_CLAIMS {
+        if let Some(mode) = manifest.semantic_modes.get(*feature) {
+            if mode == "supported" || mode == "certified" {
+                errors.push(format!(
+                    "false claim: '{feature}' marked '{mode}' but reference runtime does not support it"
+                ));
+            }
+        }
+    }
+    for (id, entry) in &manifest.functions {
+        if entry.supported
+            && entry.tier == "certified"
+            && matches!(
+                id.as_str(),
+                "dtcs:explode" | "dtcs:unnest" | "dtcs:map_entries"
+            )
+        {
+            errors.push(format!("false claim: certified support for '{id}'"));
+        }
+        if !entry.supported && entry.tier == "certified" {
+            errors.push(format!(
+                "inconsistent claim: '{id}' unsupported but tier=certified"
+            ));
+        }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        Err(errors)
+    }
+}
+
+fn action_support(id: &str) -> (bool, String, Vec<String>) {
+    match id {
+        "dtcs:window" => (
+            true,
+            "certified".into(),
+            vec![
+                "supports rows and range frames".into(),
+                "first_value/last_value and framed aggregates".into(),
+            ],
+        ),
+        _ => (true, "certified".into(), Vec::new()),
+    }
+}
+
+fn function_limits(id: &str) -> IndexMap<String, String> {
+    let mut limits = IndexMap::new();
+    if matches!(
+        id,
+        "dtcs:current_date" | "dtcs:current_timestamp" | "dtcs:at_timezone"
+    ) {
+        limits.insert("timezone".into(), "fixedOffset".into());
+        limits.insert("ianaTimezone".into(), "unsupported".into());
+    }
+    limits
+}
+
+fn function_notes(id: &str, experimental: bool) -> Vec<String> {
+    let mut notes = Vec::new();
+    if experimental {
+        notes.push("experimental registry status".into());
+    }
+    if matches!(id, "dtcs:current_date" | "dtcs:current_timestamp") {
+        notes.push("reference clock fixed at 2026-01-01 for determinism".into());
+    }
+    notes
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn reference_manifest_passes_accuracy_gate() {
+        let manifest = reference_portable_manifest("dtcs:profile/portable-relational/1");
+        validate_capability_accuracy(&manifest).expect("reference should be accurate");
+        assert_eq!(
+            manifest.semantic_modes.get("ianaTimezone").map(String::as_str),
+            Some("unsupported")
+        );
+        assert_eq!(
+            manifest
+                .semantic_modes
+                .get("windowFramesRows")
+                .map(String::as_str),
+            Some("certified")
+        );
+    }
+
+    #[test]
+    fn false_claim_is_rejected() {
+        let mut manifest = reference_portable_manifest("dtcs:profile/portable-relational/1");
+        manifest
+            .semantic_modes
+            .insert("ianaTimezone".into(), "certified".into());
+        let err = validate_capability_accuracy(&manifest).expect_err("should fail");
+        assert!(err.iter().any(|e| e.contains("ianaTimezone")));
     }
 }

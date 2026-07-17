@@ -1,13 +1,13 @@
 # DTCS Change Proposal: Rich Portable Relational Transformations
 
-Status: **Accepted** (implemented in tools `0.15.0`; SPEC draft updated)  
+Status: **Accepted** (implemented in tools `0.12.0`; SPEC draft updated)  
 Proposed target: DTCS next compatible revision plus staged registries  
-Related ETLantic milestones: 0.11-0.15  
+Related ETLantic milestones: 0.12  
 Proposal owner: DTCS publisher and maintainers
 
 **Normative landing:** [SPEC.md](../SPEC.md) Chapter 13 §12.1, Chapter 23 §5.1, Appendix A.3–A.4, A.8.  
 **Compatibility table:** [docs/user/migration-portable-relational.md](user/migration-portable-relational.md).  
-**Roadmap:** phases 0.12–0.15 in [ROADMAP.md](../ROADMAP.md).
+**Roadmap:** phase 0.12 in [ROADMAP.md](../ROADMAP.md).
 
 ## 1. Problem statement
 

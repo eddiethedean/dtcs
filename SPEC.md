@@ -5093,9 +5093,15 @@ Dataset operators:
     lineageBehavior `filter`
 -   `dtcs:partition` (category: partitioning) --- parameters: `field`;
     lineageBehavior `partition`
--   `dtcs:window` (category: window; experimental) --- parameters
-    `partitionBy`, `orderBy`, `frame`, `functions`; profile
-    `dtcs:profile/portable-window/1`
+-   `dtcs:window` (category: window) --- parameters `partitionBy`,
+    `orderBy`, `frame`, `functions`; profile
+    `dtcs:profile/portable-window/1`. Frame `type` SHALL be `rows` or
+    `range`; bounds are `unboundedPreceding`, `nPreceding`,
+    `currentRow`, `nFollowing`, `unboundedFollowing`. Default frame is
+    rows from unbounded preceding through current row. Window functions
+    include `row_number`, `rank`, `dense_rank`, `lag`, `lead`,
+    `first_value`, `last_value`, and framed aggregates
+    (`sum`/`count`/`average`/`min`/`max`).
 
 Lineage default operation:
 
@@ -5154,11 +5160,15 @@ The standard Function catalog is:
     argument is missing
 -   Aggregate family: `dtcs:count_all`, `dtcs:count`,
     `dtcs:count_distinct`, `dtcs:sum`, `dtcs:average`
--   Date/time family (experimental): `dtcs:current_date`,
-    `dtcs:current_timestamp`, `dtcs:date_add`, `dtcs:date_diff`
--   Window family (experimental; profile
-    `dtcs:profile/portable-window/1`): `dtcs:row_number`, `dtcs:rank`,
-    `dtcs:dense_rank`, `dtcs:lag`, `dtcs:lead`
+-   Date/time family (fixed-offset timezone profile; reference clock
+    MAY be fixed for determinism): `dtcs:current_date`,
+    `dtcs:current_timestamp`, `dtcs:date_add`, `dtcs:date_diff`,
+    `dtcs:date_trunc`, `dtcs:extract`, `dtcs:at_timezone`. Units for
+    add/diff include day, month, year, hour, and minute. IANA/DST
+    calendars are non-goals for the portable fixed-offset profile.
+-   Window family (profile `dtcs:profile/portable-window/1`):
+    `dtcs:row_number`, `dtcs:rank`, `dtcs:dense_rank`, `dtcs:lag`,
+    `dtcs:lead`, `dtcs:first_value`, `dtcs:last_value`
 
 ### A.4.1 Operators
 
@@ -5173,9 +5183,11 @@ Boolean: `dtcs:and`, `dtcs:or`, `dtcs:not`
 Arithmetic: `dtcs:add`, `dtcs:subtract`, `dtcs:multiply`,
 `dtcs:divide`, `dtcs:modulo`, `dtcs:negate`
 
-Membership: `dtcs:in`, `dtcs:between`
+Membership: `dtcs:in`, `dtcs:between` (arity 3; inclusive
+`value between lower and upper`; null/missing operands yield null)
 
-Access: `dtcs:field`, `dtcs:index`, `dtcs:element_at`
+Access: `dtcs:field`, `dtcs:index`, `dtcs:element_at` (list/map/object
+access; `element_at` returns null on out-of-bounds)
 
 Each operator declares arity, accepted types, return type, promotion,
 null/missing/invalid and NaN behavior, errors, determinism, and

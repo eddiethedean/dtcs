@@ -154,6 +154,8 @@ pub enum ConformanceAssertion {
         #[serde(rename = "probeId")]
         probe_id: String,
     },
+    /// Portable differential fixture (input rows + action steps + expected rows).
+    PortableDifferential,
 }
 
 /// A single conformance test definition.

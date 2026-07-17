@@ -141,6 +141,23 @@ impl<'a> Parser<'a> {
     fn parse_comparison(&mut self) -> Result<Expr, ParseError> {
         let mut left = self.parse_additive()?;
         loop {
+            // Ternary: `value between lo and hi` → Call(dtcs:between, [value, lo, hi]).
+            if matches!(&self.peek().kind, TokenKind::Ident(name) if name == "between") {
+                let between_token = self.consume();
+                let lo = self.parse_additive()?;
+                self.expect_ident("and")?;
+                let hi = self.parse_additive()?;
+                let span = Span {
+                    start: expr_span_start(&left),
+                    end: end_span(&hi).max(between_token.span.end),
+                };
+                left = Expr::Call {
+                    callee: "dtcs:between".into(),
+                    args: vec![left, lo, hi],
+                    span,
+                };
+                continue;
+            }
             let op = match &self.peek().kind {
                 TokenKind::Op("==") => Some(BinaryOp::Eq),
                 TokenKind::Op("!=") => Some(BinaryOp::Neq),
@@ -151,7 +168,6 @@ impl<'a> Parser<'a> {
                 TokenKind::Op(">=") => Some(BinaryOp::Gte),
                 TokenKind::Ident(name) if name == "in" => Some(BinaryOp::In),
                 TokenKind::Ident(name) if name == "contains" => Some(BinaryOp::Contains),
-                TokenKind::Ident(name) if name == "between" => Some(BinaryOp::Between),
                 _ => None,
             };
             let Some(op) = op else { break };
@@ -165,6 +181,20 @@ impl<'a> Parser<'a> {
             };
         }
         Ok(left)
+    }
+
+    fn expect_ident(&mut self, expected: &str) -> Result<(), ParseError> {
+        let token = self.peek().clone();
+        match &token.kind {
+            TokenKind::Ident(name) if name == expected => {
+                self.consume();
+                Ok(())
+            }
+            _ => Err(ParseError {
+                message: format!("expected '{expected}'"),
+                span: token.span,
+            }),
+        }
     }
 
     fn parse_additive(&mut self) -> Result<Expr, ParseError> {
@@ -379,6 +409,16 @@ fn end_span(expr: &Expr) -> usize {
         | Expr::Unary { span, .. }
         | Expr::Binary { span, .. }
         | Expr::Call { span, .. } => span.end,
+    }
+}
+
+fn expr_span_start(expr: &Expr) -> usize {
+    match expr {
+        Expr::Literal { span, .. }
+        | Expr::FieldRef { span, .. }
+        | Expr::Unary { span, .. }
+        | Expr::Binary { span, .. }
+        | Expr::Call { span, .. } => span.start,
     }
 }
 

@@ -2,7 +2,7 @@
 
 pub mod actions;
 mod conversion;
-mod expr;
+pub mod expr;
 pub mod functions;
 mod lineage;
 mod model;

@@ -1,0 +1,33 @@
+{
+  "id": "complex-access",
+  "actions": [
+    {
+      "action": "dtcs:with_fields",
+      "target": "t",
+      "parameters": {
+        "assignments": [
+          { "as": "first", "expr": "dtcs:index(items, 0)" },
+          { "as": "name", "expr": "dtcs:field(meta, \"label\")" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      {
+        "items": [10, 20],
+        "meta": { "label": "ok" }
+      }
+    ]
+  },
+  "expected": {
+    "t": [
+      {
+        "items": [10, 20],
+        "meta": { "label": "ok" },
+        "first": 10,
+        "name": "ok"
+      }
+    ]
+  }
+}

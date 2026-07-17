@@ -1,4 +1,4 @@
-//! Portable Relational Profile integration tests (0.12–0.15).
+//! Portable Relational Profile integration tests (phase 0.12).
 
 use std::collections::BTreeMap;
 
@@ -278,5 +278,274 @@ fn structured_expression_round_trip_and_capability_manifest() {
     assert_eq!(
         manifest.limits.get("maxPortablePlanBytes").map(String::as_str),
         Some("8388608")
+    );
+}
+
+#[test]
+fn between_ternary_inclusive() {
+    use dtcs::runtime::expr::eval_expression_on_row;
+    let row = btreemap! { "x" => RuntimeValue::Integer(5) };
+    assert_eq!(
+        eval_expression_on_row("x between 1 and 10", &row).unwrap(),
+        RuntimeValue::Boolean(true)
+    );
+    assert_eq!(
+        eval_expression_on_row("x between 5 and 5", &row).unwrap(),
+        RuntimeValue::Boolean(true)
+    );
+    assert_eq!(
+        eval_expression_on_row("x between 6 and 10", &row).unwrap(),
+        RuntimeValue::Boolean(false)
+    );
+    let null_row = btreemap! { "x" => RuntimeValue::Null };
+    assert_eq!(
+        eval_expression_on_row("x between 1 and 10", &null_row).unwrap(),
+        RuntimeValue::Null
+    );
+}
+
+#[test]
+fn sort_by_expression_and_union_duplicate_policy() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! {
+                "a" => RuntimeValue::Integer(1),
+                "b" => RuntimeValue::Integer(4),
+            },
+            btreemap! {
+                "a" => RuntimeValue::Integer(3),
+                "b" => RuntimeValue::Integer(1),
+            },
+            btreemap! {
+                "a" => RuntimeValue::Integer(2),
+                "b" => RuntimeValue::Integer(2),
+            },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert(
+        "keys".into(),
+        json!([{ "expr": "a + b", "descending": true }]),
+    );
+    apply_dataset_action("dtcs:sort", "t", &params, &mut workspaces).unwrap();
+    assert_eq!(
+        workspaces["t"][0].get("a"),
+        Some(&RuntimeValue::Integer(1))
+    );
+
+    workspaces.insert(
+        "u".into(),
+        vec![
+            btreemap! { "id" => RuntimeValue::Integer(1) },
+            btreemap! { "id" => RuntimeValue::Integer(1) },
+            btreemap! { "id" => RuntimeValue::Integer(2) },
+        ],
+    );
+    workspaces.insert(
+        "v".into(),
+        vec![btreemap! { "id" => RuntimeValue::Integer(2) }],
+    );
+    let mut uparams = IndexMap::new();
+    uparams.insert("other".into(), json!("v"));
+    uparams.insert("duplicatePolicy".into(), json!("distinct"));
+    apply_dataset_action("dtcs:union", "u", &uparams, &mut workspaces).unwrap();
+    assert_eq!(workspaces["u"].len(), 2);
+}
+
+#[test]
+fn join_collision_policy_and_predicate() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "left".into(),
+        vec![btreemap! {
+            "k" => RuntimeValue::Integer(1),
+            "name" => RuntimeValue::String("L".into()),
+            "score" => RuntimeValue::Integer(10),
+        }],
+    );
+    workspaces.insert(
+        "right".into(),
+        vec![btreemap! {
+            "k" => RuntimeValue::Integer(1),
+            "name" => RuntimeValue::String("R".into()),
+            "score" => RuntimeValue::Integer(20),
+        }],
+    );
+    let mut params = IndexMap::new();
+    params.insert("right".into(), json!("right"));
+    params.insert("leftKey".into(), json!("k"));
+    params.insert("collisionPolicy".into(), json!("suffix"));
+    params.insert("predicate".into(), json!("score_left < score_right"));
+    apply_dataset_action("dtcs:join", "left", &params, &mut workspaces).unwrap();
+    assert_eq!(workspaces["left"].len(), 1);
+    assert_eq!(
+        workspaces["left"][0].get("name_left"),
+        Some(&RuntimeValue::String("L".into()))
+    );
+    assert_eq!(
+        workspaces["left"][0].get("name_right"),
+        Some(&RuntimeValue::String("R".into()))
+    );
+
+    let err = {
+        let mut ws = BTreeMap::new();
+        ws.insert(
+            "l".into(),
+            vec![btreemap! {
+                "k" => RuntimeValue::Integer(1),
+                "x" => RuntimeValue::Integer(1),
+            }],
+        );
+        ws.insert(
+            "r".into(),
+            vec![btreemap! {
+                "k" => RuntimeValue::Integer(1),
+                "x" => RuntimeValue::Integer(2),
+            }],
+        );
+        let mut p = IndexMap::new();
+        p.insert("right".into(), json!("r"));
+        p.insert("leftKey".into(), json!("k"));
+        p.insert("collisionPolicy".into(), json!("error"));
+        apply_dataset_action("dtcs:join", "l", &p, &mut ws)
+    };
+    assert!(err.unwrap_err().contains("collision"));
+}
+
+#[test]
+fn aggregate_group_by_expression_and_empty_input() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! { "v" => RuntimeValue::Integer(1) },
+            btreemap! { "v" => RuntimeValue::Integer(2) },
+            btreemap! { "v" => RuntimeValue::Integer(11) },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert(
+        "groupBy".into(),
+        json!([{ "expr": "v > 10", "as": "big" }]),
+    );
+    params.insert(
+        "aggregates".into(),
+        json!([{ "as": "n", "op": "count_all" }]),
+    );
+    apply_dataset_action("dtcs:aggregate", "t", &params, &mut workspaces).unwrap();
+    assert_eq!(workspaces["t"].len(), 2);
+
+    workspaces.insert("empty".into(), vec![]);
+    let mut eparams = IndexMap::new();
+    eparams.insert("groupBy".into(), json!(["g"]));
+    eparams.insert(
+        "aggregates".into(),
+        json!([{ "as": "n", "op": "count_all" }]),
+    );
+    apply_dataset_action("dtcs:aggregate", "empty", &eparams, &mut workspaces).unwrap();
+    assert!(workspaces["empty"].is_empty());
+}
+
+#[test]
+fn window_frame_first_last_and_date_units() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! { "x" => RuntimeValue::Integer(1) },
+            btreemap! { "x" => RuntimeValue::Integer(2) },
+            btreemap! { "x" => RuntimeValue::Integer(3) },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert("orderBy".into(), json!([{ "field": "x" }]));
+    params.insert(
+        "frame".into(),
+        json!({
+            "type": "rows",
+            "start": { "preceding": 1 },
+            "end": "currentRow"
+        }),
+    );
+    params.insert(
+        "functions".into(),
+        json!([
+            { "as": "fv", "function": "first_value", "field": "x" },
+            { "as": "s", "function": "sum", "field": "x" }
+        ]),
+    );
+    apply_dataset_action("dtcs:window", "t", &params, &mut workspaces).unwrap();
+    assert_eq!(
+        workspaces["t"][1].get("fv"),
+        Some(&RuntimeValue::Integer(1))
+    );
+    assert_eq!(
+        workspaces["t"][1].get("s"),
+        Some(&RuntimeValue::Decimal(3.0))
+    );
+
+    let month = call_function(
+        "dtcs:date_add",
+        &[
+            RuntimeValue::Date("2026-01-31".into()),
+            RuntimeValue::Integer(1),
+            RuntimeValue::String("month".into()),
+        ],
+    )
+    .unwrap();
+    assert_eq!(month, RuntimeValue::Date("2026-02-28".into()));
+
+    let trunc = call_function(
+        "dtcs:date_trunc",
+        &[
+            RuntimeValue::DateTime("2026-03-15T12:30:00Z".into()),
+            RuntimeValue::String("month".into()),
+        ],
+    )
+    .unwrap();
+    assert_eq!(
+        trunc,
+        RuntimeValue::DateTime("2026-03-01T00:00:00Z".into())
+    );
+
+    assert!(dtcs::validate_capability_accuracy(&dtcs::reference_portable_manifest(
+        KERNEL_PROFILE
+    ))
+    .is_ok());
+}
+
+#[test]
+fn field_index_element_at_access_ops() {
+    let map = RuntimeValue::Map({
+        let mut m = BTreeMap::new();
+        m.insert("a".into(), RuntimeValue::Integer(7));
+        m
+    });
+    assert_eq!(
+        call_function(
+            "dtcs:field",
+            &[map.clone(), RuntimeValue::String("a".into())]
+        )
+        .unwrap(),
+        RuntimeValue::Integer(7)
+    );
+    let list = RuntimeValue::List(vec![
+        RuntimeValue::Integer(1),
+        RuntimeValue::Integer(2),
+        RuntimeValue::Integer(3),
+    ]);
+    assert_eq!(
+        call_function("dtcs:index", &[list.clone(), RuntimeValue::Integer(1)]).unwrap(),
+        RuntimeValue::Integer(2)
+    );
+    assert_eq!(
+        call_function(
+            "dtcs:element_at",
+            &[list, RuntimeValue::Integer(99)]
+        )
+        .unwrap(),
+        RuntimeValue::Null
     );
 }

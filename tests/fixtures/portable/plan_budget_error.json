@@ -1,0 +1,20 @@
+{
+  "id": "plan-budget-error",
+  "actions": [
+    {
+      "action": "dtcs:join",
+      "target": "left",
+      "parameters": {
+        "right": "right",
+        "leftKey": "k",
+        "collisionPolicy": "error"
+      }
+    }
+  ],
+  "input": {
+    "left": [{ "k": 1, "x": 1 }],
+    "right": [{ "k": 1, "x": 2 }]
+  },
+  "expected": {},
+  "expectError": "collision"
+}

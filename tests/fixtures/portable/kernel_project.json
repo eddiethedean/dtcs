@@ -1,0 +1,20 @@
+{
+  "id": "kernel-project",
+  "actions": [
+    {
+      "action": "dtcs:project",
+      "target": "t",
+      "parameters": { "fields": ["a", "b"] }
+    }
+  ],
+  "input": {
+    "t": [
+      { "a": 1, "b": "x", "c": 3 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "a": 1, "b": "x" }
+    ]
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "id": "window-frame-sum",
+  "actions": [
+    {
+      "action": "dtcs:window",
+      "target": "t",
+      "parameters": {
+        "partitionBy": ["g"],
+        "orderBy": [{ "field": "x" }],
+        "frame": {
+          "type": "rows",
+          "start": "unboundedPreceding",
+          "end": "currentRow"
+        },
+        "functions": [
+          { "as": "rn", "function": "row_number" },
+          { "as": "running", "function": "sum", "field": "x" },
+          { "as": "first_x", "function": "first_value", "field": "x" },
+          { "as": "last_x", "function": "last_value", "field": "x" }
+        ]
+      }
+    }
+  ],
+  "input": {
+    "t": [
+      { "g": "a", "x": 1 },
+      { "g": "a", "x": 2 },
+      { "g": "a", "x": 3 }
+    ]
+  },
+  "expected": {
+    "t": [
+      { "g": "a", "x": 1, "rn": 1, "running": 1.0, "first_x": 1, "last_x": 1 },
+      { "g": "a", "x": 2, "rn": 2, "running": 3.0, "first_x": 1, "last_x": 2 },
+      { "g": "a", "x": 3, "rn": 3, "running": 6.0, "first_x": 1, "last_x": 3 }
+    ]
+  }
+}

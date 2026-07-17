@@ -21,13 +21,13 @@ entries:
     name: "Portable Window"
     category: "profile"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
-      {"kind":"profile","family":"portable-window","extends":"dtcs:profile/portable-relational/1","requiredActions":["dtcs:window"],"requiredFunctions":["dtcs:row_number","dtcs:rank","dtcs:dense_rank","dtcs:lag","dtcs:lead"],"planProfile":"dtcs.transform-plan/1"}
+      {"kind":"profile","family":"portable-window","extends":"dtcs:profile/portable-relational/1","requiredActions":["dtcs:window"],"requiredFunctions":["dtcs:row_number","dtcs:rank","dtcs:dense_rank","dtcs:lag","dtcs:lead","dtcs:first_value","dtcs:last_value"],"supportsFrames":["rows","range"],"planProfile":"dtcs.transform-plan/1"}
   dtcs:profile/portable-complex-types/1:
     name: "Portable Complex Types"
     category: "profile"
     version: "1.0.0"
-    status: "experimental"
+    status: "standard"
     definition: |
-      {"kind":"profile","family":"portable-complex-types","extends":"dtcs:profile/portable-relational-kernel/1","requiredTypes":["list","map","object"],"typeAliases":{"array":"list","struct":"object"},"planProfile":"dtcs.transform-plan/1"}
+      {"kind":"profile","family":"portable-complex-types","extends":"dtcs:profile/portable-relational-kernel/1","requiredTypes":["list","map","object"],"typeAliases":{"array":"list","struct":"object"},"requiredOperators":["dtcs:field","dtcs:index","dtcs:element_at"],"unsupported":["explode","unnest","map_entries"],"planProfile":"dtcs.transform-plan/1"}

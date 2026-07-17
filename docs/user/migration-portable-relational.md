@@ -1,6 +1,6 @@
 # Portable Relational Profile — Compatibility Table
 
-Upgrade guidance for tools **0.12+** / **0.15+** implementing the Portable Relational Profile
+Upgrade guidance for tools **0.12+** implementing the Portable Relational Profile
 (`dtcs:profile/portable-relational-kernel/1` through advanced profiles). Spec is **`2.0.0`**.
 Document `dtcsVersion` SHOULD be `"2.0.0"`; `"1.0.0"` remains accepted for compatibility.
 
@@ -15,6 +15,10 @@ Documents that use only legacy parameters keep legacy observable behavior where 
 subset is compatible. Documents that opt into new parameters get the new semantics.
 Behavior that cannot remain subset-compatible (noted below) applies under the new
 registry entry version pin.
+
+As of **0.12.0**, previously declared-but-ignored parameters are **enforced** in the
+reference runtime: join `collisionPolicy` / `predicate`, union `duplicatePolicy`,
+sort/groupBy expression keys, and ternary `between`.
 
 ## Action compatibility
 

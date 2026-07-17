@@ -14,6 +14,8 @@ pub(crate) mod parse;
 pub(crate) mod rewrite;
 pub(crate) mod types;
 
+pub use format::format_expression;
+
 use serde_json::Value;
 
 /// Lower a string expression to a structured portable node (SPEC Chapter 8 §3.1).

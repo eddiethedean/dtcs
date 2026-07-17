@@ -1,0 +1,29 @@
+{
+  "id": "relational-join",
+  "actions": [
+    {
+      "action": "dtcs:join",
+      "target": "left",
+      "parameters": {
+        "right": "right",
+        "leftKey": "k",
+        "type": "inner"
+      }
+    }
+  ],
+  "input": {
+    "left": [
+      { "k": 1, "v": "a" },
+      { "k": 2, "v": "b" }
+    ],
+    "right": [
+      { "k": 2, "w": 9 },
+      { "k": null, "w": 1 }
+    ]
+  },
+  "expected": {
+    "left": [
+      { "k": 2, "v": "b", "w": 9 }
+    ]
+  }
+}
