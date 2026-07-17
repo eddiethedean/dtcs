@@ -7,13 +7,13 @@ CLI JSON shapes in [json-output.md](../user/json-output.md) use the same camelCa
 ## Install
 
 ```bash
-pip install 'dtcs==0.11.0'
+pip install 'dtcs==0.12.0'
 ```
 
 ```python
 import dtcs
-print(dtcs.__version__)   # package version, e.g. "0.11.0"
-print(dtcs.SPEC_VERSION)  # "1.0.0-draft"
+print(dtcs.__version__)   # package version, e.g. "0.12.0"
+print(dtcs.SPEC_VERSION)  # "2.0.0"
 ```
 
 ## Errors and validity

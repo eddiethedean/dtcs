@@ -51,7 +51,7 @@ At runtime, JSON `null`, missing fields, and invalid values are distinct. Encode
 
 ## Maturity
 
-Spec `1.0.0-draft` · tools `0.11.0` (alpha). Coverage tables mean the **reference implementation exercises** draft chapters — not that DTCS 1.0 is finalized or production-certified.
+Spec `2.0.0` · tools `0.12.0` (alpha). Coverage tables mean the **reference implementation exercises** draft chapters — not that DTCS 1.0 is finalized or production-certified.
 
 ## Next
 

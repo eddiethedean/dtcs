@@ -122,15 +122,11 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
             }
             crate::model::RegistryCategory::Function => {
                 let experimental = entry.status == crate::model::RegistryEntryStatus::Experimental;
-                let tier = if experimental {
-                    "experimental".into()
-                } else {
-                    "certified".into()
-                };
+                let (supported, tier, notes) = function_support(&entry.id, experimental);
                 functions.insert(
                     entry.id.clone(),
                     EntryCapability {
-                        supported: true,
+                        supported,
                         version: Some(entry.version.clone()),
                         semantic_modes: if experimental {
                             vec!["experimental".into()]
@@ -138,7 +134,7 @@ pub fn reference_portable_manifest(profile: &str) -> PortableCapabilityManifest 
                             Vec::new()
                         },
                         limits: function_limits(&entry.id),
-                        notes: function_notes(&entry.id, experimental),
+                        notes,
                         tier,
                     },
                 );
@@ -284,6 +280,35 @@ fn action_support(id: &str) -> (bool, String, Vec<String>) {
         ),
         _ => (true, "certified".into(), Vec::new()),
     }
+}
+
+fn function_support(id: &str, experimental: bool) -> (bool, String, Vec<String>) {
+    let mut notes = function_notes(id, experimental);
+    // Aggregate and window functions are not scalar-callable.
+    if matches!(
+        id,
+        "dtcs:count_all"
+            | "dtcs:count"
+            | "dtcs:count_distinct"
+            | "dtcs:sum"
+            | "dtcs:average"
+            | "dtcs:row_number"
+            | "dtcs:rank"
+            | "dtcs:dense_rank"
+            | "dtcs:lag"
+            | "dtcs:lead"
+            | "dtcs:first_value"
+            | "dtcs:last_value"
+    ) {
+        notes.push("not callable as a scalar expression; use aggregate/window actions".into());
+        return (true, "certified".into(), notes);
+    }
+    let tier = if experimental {
+        "experimental".into()
+    } else {
+        "certified".into()
+    };
+    (true, tier, notes)
 }
 
 fn function_limits(id: &str) -> IndexMap<String, String> {

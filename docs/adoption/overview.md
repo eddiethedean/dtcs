@@ -18,11 +18,11 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 
 ## Reference implementation maturity
 
-> **Maturity:** Spec `1.0.0-draft` · tools alpha (`0.11.0`). **Covered** means the reference implementation exercises that draft area — not production certification of the standard.
+> **Maturity:** Spec `2.0.0` (draft) · tools alpha (`0.12.0`). **Covered** means the reference implementation exercises that draft area — not production certification of the standard.
 
 | Component | Reference impl coverage |
 |-----------|-------------------------|
-| Specification | Draft (`1.0.0-draft`, 26 chapters + Appendix A catalog) |
+| Specification | Draft (`2.0.0`, 26 chapters + Appendix A catalog) |
 | Parser (YAML/JSON) | Covered |
 | Seven-phase validation | Covered |
 | Metadata validation | Covered |
@@ -42,7 +42,7 @@ It does **not** define execution engines, storage, orchestration, or SQL dialect
 | Conformance certification (Ch 23) | Covered (Phase 0.10) |
 | SPEC completeness matrix | Covered (Phase 0.11) |
 
-*Released reference implementation: `0.11.0`.*
+*Released reference implementation: `0.12.0`.*
 
 See [ROADMAP.md](https://github.com/eddiethedean/dtcs/blob/main/ROADMAP.md) for the full milestone plan and [spec-completeness.md](../implementation/spec-completeness.md) for the chapter matrix.
 

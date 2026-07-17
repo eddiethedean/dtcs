@@ -191,18 +191,24 @@ fn lower_expr_params(
 ) -> Result<IndexMap<String, Value>, String> {
     let mut out = IndexMap::new();
     for (key, value) in parameters {
-        out.insert(key.clone(), lower_value(value)?);
+        if matches!(
+            key.as_str(),
+            "expr" | "condition" | "predicate" | "on" | "filter"
+        ) && value.is_string()
+        {
+            let s = value.as_str().unwrap();
+            let node = to_structured_node(s)?;
+            let expr = from_structured_node(&node)?;
+            out.insert(key.clone(), Value::String(format_expression(&expr)));
+        } else {
+            out.insert(key.clone(), lower_value(value)?);
+        }
     }
     Ok(out)
 }
 
 fn lower_value(value: &Value) -> Result<Value, String> {
     match value {
-        Value::String(s) if looks_like_expression(s) => {
-            let node = to_structured_node(s)?;
-            let expr = from_structured_node(&node)?;
-            Ok(Value::String(format_expression(&expr)))
-        }
         Value::Array(items) => {
             let lowered: Result<Vec<_>, _> = items.iter().map(lower_value).collect();
             Ok(Value::Array(lowered?))
@@ -210,8 +216,10 @@ fn lower_value(value: &Value) -> Result<Value, String> {
         Value::Object(map) => {
             let mut out = serde_json::Map::new();
             for (k, v) in map {
-                if matches!(k.as_str(), "expr" | "condition" | "predicate" | "on" | "filter")
-                    && v.is_string()
+                if matches!(
+                    k.as_str(),
+                    "expr" | "condition" | "predicate" | "on" | "filter"
+                ) && v.is_string()
                 {
                     let s = v.as_str().unwrap();
                     let node = to_structured_node(s)?;
@@ -225,17 +233,6 @@ fn lower_value(value: &Value) -> Result<Value, String> {
         }
         other => Ok(other.clone()),
     }
-}
-
-fn looks_like_expression(s: &str) -> bool {
-    s.contains('+')
-        || s.contains('-')
-        || s.contains('*')
-        || s.contains('/')
-        || s.contains("==")
-        || s.contains("between")
-        || s.contains("&&")
-        || s.contains("||")
 }
 
 fn json_row_to_runtime(value: &Value) -> Result<Row, String> {

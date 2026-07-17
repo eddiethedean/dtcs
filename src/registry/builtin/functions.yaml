@@ -297,6 +297,13 @@ entries:
     status: "standard"
     definition: |
       {"kind":"function","family":"datetime","minArgs":2,"maxArgs":2,"argTypes":["string","date","datetime"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate"}
+  dtcs:date_part:
+    name: "Date Part"
+    category: "function"
+    version: "1.0.0"
+    status: "standard"
+    definition: |
+      {"kind":"function","family":"datetime","minArgs":2,"maxArgs":2,"argTypes":["string","date","datetime"],"returnType":"integer","returnNullable":true,"deterministic":true,"nullBehavior":"propagate","aliasOf":"dtcs:extract"}
   dtcs:at_timezone:
     name: "At Timezone"
     category: "function"

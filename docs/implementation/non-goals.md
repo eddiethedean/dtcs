@@ -10,7 +10,7 @@ Do not implement these yet:
 
 The reference crate should remain a correct spec core based on [`SPEC.md`](../SPEC.md).
 
-## In scope through 0.11.0
+## In scope through 0.12.0
 
 - Parse YAML and JSON into the Canonical Object Model
 - Seven-phase validation with structured diagnostics
@@ -28,6 +28,7 @@ The reference crate should remain a correct spec core based on [`SPEC.md`](../SP
 - Embedded full Ch 17–19 standard libraries with registry-driven semantics validation (Phase 0.5 starter; Phase 0.11 complete)
 - Static semantic analysis (Phase 0.6)
 - Transformation plan lowering with dependency graph and plan validation (Phase 0.7)
+- Portable Relational Profile: operators, rich joins/aggs, window frames, datetime, complex access, portable plans, differential conformance (Phase 0.12)
 - Plan optimization with semantics-preserving passes and equivalence checking (Phase 0.8)
 - Engine capability matching with embedded `dtcs:reference` profile (Phase 0.9)
 - Compilation to execution plans and reference in-memory runtime (Phase 0.9)

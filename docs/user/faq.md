@@ -8,7 +8,7 @@ The Data Transformation Contract Standard (DTCS) is a vendor-neutral specificati
 
 ### What does the reference implementation do today?
 
-Through version **0.11.0**, the reference tools can:
+Through version **0.12.0**, the reference tools can:
 
 - Parse YAML/JSON into the Canonical Object Model (including `guarantees`, `compatibility`, nested extensions)
 - Validate contracts with structured diagnostics
@@ -20,13 +20,14 @@ Through version **0.11.0**, the reference tools can:
 - Analyze dataset-level lineage with `operation` and `flow` (dependency graph, impact, governance)
 - Run static semantic and expression analysis (Ch 7–8), including null/missing/invalid distinction
 - Lower, optimize, match, compile, and execute contracts end-to-end with the reference runtime
-- Certify conformance across all eight implementation profiles (Ch 23)
+- Export portable plans (`dtcs.transform-plan/1`) and run Portable Relational Profile semantics (joins, window frames, datetime, complex access)
+- Certify conformance across implementation-class and portable semantic-family profiles (Ch 23)
 
 The reference runtime is suitable for evaluation and conformance testing — not production ETL. See [non-goals.md](../implementation/non-goals.md).
 
 ### Is DTCS production-ready?
 
-The specification is a **draft** (`1.0.0-draft`). The reference implementation is **alpha** (PyPI classifier: Development Status :: 3 - Alpha). It is suitable for evaluation, CI validation, and contract authoring — not yet for mission-critical execution pipelines.
+The specification is a **draft** (`2.0.0`). The reference implementation is **alpha** (PyPI classifier: Development Status :: 3 - Alpha). It is suitable for evaluation, CI validation, and contract authoring — not yet for mission-critical execution pipelines.
 
 ## Installation
 
@@ -41,8 +42,8 @@ Pre-built wheels are published for common platforms. If pip tries to compile fro
 ### How do I install a specific version?
 
 ```bash
-pip install dtcs==0.11.0
-cargo install dtcs --version 0.11.0
+pip install dtcs==0.12.0
+cargo install dtcs --version 0.12.0
 ```
 
 ## Contracts
@@ -107,7 +108,7 @@ Notable changes from 0.10.x: lineage `operation`/`flow` defaults, dataset action
 
 ### How do I upgrade between versions?
 
-Read [migration-0.11.md](migration-0.11.md) and the [CHANGELOG migration summary](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#migration-summary). Pin with `pip install dtcs==0.11.0` or `cargo install dtcs --version 0.11.0`.
+Read [migration-0.11.md](migration-0.11.md) and the [CHANGELOG migration summary](https://github.com/eddiethedean/dtcs/blob/main/CHANGELOG.md#migration-summary). Pin with `pip install dtcs==0.12.0` or `cargo install dtcs --version 0.12.0`.
 
 ## Contributing
 

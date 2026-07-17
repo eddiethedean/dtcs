@@ -553,15 +553,13 @@ fn apply_join(
 
     let uses_keys = left_key.is_some();
     if join_type == "cross" || (!uses_keys && predicate.is_some()) {
-        let mut out = Vec::new();
-        for left_row in &left_ds {
-            for right_row in &right_ds {
-                let merged = merge_rows(left_row, right_row, collision_policy)?;
-                if predicate_matches(predicate, &merged)? {
-                    out.push(merged);
-                }
-            }
-        }
+        let out = join_cartesian(
+            &left_ds,
+            &right_ds,
+            join_type,
+            predicate,
+            collision_policy,
+        )?;
         workspaces.insert(target.to_string(), out);
         return Ok(());
     }
@@ -570,6 +568,8 @@ fn apply_join(
         "join requires leftKey, type=cross, or an on/predicate expression".to_string()
     })?;
     let right_key = right_key.unwrap_or_else(|| left_key.clone());
+    let left_pad = null_pad_template(&right_ds);
+    let right_pad = null_pad_template(&left_ds);
     let mut out = Vec::new();
     let mut matched_right = HashSet::new();
 
@@ -602,7 +602,9 @@ fn apply_join(
         }
         if !matched {
             match join_type {
-                "left" | "full" => out.push(left_row.clone()),
+                "left" | "full" => {
+                    out.push(merge_rows(left_row, &left_pad, collision_policy)?);
+                }
                 "anti" => out.push(left_row.clone()),
                 _ => {}
             }
@@ -611,12 +613,84 @@ fn apply_join(
     if matches!(join_type, "right" | "full") {
         for (ri, right_row) in right_ds.iter().enumerate() {
             if !matched_right.contains(&ri) {
-                out.push(right_row.clone());
+                out.push(merge_rows(&right_pad, right_row, collision_policy)?);
             }
         }
     }
     workspaces.insert(target.to_string(), out);
     Ok(())
+}
+
+fn join_cartesian(
+    left_ds: &[Row],
+    right_ds: &[Row],
+    join_type: &str,
+    predicate: Option<&str>,
+    collision_policy: &str,
+) -> Result<Dataset, String> {
+    let left_pad = null_pad_template(right_ds);
+    let right_pad = null_pad_template(left_ds);
+    let mut out = Vec::new();
+    let mut matched_right = HashSet::new();
+
+    if join_type == "cross" && predicate.is_none() {
+        for left_row in left_ds {
+            for right_row in right_ds {
+                out.push(merge_rows(left_row, right_row, collision_policy)?);
+            }
+        }
+        return Ok(out);
+    }
+
+    for left_row in left_ds {
+        let mut matched = false;
+        for (ri, right_row) in right_ds.iter().enumerate() {
+            let merged = merge_rows(left_row, right_row, collision_policy)?;
+            if !predicate_matches(predicate, &merged)? {
+                continue;
+            }
+            matched = true;
+            matched_right.insert(ri);
+            match join_type {
+                "inner" | "left" | "full" | "right" | "cross" => out.push(merged),
+                "semi" => {
+                    out.push(left_row.clone());
+                    break;
+                }
+                "anti" => {}
+                other => return Err(format!("unknown join type '{other}'")),
+            }
+        }
+        if !matched {
+            match join_type {
+                "left" | "full" => {
+                    out.push(merge_rows(left_row, &left_pad, collision_policy)?);
+                }
+                "anti" => out.push(left_row.clone()),
+                _ => {}
+            }
+        }
+    }
+    if matches!(join_type, "right" | "full") {
+        for (ri, right_row) in right_ds.iter().enumerate() {
+            if !matched_right.contains(&ri) {
+                out.push(merge_rows(&right_pad, right_row, collision_policy)?);
+            }
+        }
+    }
+    Ok(out)
+}
+
+fn null_pad_template(rows: &[Row]) -> Row {
+    let mut template = BTreeMap::new();
+    for row in rows {
+        for key in row.keys() {
+            template
+                .entry(key.clone())
+                .or_insert(RuntimeValue::Null);
+        }
+    }
+    template
 }
 
 fn predicate_matches(predicate: Option<&str>, row: &Row) -> Result<bool, String> {
@@ -811,14 +885,35 @@ fn parse_group_by_specs(value: Option<&Value>) -> Result<Vec<GroupBySpec>, Strin
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum GroupKey {
+    Null,
+    Missing,
+    Invalid,
+    Bool(bool),
+    Integer(i64),
+    /// Canonical decimal string for Ord/Eq (avoids f64 in the key).
+    Decimal(String),
+    String(String),
+    /// Fallback fingerprint for complex values.
+    Other(String),
+}
+
 fn group_key_from_value(value: Option<&RuntimeValue>) -> GroupKey {
     match value {
         Some(RuntimeValue::Null) => GroupKey::Null,
         Some(RuntimeValue::Missing(_)) => GroupKey::Missing,
         Some(RuntimeValue::Invalid(_)) => GroupKey::Invalid,
-        Some(RuntimeValue::String(s)) => GroupKey::Present(s.clone()),
-        Some(RuntimeValue::Integer(i)) => GroupKey::Present(i.to_string()),
-        Some(other) => GroupKey::Present(format!("{other:?}")),
+        Some(RuntimeValue::Boolean(b)) => GroupKey::Bool(*b),
+        Some(RuntimeValue::Integer(i)) => GroupKey::Integer(*i),
+        Some(RuntimeValue::Decimal(d)) => GroupKey::Decimal(format!("{d}")),
+        Some(RuntimeValue::String(s)) => GroupKey::String(s.clone()),
+        Some(RuntimeValue::Date(s))
+        | Some(RuntimeValue::Time(s))
+        | Some(RuntimeValue::DateTime(s))
+        | Some(RuntimeValue::Duration(s))
+        | Some(RuntimeValue::Binary(s)) => GroupKey::String(s.clone()),
+        Some(other) => GroupKey::Other(format!("{other:?}")),
         None => GroupKey::Missing,
     }
 }
@@ -828,7 +923,14 @@ fn group_key_to_value(key: GroupKey) -> RuntimeValue {
         GroupKey::Null => RuntimeValue::Null,
         GroupKey::Missing => RuntimeValue::missing(),
         GroupKey::Invalid => RuntimeValue::invalid("grouping key"),
-        GroupKey::Present(s) => RuntimeValue::String(s),
+        GroupKey::Bool(b) => RuntimeValue::Boolean(b),
+        GroupKey::Integer(i) => RuntimeValue::Integer(i),
+        GroupKey::Decimal(s) => s
+            .parse::<f64>()
+            .map(RuntimeValue::Decimal)
+            .unwrap_or(RuntimeValue::String(s)),
+        GroupKey::String(s) => RuntimeValue::String(s),
+        GroupKey::Other(s) => RuntimeValue::String(s),
     }
 }
 
@@ -889,7 +991,7 @@ fn apply_window(
                 .collect()
         })
         .unwrap_or_default();
-    let order_by: Vec<(String, bool)> = parameters
+    let order_by: Vec<(SortKey, bool)> = parameters
         .get("orderBy")
         .and_then(Value::as_array)
         .map(|items| {
@@ -897,16 +999,18 @@ fn apply_window(
                 .iter()
                 .filter_map(|item| {
                     let obj = item.as_object()?;
-                    let field = obj
-                        .get("expr")
-                        .or_else(|| obj.get("field"))
-                        .and_then(Value::as_str)?
-                        .to_string();
+                    let key = if let Some(field) = obj.get("field").and_then(Value::as_str) {
+                        SortKey::Field(field.to_string())
+                    } else if let Some(expr) = obj.get("expr").and_then(Value::as_str) {
+                        SortKey::Expr(expr.to_string())
+                    } else {
+                        return None;
+                    };
                     let descending = obj
                         .get("descending")
                         .and_then(Value::as_bool)
                         .unwrap_or(false);
-                    Some((field, descending))
+                    Some((key, descending))
                 })
                 .collect()
         })
@@ -927,20 +1031,22 @@ fn apply_window(
         partitions.entry(key).or_default().push(idx);
     }
 
+    // Precompute order keys for every row.
+    let mut order_values: Vec<Vec<RuntimeValue>> = Vec::with_capacity(dataset.len());
+    for row in &dataset {
+        let mut keys = Vec::with_capacity(order_by.len());
+        for (key, _) in &order_by {
+            keys.push(resolve_sort_key(key, row)?);
+        }
+        order_values.push(keys);
+    }
+
     let mut out = dataset.clone();
     for indices in partitions.values() {
         let mut ordered = indices.clone();
         ordered.sort_by(|&a, &b| {
-            for (field, descending) in &order_by {
-                let av = dataset[a]
-                    .get(field)
-                    .cloned()
-                    .unwrap_or(RuntimeValue::Null);
-                let bv = dataset[b]
-                    .get(field)
-                    .cloned()
-                    .unwrap_or(RuntimeValue::Null);
-                let ord = compare_values(&av, &bv);
+            for (i, (_, descending)) in order_by.iter().enumerate() {
+                let ord = compare_values(&order_values[a][i], &order_values[b][i]);
                 if ord != std::cmp::Ordering::Equal {
                     return if *descending { ord.reverse() } else { ord };
                 }
@@ -952,18 +1058,20 @@ fn apply_window(
         let mut dense_rank = 0i64;
         let mut rank = 0i64;
         for (pos, &idx) in ordered.iter().enumerate() {
-            let rank_key = order_by
-                .iter()
-                .map(|(f, _)| format!("{:?}", dataset[idx].get(f).unwrap_or(&RuntimeValue::Null)))
-                .collect::<Vec<_>>()
-                .join("|");
+            let rank_key = format!("{:?}", order_values[idx]);
             if prev_rank_key.as_ref() != Some(&rank_key) {
                 dense_rank += 1;
                 rank = (pos as i64) + 1;
                 prev_rank_key = Some(rank_key);
             }
-            let (frame_start, frame_end) =
-                resolve_frame_bounds(&frame, pos, ordered.len(), &ordered, &dataset, &order_by)?;
+            let (frame_start, frame_end) = resolve_frame_bounds(
+                &frame,
+                pos,
+                ordered.len(),
+                &ordered,
+                &order_values,
+                &order_by,
+            )?;
             for func in functions {
                 let obj = func
                     .as_object()
@@ -1034,12 +1142,19 @@ fn apply_window(
                             .and_then(Value::as_str)
                             .ok_or_else(|| format!("window {fn_name} requires expr or field"))?;
                         let mut values = Vec::new();
-                        if frame_start <= frame_end {
-                            for sp in frame_start..=frame_end.min(ordered.len().saturating_sub(1)) {
+                        if frame_start <= frame_end && frame_start < ordered.len() {
+                            for sp in frame_start..=frame_end.min(ordered.len() - 1) {
                                 values.push(eval_expression_on_row(expr, &dataset[ordered[sp]])?);
                             }
                         }
-                        reduce_values(&values, fn_name)?
+                        if values.is_empty() {
+                            match fn_name {
+                                "count" => RuntimeValue::Integer(0),
+                                _ => RuntimeValue::Null,
+                            }
+                        } else {
+                            reduce_values(&values, fn_name)?
+                        }
                     }
                     other => {
                         return Err(format!("unsupported window function '{other}'"));
@@ -1125,8 +1240,8 @@ fn resolve_frame_bounds(
     pos: usize,
     len: usize,
     ordered: &[usize],
-    dataset: &[Row],
-    order_by: &[(String, bool)],
+    order_values: &[Vec<RuntimeValue>],
+    order_by: &[(SortKey, bool)],
 ) -> Result<(usize, usize), String> {
     if len == 0 {
         return Ok((0, 0));
@@ -1147,20 +1262,20 @@ fn resolve_frame_bounds(
                 FrameBound::NFollowing(n) => (pos + n).min(len.saturating_sub(1)),
                 FrameBound::UnboundedFollowing => len.saturating_sub(1),
             };
-            Ok((start.min(end), start.max(end)))
+            // SQL: inverted frames are empty, not swapped.
+            if start > end {
+                return Ok((len, 0));
+            }
+            Ok((start, end))
         }
         FrameUnit::Range => {
-            // Range frames require a single ORDER BY key; peers with equal order key are included.
             if order_by.len() != 1 {
                 return Err(
                     "range frames require exactly one orderBy key in the reference runtime".into(),
                 );
             }
-            let (field, _) = &order_by[0];
-            let current = dataset[ordered[pos]]
-                .get(field)
-                .cloned()
-                .unwrap_or(RuntimeValue::Null);
+            let descending = order_by[0].1;
+            let current = &order_values[ordered[pos]][0];
             let start_offset = match &frame.start {
                 FrameBound::UnboundedPreceding => None,
                 FrameBound::CurrentRow => Some(0i64),
@@ -1182,35 +1297,37 @@ fn resolve_frame_bounds(
             let mut start = 0usize;
             let mut end = len.saturating_sub(1);
             if let Some(off) = start_offset {
-                let bound = range_shift(&current, off)?;
+                let bound = range_shift(current, if descending { -off } else { off })?;
                 start = ordered
                     .iter()
                     .position(|&idx| {
-                        let v = dataset[idx]
-                            .get(field)
-                            .cloned()
-                            .unwrap_or(RuntimeValue::Null);
-                        compare_values(&v, &bound) != std::cmp::Ordering::Less
+                        let v = &order_values[idx][0];
+                        if descending {
+                            compare_values(v, &bound) != std::cmp::Ordering::Greater
+                        } else {
+                            compare_values(v, &bound) != std::cmp::Ordering::Less
+                        }
                     })
                     .unwrap_or(len);
             }
             if let Some(off) = end_offset {
-                let bound = range_shift(&current, off)?;
+                let bound = range_shift(current, if descending { -off } else { off })?;
                 end = ordered
                     .iter()
                     .rposition(|&idx| {
-                        let v = dataset[idx]
-                            .get(field)
-                            .cloned()
-                            .unwrap_or(RuntimeValue::Null);
-                        compare_values(&v, &bound) != std::cmp::Ordering::Greater
+                        let v = &order_values[idx][0];
+                        if descending {
+                            compare_values(v, &bound) != std::cmp::Ordering::Less
+                        } else {
+                            compare_values(v, &bound) != std::cmp::Ordering::Greater
+                        }
                     })
                     .unwrap_or(0);
             }
-            if start >= len {
+            if start >= len || start > end {
                 return Ok((len, 0));
             }
-            Ok((start, end.max(start)))
+            Ok((start, end))
         }
     }
 }
@@ -1316,14 +1433,6 @@ fn apply_limit(
     let start = offset.min(dataset.len());
     *dataset = dataset[start..end].to_vec();
     Ok(())
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-enum GroupKey {
-    Null,
-    Missing,
-    Invalid,
-    Present(String),
 }
 
 #[derive(Debug, Clone)]
@@ -1494,9 +1603,20 @@ fn compare_values_with_nulls(a: &RuntimeValue, b: &RuntimeValue, nulls: Nulls) -
     match (a, b) {
         (RuntimeValue::Integer(x), RuntimeValue::Integer(y)) => x.cmp(y),
         (RuntimeValue::String(x), RuntimeValue::String(y)) => x.cmp(y),
+        (RuntimeValue::Boolean(x), RuntimeValue::Boolean(y)) => x.cmp(y),
         (RuntimeValue::Decimal(x), RuntimeValue::Decimal(y)) => {
             x.partial_cmp(y).unwrap_or(std::cmp::Ordering::Equal)
         }
+        (RuntimeValue::Integer(x), RuntimeValue::Decimal(y)) => (*x as f64)
+            .partial_cmp(y)
+            .unwrap_or(std::cmp::Ordering::Equal),
+        (RuntimeValue::Decimal(x), RuntimeValue::Integer(y)) => x
+            .partial_cmp(&(*y as f64))
+            .unwrap_or(std::cmp::Ordering::Equal),
+        (RuntimeValue::Date(x), RuntimeValue::Date(y))
+        | (RuntimeValue::DateTime(x), RuntimeValue::DateTime(y))
+        | (RuntimeValue::Date(x), RuntimeValue::DateTime(y))
+        | (RuntimeValue::DateTime(x), RuntimeValue::Date(y)) => x.cmp(y),
         _ => std::cmp::Ordering::Equal,
     }
 }

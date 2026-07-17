@@ -76,7 +76,7 @@ assert report["passed"]
 
 JSON reports include:
 
-- `implementationId`, `implementationVersion` — reference implementation identity (`0.11.0`)
+- `implementationId`, `implementationVersion` — reference implementation identity (`0.12.0`)
 - `profiles` — profiles exercised in this run
 - `results` — per-test outcomes (`id`, `profile`, `passed`, optional `message`)
 - `security` — automated Ch 24 checklist probes

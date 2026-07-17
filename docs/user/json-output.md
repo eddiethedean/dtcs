@@ -259,7 +259,7 @@ Success emits an execution plan document (same shape as the Rust `ExecutionPlan`
 {
   "target": {
     "engineId": "dtcs:reference",
-    "engineVersion": "0.11.0",
+    "engineVersion": "0.12.0",
     "capabilityVersion": "1.0.0"
   },
   "identity": {
@@ -353,7 +353,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.11.0",
+  "implementationVersion": "0.12.0",
   "dtcsVersion": "1.0.0-draft",
   "primaryProfile": "integrated-platform",
   "profiles": [
@@ -361,7 +361,7 @@ Success emits a single registry entry (same object shape as list items, may incl
       "id": "integrated-platform",
       "implementationClass": "integratedPlatform",
       "dtcsVersion": "1.0.0-draft",
-      "implementationVersion": "0.11.0",
+      "implementationVersion": "0.12.0",
       "supportedRegistries": ["dtcs:builtin"],
       "supportedExtensions": ["acme"],
       "optionalCapabilities": ["planOptimization", "referenceRuntime"]
@@ -375,7 +375,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 ```json
 {
   "implementationId": "dtcs:reference",
-  "implementationVersion": "0.11.0",
+  "implementationVersion": "0.12.0",
   "profiles": ["integrated-platform"],
   "results": [
     {
@@ -399,7 +399,7 @@ Success emits a single registry entry (same object shape as list items, may incl
 
 ```json
 {
-  "crateVersion": "0.11.0",
+  "crateVersion": "0.12.0",
   "specVersion": "1.0.0-draft"
 }
 ```

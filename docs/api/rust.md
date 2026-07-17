@@ -32,7 +32,7 @@ Exact signatures: see docs.rs for the installed crate version.
 ## CLI
 
 ```bash
-cargo install dtcs --version 0.11.0
+cargo install dtcs --version 0.12.0
 dtcs validate contract.dtcs.yaml
 ```
 

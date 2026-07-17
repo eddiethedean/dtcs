@@ -23,8 +23,8 @@ dtcs version
 Expected:
 
 ```text
-dtcs 0.11.0
-spec 1.0.0-draft
+dtcs 0.12.0
+spec 2.0.0
 ```
 
 ## 2. Get a minimal contract (no git clone)
@@ -36,10 +36,10 @@ curl -fsSL https://raw.githubusercontent.com/eddiethedean/dtcs/main/examples/min
   -o contract.dtcs.yaml
 ```
 
-Or create `contract.dtcs.yaml` with this content (note `dtcsVersion` must be exactly `"1.0.0"` — the Spec is still `1.0.0-draft`, but documents use the finalized document version string):
+Or create `contract.dtcs.yaml` with this content (prefer `dtcsVersion: "2.0.0"`; `"1.0.0"` remains accepted):
 
 ```yaml
-dtcsVersion: "1.0.0"
+dtcsVersion: "2.0.0"
 id: "demo.minimal"
 name: "Minimal Demo"
 version: "0.1.0"

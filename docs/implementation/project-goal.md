@@ -4,7 +4,7 @@ Build the reference Rust crate for the Data Transformation Contract Standard (DT
 
 `SPEC.md` is the source of truth.
 
-## Implemented through 0.11.0
+## Implemented through 0.12.0
 
 - Canonical Object Model (including `guarantees`, `compatibility` declaration, nested extensions)
 - YAML and JSON parsing

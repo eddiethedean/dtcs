@@ -449,6 +449,206 @@ fn aggregate_group_by_expression_and_empty_input() {
 }
 
 #[test]
+fn and_or_short_circuit_on_row_eval() {
+    use dtcs::runtime::expr::eval_expression_on_row;
+    let row = btreemap! {
+        "a" => RuntimeValue::Boolean(false),
+        "b" => RuntimeValue::Integer(1),
+    };
+    // Previously panicked: evaluate_binary treated And/Or as unreachable on the row path.
+    assert_eq!(
+        eval_expression_on_row("a && (b == 1)", &row).unwrap(),
+        RuntimeValue::Boolean(false)
+    );
+    assert_eq!(
+        eval_expression_on_row("a || (b == 1)", &row).unwrap(),
+        RuntimeValue::Boolean(true)
+    );
+}
+
+#[test]
+fn sort_mixed_integer_decimal_and_group_key_types() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! { "v" => RuntimeValue::Integer(2) },
+            btreemap! { "v" => RuntimeValue::Decimal(1.0) },
+            btreemap! { "v" => RuntimeValue::Integer(3) },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert("keys".into(), json!([{ "field": "v" }]));
+    apply_dataset_action("dtcs:sort", "t", &params, &mut workspaces).unwrap();
+    assert_eq!(
+        workspaces["t"][0].get("v"),
+        Some(&RuntimeValue::Decimal(1.0))
+    );
+    assert_eq!(
+        workspaces["t"][2].get("v"),
+        Some(&RuntimeValue::Integer(3))
+    );
+
+    workspaces.insert(
+        "g".into(),
+        vec![
+            btreemap! { "n" => RuntimeValue::Integer(1) },
+            btreemap! { "n" => RuntimeValue::Integer(1) },
+            btreemap! { "n" => RuntimeValue::Integer(2) },
+        ],
+    );
+    let mut gparams = IndexMap::new();
+    gparams.insert("groupBy".into(), json!(["n"]));
+    gparams.insert(
+        "aggregates".into(),
+        json!([{ "as": "c", "op": "count_all" }]),
+    );
+    apply_dataset_action("dtcs:aggregate", "g", &gparams, &mut workspaces).unwrap();
+    let ones = workspaces["g"]
+        .iter()
+        .find(|r| r.get("n") == Some(&RuntimeValue::Integer(1)))
+        .expect("integer group key preserved");
+    assert_eq!(ones.get("c"), Some(&RuntimeValue::Integer(2)));
+}
+
+#[test]
+fn predicate_only_anti_join_and_left_null_pad() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "left".into(),
+        vec![
+            btreemap! { "id" => RuntimeValue::Integer(1), "x" => RuntimeValue::Integer(10) },
+            btreemap! { "id" => RuntimeValue::Integer(2), "x" => RuntimeValue::Integer(20) },
+        ],
+    );
+    workspaces.insert(
+        "right".into(),
+        vec![btreemap! {
+            "id" => RuntimeValue::Integer(1),
+            "y" => RuntimeValue::Integer(99),
+        }],
+    );
+    let mut anti = IndexMap::new();
+    anti.insert("right".into(), json!("right"));
+    anti.insert("type".into(), json!("anti"));
+    anti.insert("leftKey".into(), json!("id"));
+    apply_dataset_action("dtcs:join", "left", &anti, &mut workspaces).unwrap();
+    assert_eq!(workspaces["left"].len(), 1);
+    assert_eq!(
+        workspaces["left"][0].get("id"),
+        Some(&RuntimeValue::Integer(2))
+    );
+
+    // Predicate-only anti must honor join type (not silently become inner).
+    workspaces.insert(
+        "pl".into(),
+        vec![
+            btreemap! { "x" => RuntimeValue::Integer(1) },
+            btreemap! { "x" => RuntimeValue::Integer(5) },
+        ],
+    );
+    workspaces.insert(
+        "pr".into(),
+        vec![btreemap! { "y" => RuntimeValue::Integer(3) }],
+    );
+    let mut pred_anti = IndexMap::new();
+    pred_anti.insert("right".into(), json!("pr"));
+    pred_anti.insert("type".into(), json!("anti"));
+    pred_anti.insert("predicate".into(), json!("x < y"));
+    apply_dataset_action("dtcs:join", "pl", &pred_anti, &mut workspaces).unwrap();
+    assert_eq!(workspaces["pl"].len(), 1);
+    assert_eq!(
+        workspaces["pl"][0].get("x"),
+        Some(&RuntimeValue::Integer(5))
+    );
+
+    workspaces.insert(
+        "l2".into(),
+        vec![btreemap! {
+            "k" => RuntimeValue::Integer(1),
+            "a" => RuntimeValue::Integer(1),
+        }],
+    );
+    workspaces.insert(
+        "r2".into(),
+        vec![btreemap! {
+            "k" => RuntimeValue::Integer(2),
+            "b" => RuntimeValue::Integer(7),
+        }],
+    );
+    let mut left_join = IndexMap::new();
+    left_join.insert("right".into(), json!("r2"));
+    left_join.insert("leftKey".into(), json!("k"));
+    left_join.insert("type".into(), json!("left"));
+    apply_dataset_action("dtcs:join", "l2", &left_join, &mut workspaces).unwrap();
+    assert_eq!(workspaces["l2"].len(), 1);
+    assert_eq!(
+        workspaces["l2"][0].get("b"),
+        Some(&RuntimeValue::Null),
+        "left join must null-pad missing right columns"
+    );
+}
+
+#[test]
+fn datetime_preserves_time_and_hour_diff() {
+    let added = call_function(
+        "dtcs:date_add",
+        &[
+            RuntimeValue::DateTime("2026-01-01T15:30:00Z".into()),
+            RuntimeValue::Integer(1),
+            RuntimeValue::String("day".into()),
+        ],
+    )
+    .unwrap();
+    assert_eq!(
+        added,
+        RuntimeValue::DateTime("2026-01-02T15:30:00Z".into())
+    );
+
+    let hours = call_function(
+        "dtcs:date_diff",
+        &[
+            RuntimeValue::DateTime("2026-01-01T12:00:00Z".into()),
+            RuntimeValue::DateTime("2026-01-01T00:00:00Z".into()),
+            RuntimeValue::String("hour".into()),
+        ],
+    )
+    .unwrap();
+    assert_eq!(hours, RuntimeValue::Integer(12));
+}
+
+#[test]
+fn inverted_window_frame_is_empty() {
+    let mut workspaces = BTreeMap::new();
+    workspaces.insert(
+        "t".into(),
+        vec![
+            btreemap! { "x" => RuntimeValue::Integer(1) },
+            btreemap! { "x" => RuntimeValue::Integer(2) },
+            btreemap! { "x" => RuntimeValue::Integer(3) },
+        ],
+    );
+    let mut params = IndexMap::new();
+    params.insert("orderBy".into(), json!([{ "field": "x" }]));
+    params.insert(
+        "frame".into(),
+        json!({
+            "type": "rows",
+            "start": { "following": 1 },
+            "end": { "preceding": 1 }
+        }),
+    );
+    params.insert(
+        "functions".into(),
+        json!([{ "as": "s", "function": "sum", "field": "x" }]),
+    );
+    apply_dataset_action("dtcs:window", "t", &params, &mut workspaces).unwrap();
+    for row in &workspaces["t"] {
+        assert_eq!(row.get("s"), Some(&RuntimeValue::Null));
+    }
+}
+
+#[test]
 fn window_frame_first_last_and_date_units() {
     let mut workspaces = BTreeMap::new();
     workspaces.insert(

@@ -10,7 +10,7 @@ Pre-built wheels are published for common platforms and Python 3.9–3.13. If pi
 
 1. Ensure you are on a supported Python version.
 2. Install Rust 1.75+ and [maturin](https://www.maturin.rs/).
-3. Or pin a released version: `pip install dtcs==0.11.0`.
+3. Or pin a released version: `pip install dtcs==0.12.0`.
 
 See [faq.md](faq.md#pip-install-dtcs-fails-to-build-what-do-i-do).
 

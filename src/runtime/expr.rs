@@ -41,11 +41,41 @@ pub fn evaluate_expr_on_row(expr: &Expr, row: &Row) -> Result<RuntimeValue, Stri
         }
         Expr::Binary {
             op, left, right, ..
-        } => {
-            let left_val = evaluate_expr_on_row(left, row)?;
-            let right_val = evaluate_expr_on_row(right, row)?;
-            evaluate_binary(*op, &left_val, &right_val)
-        }
+        } => match op {
+            BinaryOp::And => {
+                let left_val = evaluate_expr_on_row(left, row)?;
+                let left_bool = left_val
+                    .as_bool()
+                    .ok_or_else(|| "and requires boolean operands".to_string())?;
+                if !left_bool {
+                    return Ok(RuntimeValue::Boolean(false));
+                }
+                let right_val = evaluate_expr_on_row(right, row)?;
+                let right_bool = right_val
+                    .as_bool()
+                    .ok_or_else(|| "and requires boolean operands".to_string())?;
+                Ok(RuntimeValue::Boolean(right_bool))
+            }
+            BinaryOp::Or => {
+                let left_val = evaluate_expr_on_row(left, row)?;
+                let left_bool = left_val
+                    .as_bool()
+                    .ok_or_else(|| "or requires boolean operands".to_string())?;
+                if left_bool {
+                    return Ok(RuntimeValue::Boolean(true));
+                }
+                let right_val = evaluate_expr_on_row(right, row)?;
+                let right_bool = right_val
+                    .as_bool()
+                    .ok_or_else(|| "or requires boolean operands".to_string())?;
+                Ok(RuntimeValue::Boolean(right_bool))
+            }
+            _ => {
+                let left_val = evaluate_expr_on_row(left, row)?;
+                let right_val = evaluate_expr_on_row(right, row)?;
+                evaluate_binary(*op, &left_val, &right_val)
+            }
+        },
         Expr::Call { callee, args, .. } => {
             let evaluated_args: Result<Vec<_>, _> =
                 args.iter().map(|arg| evaluate_expr_on_row(arg, row)).collect();

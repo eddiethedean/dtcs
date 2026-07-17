@@ -1,6 +1,6 @@
 # Performance and deployment limits
 
-Honest boundaries for the **reference tools** (`0.11.0`, alpha).
+Honest boundaries for the **reference tools** (`0.12.0`, alpha).
 
 ## What `dtcs run` is
 

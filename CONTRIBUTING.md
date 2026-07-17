@@ -74,7 +74,7 @@ The Rust reference crate lives in [src/](src/). Before implementing a module:
 
 ### Scope
 
-The reference crate through **0.11.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, full Ch 17–19 standard libraries with registry-driven semantics validation, COM deepening (lineage operation/flow, guarantees, compatibility, null/missing/invalid), static semantic and expression analysis (Ch 7–8), transformation plan lowering (Ch 13), semantics-preserving plan optimization (Ch 13 §9), engine capability matching (Ch 14), compilation to execution plans (Ch 15), reference in-memory runtime execution (Ch 16), conformance profiles and offline certification (Ch 23), and automated security checklist probes (Ch 24). See [docs/implementation/non-goals.md](docs/implementation/non-goals.md) for remaining out-of-scope work.
+The reference crate through **0.12.0** implements parsing, the canonical object model, validation (including metadata, types, expressions, and I/O interfaces), diagnostics, contract analysis (compatibility, evolution, versioning, and dataset-level lineage), identifier registries with extension validation, full Ch 17–19 standard libraries with registry-driven semantics validation, COM deepening (lineage operation/flow, guarantees, compatibility, null/missing/invalid), static semantic and expression analysis (Ch 7–8), transformation plan lowering (Ch 13), semantics-preserving plan optimization (Ch 13 §9), engine capability matching (Ch 14), compilation to execution plans (Ch 15), reference in-memory runtime execution (Ch 16), Portable Relational Profile (operators, rich joins/aggs, window frames, datetime, complex access), conformance profiles and offline certification (Ch 23), and automated security checklist probes (Ch 24). See [docs/implementation/non-goals.md](docs/implementation/non-goals.md) for remaining out-of-scope work.
 
 ### Conformance maintenance (Ch 26 §9)
 
@@ -105,9 +105,9 @@ Maintainer checklist (versions, WASM/npm, dual conformance manifests): [docs/imp
 Releases are automated by [`.github/workflows/release.yml`](.github/workflows/release.yml) when a semver tag is pushed:
 
 ```bash
-# Ensure Cargo.toml and pyproject.toml are both 0.11.0 and CI is green
-git tag v0.11.0
-git push origin v0.11.0
+# Ensure Cargo.toml and pyproject.toml are both 0.12.0 and CI is green
+git tag v0.12.0
+git push origin v0.12.0
 ```
 
 The workflow verifies the tag matches `Cargo.toml` and `pyproject.toml`, runs checks, publishes to crates.io, builds multi-platform Python wheels, publishes to PyPI via `uv publish`, builds WASM/npm packages when configured, and attaches `dtcs-conformance-declaration.json` to the GitHub release.

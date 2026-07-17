@@ -428,12 +428,15 @@ pub fn call_function(callee: &str, args: &[RuntimeValue]) -> Result<RuntimeValue
                 .ok_or("dtcs:date_add second argument must be integer")?;
             let unit = args.get(2).and_then(RuntimeValue::as_str).unwrap_or("day");
             let shifted = shift_iso_date_unit(base, amount, unit)?;
-            Ok(if matches!(args[0], RuntimeValue::DateTime(_)) || base.contains('T') {
-                if shifted.contains('T') {
-                    RuntimeValue::DateTime(shifted)
+            let is_datetime = matches!(args[0], RuntimeValue::DateTime(_)) || base.contains('T');
+            Ok(if is_datetime {
+                RuntimeValue::DateTime(if shifted.contains('T') {
+                    shifted
                 } else {
-                    RuntimeValue::DateTime(format!("{shifted}T00:00:00Z"))
-                }
+                    // Preserve original time-of-day when shifting by calendar units.
+                    let (_, hour, minute, second, offset) = parse_datetime_parts(base)?;
+                    format_datetime_with_offset(&shifted, hour, minute, second, offset)
+                })
             } else {
                 RuntimeValue::Date(shifted)
             })
@@ -623,12 +626,45 @@ fn diff_iso_dates_unit(left: &str, right: &str, unit: &str) -> Result<i64, Strin
             let (ry, _, _) = parse_ymd(right)?;
             Ok((ly - ry) as i64)
         }
-        "hour" | "hours" => Ok(diff_iso_dates(left, right)? * 24),
-        "minute" | "minutes" => Ok(diff_iso_dates(left, right)? * 24 * 60),
+        "hour" | "hours" | "minute" | "minutes" => {
+            let left_minutes = datetime_to_utc_minutes(left)?;
+            let right_minutes = datetime_to_utc_minutes(right)?;
+            let delta = left_minutes - right_minutes;
+            Ok(if matches!(unit, "hour" | "hours") {
+                delta / 60
+            } else {
+                delta
+            })
+        }
         other => Err(format!(
             "dtcs:date_diff unsupported unit '{other}' (supports day/month/year/hour/minute)"
         )),
     }
+}
+
+fn datetime_to_utc_minutes(value: &str) -> Result<i64, String> {
+    let (date, hour, minute, _second, offset) = parse_datetime_parts(value)?;
+    let (y, m, d) = parse_ymd(&date)?;
+    Ok(days_from_civil(y, m, d) * 24 * 60 + hour as i64 * 60 + minute as i64 - offset as i64)
+}
+
+fn format_datetime_with_offset(
+    date: &str,
+    hour: u32,
+    minute: u32,
+    second: u32,
+    offset_minutes: i32,
+) -> String {
+    if offset_minutes == 0 {
+        return format!("{date}T{hour:02}:{minute:02}:{second:02}Z");
+    }
+    let sign = if offset_minutes >= 0 { '+' } else { '-' };
+    let abs = offset_minutes.abs();
+    format!(
+        "{date}T{hour:02}:{minute:02}:{second:02}{sign}{:02}:{:02}",
+        abs / 60,
+        abs % 60
+    )
 }
 
 fn days_in_month(y: i32, m: u32) -> u32 {
