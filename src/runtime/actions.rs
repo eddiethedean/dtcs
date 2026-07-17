@@ -989,10 +989,9 @@ fn apply_window(
                     let obj = item.as_object()?;
                     let key = if let Some(field) = obj.get("field").and_then(Value::as_str) {
                         SortKey::Field(field.to_string())
-                    } else if let Some(expr) = obj.get("expr").and_then(Value::as_str) {
-                        SortKey::Expr(expr.to_string())
                     } else {
-                        return None;
+                        let expr = obj.get("expr").and_then(Value::as_str)?;
+                        SortKey::Expr(expr.to_string())
                     };
                     let descending = obj
                         .get("descending")
