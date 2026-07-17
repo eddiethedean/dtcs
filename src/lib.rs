@@ -50,7 +50,7 @@
 //! ```
 
 /// DTCS specification version this crate targets.
-pub const SPEC_VERSION: &str = "2.0.0";
+pub const SPEC_VERSION: &str = "3.0.0";
 
 pub mod analysis;
 pub mod capability;

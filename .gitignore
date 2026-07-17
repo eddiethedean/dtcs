@@ -32,6 +32,7 @@ dist/
 .python-version
 venv/
 .venv/
+.venv-check/
 
 # MkDocs / Read the Docs
 /site/
